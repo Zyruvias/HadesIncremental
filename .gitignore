@@ -1,7 +1,8 @@
-# Ignore everything except zyruviMod
+# Ignore everything except zyruviMod, README, and gitignore
 
 /*
-
 !README.md
 !.gitignore
 !ZyruviasIncremental
+
+# Other artifacts
