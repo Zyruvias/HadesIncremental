@@ -1,0 +1,41 @@
+{
+    "configs":
+    [
+        {
+            "name":"zyru_incremental_files",
+            "enabled":true,
+            "sync":
+            [
+                {
+                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods/ZyruviasIncremental",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ZyruviasIncremental",
+                    "bidir":true
+                }
+            ]
+        },
+        {
+            "name":"modpack",
+            "enabled": true,
+            "sync":
+            [
+                {
+                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods"
+                }
+            ]
+        },
+        {
+            "name":"ModUtil",
+            "enabled": true,
+            "sync":
+            [
+                {
+                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods/ModUtil",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ModUtil",
+                    "bidir": true
+                }
+            ]
+        }
+        
+    ]
+}
