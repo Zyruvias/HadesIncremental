@@ -7,3 +7,6 @@ Import "ZyruIncrementalUtils.lua"
 Import "ZyruIncrementalBoonTracking.lua"
 Import "ZyruIncrementalUI.lua"
 Import "stats.lua"
+
+To "Game/Text/en/HelpText.en.sjson"
+SJSON "Localization/helptext.en.sjson"

@@ -276,6 +276,14 @@ ModUtil.LoadOnce(function ()
         },
     }
 
+-- TODO : constants over magic strings
+local UpgradeSourceEnums = {
+    ZEUS = "Zeus"
+    -- "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
+    --     -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
+    --     "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
+}
+
 --[[
     Upgrade shape: {
         Name
@@ -284,6 +292,7 @@ ModUtil.LoadOnce(function ()
         OnApplyFunction
         OnApplyFunctionArgs
         Purchased
+        Source
     }
     ]]--
     Z.UpgradeData = {
@@ -306,7 +315,9 @@ ModUtil.LoadOnce(function ()
                         { "ZeusWeaponTrait", "ZeusSecondaryTrait" },
                     }
                 }
-            }
+            },
+            Purchased = false,
+            Source = UpgradeSourceEnums.ZEUS
         },
 
         PoseidonHermesSynergyTrait = {
