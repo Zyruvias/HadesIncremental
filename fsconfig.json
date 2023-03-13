@@ -7,7 +7,7 @@
             "sync":
             [
                 {
-                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods/ZyruviasIncremental",
+                    "src": "Mods/ZyruviasIncremental",
                     "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ZyruviasIncremental",
                     "bidir":true
                 }
@@ -19,7 +19,7 @@
             "sync":
             [
                 {
-                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods",
+                    "src": "Mods",
                     "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods"
                 }
             ]
@@ -30,7 +30,7 @@
             "sync":
             [
                 {
-                    "src": "C:/Users/Chris/Documents/Hades/HadesIncremental/Mods/ModUtil",
+                    "src": "Mods/ModUtil",
                     "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ModUtil",
                     "bidir": true
                 }

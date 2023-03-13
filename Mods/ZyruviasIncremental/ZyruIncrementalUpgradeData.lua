@@ -278,15 +278,22 @@ ModUtil.LoadOnce(function ()
 
 -- TODO : constants over magic strings
 local UpgradeSourceEnums = {
-    ZEUS = "Zeus"
+    ZEUS = "Zeus",
+    NYX = "NYX",
     -- "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
     --     -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
     --     "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
 }
 
+local UpgradeTypeEnums = {
+    PURCHASE_BOON = "PURCHASE_BOON",
+    MIRROR_UPGRADE = "MIRROR_UPGRADE",
+    UPGRADE_BOON = "UPGRADE_BOON",
+    STANDARD = "STANDARD"
+}
 --[[
     Upgrade shape: {
-        Name
+        Name -- TODO: is this necessary
         CostType
         Cost
         OnApplyFunction
@@ -436,7 +443,7 @@ local UpgradeSourceEnums = {
             Cost = 0,
             OnApplyFunction = "Z.MergeDataTable",
             OnApplyFunctionArgs = aresDoomDurationUpgradeDataArgs
-        }
+        },
         -----------------
         -- POSEIDON    --
         -----------------
@@ -458,7 +465,115 @@ local UpgradeSourceEnums = {
         -----------------
         -- NYX / MIRROR--
         -----------------
+        ShadowPresenceFieryPresenceDualSidedUpgrade = {
+            Name = "ShadowPresenceFieryPresenceDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "BackstabMetaUpgrade", "FirstStrikeMetaUpgrade" }
+        },
 
+        ChthonicVitalityDarkRegenerationDualSidedUpgrade = {
+            Name = "ChthonicVitalityDarkRegenerationDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "DoorHealMetaUpgrade", "DarknessHealMetaUpgrade" }
+        },
+
+        DeathDefianceStubbornDefianceDualSidedUpgrade = {
+            Name = "DeathDefianceStubbornDefianceDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "ExtraChanceMetaUpgrade", "ExtraChanceMetaUpgrade" }
+        },
+    
+        GreaterReflexRuthlessReflexDualSidedUpgrade = {
+            Name = "GreaterReflexRuthlessReflexDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "StaminaMetaUpgrade", "PerfectDashMetaUpgrade" }
+        },
+    
+        BoilingBloodAbyssalBloodDualSidedUpgrade = {
+            Name = "BoilingBloodAbyssalBloodDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "StoredAmmoVulnerabilityMetaUpgrade", "StoredAmmoSlowMetaUpgrade" }
+        },
+    
+        InfernalSoulStygianSoulDualSidedUpgrade = {
+            Name = "InfernalSoulStygianSoulDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "AmmoMetaUpgrade", "ReloadAmmoMetaUpgrade" }
+        },
+    
+        DeepPocketsGoldenTouchDualSidedUpgrade = {
+            Name = "DeepPocketsGoldenTouchDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "MoneyMetaUpgrade", "InterestMetaUpgrade" }
+        },
+    
+        ThickSkinHighConfidenceDualSidedUpgrade = {
+            Name = "ThickSkinHighConfidenceDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "HealthMetaUpgrade", "HighHealthDamageMetaUpgrade" }
+        },
+    
+        PrivilegedStatusFamilyFavoriteDualSidedUpgrade = {
+            Name = "PrivilegedStatusFamilyFavoriteDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "VulnerabilityEffectBonusMetaUpgrade", "GodEnhancementMetaUpgrade" }
+        },
+    
+        OlympianFavorDarkForesightDualSidedUpgrade = {
+            Name = "OlympianFavorDarkForesightDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "RareBoonDropMetaUpgrade", "RunProgressRewardMetaUpgrade" }
+        },
+    
+        GodsPrideGodsLegacyDualSidedUpgrade = {
+            Name = "GodsPrideGodsLegacyDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "EpicBoonDropMetaUpgrade", "DuoRarityBoonDropMetaUpgrade" }
+        },
+    
+        FatedAuthorityFatedPersuasionDualSidedUpgrade = {
+            Name = "FatedAuthorityFatedPersuasionDualSidedUpgrade",
+            Cost = 0,
+            CostType = "",
+            Source = UpgradeSourceEnums.NYX,
+            OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
+            OnApplyFunctionArgs = { "RerollMetaUpgrade", "RerollPanelMetaUpgrade" }
+        },
+
+        -- Mirror Expansion Upgrades
 
     }
 end)
@@ -650,4 +765,20 @@ ModUtil.LoadOnce(function ( )
             },
         }
     })
+end)
+
+-- Mirror Upgrads
+-- TODO: should this be game state or is local generation fine? mid-run quitiout shenanigans
+local mirrorUpgradesToDuplicate = {}
+function Z.ApplyBothMirrorSidesForUpgrade(upgradeNames, args)
+    ModUtil.Table.Concat(mirrorUpgradesToDuplicate, upgradeNames)
+end
+
+ModUtil.LoadOnce(function ()
+    ModUtil.Path.Wrap("IsMetaUpgradeActive", function (baseFunc, upgradeName)
+        if Contains(mirrorUpgradesToDuplicate, upgradeName) then
+            return true
+        end
+        return baseFunc(upgradeName)
+    end, Z)
 end)

@@ -311,7 +311,7 @@ function CreateScreenWithCloseButton( name, args )
         end
     end
 
-    
+    -- TODO: Figure out system to have HandleScreenInput called by default, possibly callback method
 	-- HandleScreenInput( screen )
     return screen
 end
@@ -335,11 +335,11 @@ function ShowZyruUpgradeScreen()
 
     -- 
     -- Title TODO: fix title
-    CreateTextBox({ Id = components.Background.Id, Text = "God Progression",
+    CreateTextBox({ Id = components.Background.Id, Text = "Upgrades",
     Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
     OffsetY = -450, Justification = "Center" })
     -- Suytitle
-    CreateTextBox({ Id = components.Background.Id, Text = "Select an Olympian to view your progress with their gifts!",
+    CreateTextBox({ Id = components.Background.Id, Text = "Purchase powerful boons, abilities, and insights into the finer workings of the underworld!",
         Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
         OffsetY = -400, Justification = "Center" })
 
@@ -410,7 +410,7 @@ function ShowUpgradeScreenForItem( screen, button )
                     Offset = {X = 0, Y = 0},
                     Justification = "Center",
                     FontSize = 20,
-                    Font = "MonospaceTypewriterBold",
+                    Font = "SpectralSCLightTitling",
                     ImageStyle = {
                         Image = "GUI\\Screens\\BoonIcons\\" .. TraitData[upgrade.Name].Icon,
                         Offset = {X = -225, Y = 0},
@@ -418,7 +418,8 @@ function ShowUpgradeScreenForItem( screen, button )
                     },
                 }
             )
-            -- CreateUpgradePurchaseButton(screen, button)-- Items = {
+            -- CreateUpgradePurchaseButton(screen, button)-- 
+            -- Items = {
         --     {
         --         event = function(list)
         --             DebugPrint({Text = "Woah you enabled me"})
