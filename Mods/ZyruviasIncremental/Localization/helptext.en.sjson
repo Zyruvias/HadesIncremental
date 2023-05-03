@@ -1,0 +1,55 @@
+{
+    Texts = [
+        "_append"
+        {
+            Id = "ZeusHermesSynergyTrait"
+            DisplayName = "Superconductor"
+            Description = "Enemies no longer resist lightning effects applied in quick succession."
+        }
+        {
+            Id = "ZeusHermesSynergyTrait_Initial"
+            InheritFrom = "ZeusHermesSynergyTrait"
+            Description = "Enemies no longer resist lightning effects applied in quick succession."
+        }
+        {
+            Id = "ChangingTidesLegendary"
+            DisplayName = "Alternating Tides"
+            Description = "Harness the power of the tides, pushing and pulling enemies with great force."
+        }
+        {
+            Id = "ChangingTidesLegendary_Initial"
+            InheritFrom = "ChangingTidesLegendary"
+            Description = "Harness the power of the tides, pushing and pulling enemies with great force."
+        }
+        {
+            Id = "PermanentVulnerabilityLegendary"
+            DisplayName = "Permanent Vulnerability"
+            Description = "Enemies can no longer protect their weak spots, your Hunter's Mark no longer expires on hit."
+        }
+        {
+            Id = "PermanentVulnerabilityLegendary_Initial"
+            InheritFrom = "PermanentVulnerabilityLegendary"
+            Description = "Enemies can no longer protect their weak spots, your Hunter's Mark no longer expires on hit."
+        }
+        {
+            Id = "UnendingHangoverLegendary"
+            DisplayName = "Unending Hangover"
+            Description = "Your hangover effects no longer expire."
+        }
+        {
+            Id = "UnendingHangoverLegendary_Initial"
+            InheritFrom = "UnendingHangoverLegendary"
+            Description = "Your hangover effects no longer expire."
+        }
+        {
+            Id = "StrategicCooperationBlessingLegendary"
+            DisplayName = "Strategic Cooperation"
+            Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
+        }
+        {
+            Id = "StrategicCooperationBlessingLegendary_Initial"
+            InheritFrom = "StrategicCooperationBlessingLegendary"
+            Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
+        }
+    ]
+}
