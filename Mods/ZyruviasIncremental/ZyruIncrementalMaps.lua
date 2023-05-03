@@ -47,6 +47,9 @@ ModUtil.LoadOnce(function ( )
         ]]--
         UpgradeData = {
           
+        },
+        Currencies = {
+          
         }
       }
     end
@@ -78,9 +81,21 @@ ModUtil.LoadOnce( function ( )
   -- process existing upgrades
   for i, upgradeName in ipairs(GameState.ZyruIncremental.UpgradeData) do
     local upgrade = Z.UpgradeData[upgradeName]
-    DebugPrint { Text = ModUtil.ToString.Deep(upgrade)}
-    if upgrade.OnApplyFunction ~= nil then
-      _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
+    if upgrade == nil then
+      DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
+      Z.RemoveUpgrade(upgradeName)
+    else
+      -- DebugPrint { Text = ModUtil.ToString.Deep(upgrade)}
+      if upgrade.OnApplyFunction ~= nil then
+        _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
+      end
+      if upgrade.OnApplyFunctions ~= nil then
+          for k, functionName in ipairs(upgrade.OnApplyFunctions) do
+              local functionArgs = upgrade.OnApplyFunctionArgs[k]
+              DebugPrint { Text = "Processing Savefile Upgrades: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
+              _G[functionName](functionArgs)
+          end
+      end
     end
   end
 
@@ -406,6 +421,7 @@ ModUtil.LoadOnce(function ( )
       ChaosBlessingExtraChanceTrait = 1,
       ChaosBlessingSecondaryTrait = 1,
       ChaosBlessingDashAttackTrait = 1,
+      FountainDamageBonusTrait = 1,
     }
 
     Z.BoonExperiencePerUse = {
@@ -586,7 +602,7 @@ ModUtil.LoadOnce(function ( )
       ChaosBlessingExtraChanceTrait = 1,
       ChaosBlessingSecondaryTrait = 1,
       ChaosBlessingDashAttackTrait = 1,
-	
+      FountainDamageBonusTrait = 1,
     }
 
     Z.BoonsToIgnore = {
@@ -835,5 +851,6 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
 end, Z)
 
 OnAnyLoad{ function ( )
-  Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
+  -- Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
+  Z.DifficultyModifier = 1
 end }

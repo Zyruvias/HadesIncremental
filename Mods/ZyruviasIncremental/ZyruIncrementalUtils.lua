@@ -201,3 +201,15 @@ ModUtil.LoadOnce( function ( )
   --   MaxHealth = 50000,
   -- })
 end)
+
+ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)
+  local baseVal = baseFunc(args)
+  if not baseVal then
+    for i, traitName in ipairs(args) do
+      if HeroHasTrait(traitName) then
+        return true
+      end 
+    end
+  end
+  return baseVal
+end, Z)

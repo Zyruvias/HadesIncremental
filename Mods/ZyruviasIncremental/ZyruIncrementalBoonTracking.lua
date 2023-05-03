@@ -61,7 +61,9 @@ end
 
 ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- Calculate normal rarity for the sake of Duos / Legendaries, I like the current system.
+  DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
   baseFunc(lootData, args)
+  Z.DebugLoot = DeepCopyTable(lootData)
 
 
   local upgradeOptions = lootData.UpgradeOptions
@@ -111,6 +113,7 @@ ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- TODO: fix hammer spawn / chaos spawn
   -- TODO: Fix boons
   for i, upgradeData in ipairs(upgradeOptions) do
+    DebugPrint { Text = ModUtil.ToString.Shallow(upgradeData)}
     if god ~= nil and upgradeData.Rarity ~= "Legendary" then
       local chosenRarity = Z.ComputeRarityForGod(god)
       DebugPrint { Text = "Rolled " .. chosenRarity }
@@ -398,6 +401,7 @@ function Z.TrackBoonEffect ( traitName, damageValue )
     saveTraitData.Value = saveTraitData.Value + damageValue
     if (Z.BoonExperienceFactor[traitName] == nil) then
       DebugPrint { Text = traitName .. " not found in BoonExperienceFactor map"}
+      return
     end
     saveTraitData.Experience = saveTraitData.Experience + Z.BoonExperienceFactor[traitName] * damageValue
     expGained = expGained + Z.BoonExperienceFactor[traitName] * damageValue
@@ -405,9 +409,10 @@ function Z.TrackBoonEffect ( traitName, damageValue )
 
   if (Z.BoonExperiencePerUse[traitName] == nil) then
     DebugPrint { Text = traitName .. " not found in BoonExperiencePerUse map"}
+  else
+    saveTraitData.Experience = saveTraitData.Experience + Z.BoonExperiencePerUse[traitName]
+    expGained = expGained + Z.BoonExperiencePerUse[traitName]
   end
-  saveTraitData.Experience = saveTraitData.Experience + Z.BoonExperiencePerUse[traitName]
-  expGained = expGained + Z.BoonExperiencePerUse[traitName]
 
   if expGained > 0 then
     thread( DisplayExperiencePopup, expGained )
