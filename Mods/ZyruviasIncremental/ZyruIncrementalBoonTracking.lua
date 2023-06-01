@@ -236,6 +236,11 @@ ModUtil.Path.Wrap("DamageEnemy", function(baseFunc, victim, triggerArgs)
       if type(traitUsed) == "table" then
         traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]
         -- DebugPrint({ Text = ModUtil.ToString.Shallow(traitUsed) })
+        
+        -- if not defined, it's coming from a source that isn't meant to be tracked
+        if traitUsed == nil then
+          return
+        end
       end
       boonsUsed[traitUsed] = damageResult.BaseDamage
       sourceName = triggerArgs.EffectName

@@ -193,14 +193,6 @@ function Z.ComputeRarityArrayForGod( god )
 end
 
 
--- Dev scripts
-ModUtil.LoadOnce( function ( ) 
-  _G["k"] = ModUtil.ToString.TableKeys
-  -- AddTraitToHero { TraitName = "DemeterHermesSynergyTrait" }
-  -- ModUtil.Table.Merge(HeroData.DefaultHero, {
-  --   MaxHealth = 50000,
-  -- })
-end)
 
 ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)
   local baseVal = baseFunc(args)
@@ -213,3 +205,63 @@ ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)
   end
   return baseVal
 end, Z)
+
+ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
+--[[
+  Get existing merge table mappings and apply
+]]
+  ------------------
+  -- TraitData -----
+  ------------------
+  ModUtil.Table.Merge(TraitData, Z.TraitData)
+  ------------------
+  -- WeaponSets ----
+  ------------------
+  local hermesAfterImageWeapons = {}
+  for i, weaponName in ipairs(WeaponSets.HeroPhysicalWeapons) do
+    table.insert(hermesAfterImageWeapons, weaponName .. "AfterImage")
+    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+        table.insert(hermesAfterImageWeapons, w .. "AfterImage") 
+      end
+    end
+  end
+  Z.MergeDataArrays({
+    {
+      Array = "WeaponSets.HeroPhysicalWeapons",
+      Value = hermesAfterImageWeapons
+    }
+  })
+  
+  hermesAfterImageWeapons = {}
+  for i, weaponName in ipairs(WeaponSets.HeroSecondaryWeapons) do
+    table.insert(hermesAfterImageWeapons, weaponName .. "AfterImage")
+    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+        table.insert(hermesAfterImageWeapons, w .. "AfterImage")
+      end
+    end
+  end
+  Z.MergeDataArrays({
+    {
+      Array = "WeaponSets.HeroSecondaryWeapons",
+      Value = hermesAfterImageWeapons
+    }
+  })
+  --- baseFunc
+  baseFunc()
+end, Z)
+-- TODO: wrapping setupRunData versus just redoing it manually
+SetupRunData()
+
+
+-- Dev scripts
+ModUtil.LoadOnce( function ( ) 
+  _G["k"] = ModUtil.ToString.TableKeys
+  -- AddTraitToHero { TraitName = "DemeterHermesSynergyTrait" }
+  -- ModUtil.Table.Merge(HeroData.DefaultHero, {
+  --   MaxHealth = 50000,
+  -- })
+  -- AddTraitToHero{TraitName="ChaosRandomStatusLegendary"}
+  AddTraitToHero({TraitName="ZeusChainRangeLegendary"})
+end)

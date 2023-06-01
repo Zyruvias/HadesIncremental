@@ -1,0 +1,144 @@
+{
+  Weapons = [
+    "_append"
+    {
+        Name = "GunGrenadeTossAfterImage",
+        InheritFrom = "GunGrenadeToss",
+        RootOwnerWhileFiring = false
+        BlockMoveInput = false
+        CancelMovement = false
+        ChargeCancelMovement = false
+        Control = "null"
+        ChargeStartAnimation = "null"
+        FireGraphic = "null"
+        ClipSize = 1
+        ReloadTime = 0.5
+        ShowFreeAimLine = false
+        ManualAiming = false
+        ChargeTime = 0
+        FireOnRelease = false
+        TargetReticleAnimation = "null"
+        CanCancelDisables = false
+        FireFx = "null"
+        Effects = "null"
+        Effect = "null"
+    }
+    {
+        Name = "GunWeaponAfterImage"
+        InheritFrom = "GunWeapon"
+        Control = "null"
+        FireSound = "null"
+        FireFx = "GunFire"
+        ChargeTimeFrames = 4
+        LockTriggerForCharge = true
+        FireGraphic = "null"
+        LockTriggerTransferFromOnSwap = false
+        FailedToFireCooldownAnimation = "null"
+        FailedToFireCooldownDuration = 0
+        FireOnRelease = false
+        NumProjectiles = 1
+        Cooldown = 0.1
+        Spread = 0
+        ClipSize = 999999
+        ReloadTime = 0.25
+        TriggerTapIgnoresCooldown = false
+        MaxAmmo = 999999
+        TriggersStoredAmmoVulnerability = true
+        Effects = "null"
+    }
+    {
+      Name = "GunWeaponDashAfterImage"
+      InheritFrom = "GunWeaponAfterImage"
+      Control = "null"
+      TriggerTapIgnoresCooldown = true
+      TriggersStoredAmmoVulnerability = true
+      SwapOnFire = "null"
+      ControlWindow = 0.45
+      SelfVelocity = 0
+      CanCancelDisables = true
+      CanCancelOwnDisables = false
+      FailedToFireCooldownAnimation = "null"
+      LockTriggerTransferFromOnSwap = false
+      AllowExternalForceRelease = false
+      ClearFireRequestOnChargeCancel = false
+      PreFireAnimation = null
+      FireGraphic = null
+      ShareAmmoWeapon = "GunWeaponAfterImage"
+      NumProjectiles = 1
+      ProjectileAngleOffset = 0
+      Scatter = 0
+      ScatterCap = 0
+      ProjectileInterval = 0.0
+      AutoLockArcDistance = 360
+    }
+    {
+      Name = "SniperGunWeaponAfterImage"
+      InheritFrom = "GunWeaponAfterImage"
+      Control = "null"
+      DefaultControl = false
+      TriggerTapIgnoresCooldown = true
+      TriggersStoredAmmoVulnerability = true
+      FireSound = "/Leftovers/SFX/AuraPerfectThrow"
+      Projectile = "SniperGunWeapon"
+      SwapOnFire = "null"
+      AutoLockRange = 1050
+      ChargeTimeFrames = 0
+      SelfVelocity = 0
+      CanCancelDisables = true
+      CanCancelOwnDisables = true
+      PreFireAnimation = null
+      FireGraphic = null
+      FailedToFireCooldownAnimation = "null"
+      LockTriggerTransferFromOnSwap = false
+      ForceReleaseOnFire = true
+      LockTriggerForCharge = false
+      MinChargeToFire = 0
+      ChargeCancelMovement = false
+      AllowExternalForceRelease = false
+      ClearFireRequestOnChargeCancel = false
+      ShareAmmoWeapon = "GunWeapon"
+      Enabled = false
+    }
+    {
+      Name = "SniperGunWeaponDashAfterImage"
+      InheritFrom = "SniperGunWeaponAfterImage"
+      Control = "null"
+      TriggerTapIgnoresCooldown = true
+      TriggersStoredAmmoVulnerability = true
+      SwapOnFire = "null"
+      ControlWindow = 0.45
+      SelfVelocity = 0
+      CanCancelDisables = true
+      CanCancelOwnDisables = true
+      FailedToFireCooldownAnimation = "null"
+      LockTriggerTransferFromOnSwap = false
+      AllowExternalForceRelease = false
+      ClearFireRequestOnChargeCancel = false
+      ShareAmmoWeapon = "GunWeaponAfterImage"
+      NumProjectiles = 1
+	    Enabled = false
+    }
+    {
+      Name = "GunBombWeaponAfterImage"
+      InheritFrom = "GunBombWeapon"
+      Type = "GUN"
+      Projectile = "GunBombWeapon"
+	    ClearFireRequestOnChargeCancel = false
+      FullyAutomatic = true
+      AutoLock = true
+      FireFx = "null"
+      IgnoreOwnerAttackDisabled = true
+    }
+    {
+      Name = "GunBombImmolationAfterImage"
+      InheritFrom = "GunBombImmolation"
+      Type = "GUN"
+      Projectile = "GunBombImmolation"
+      ClearFireRequestOnChargeCancel = false
+      FullyAutomatic = true
+      AutoLock = true
+      FireFx = "null"
+      IgnoreOwnerAttackDisabled = true
+    }
+  ]
+}

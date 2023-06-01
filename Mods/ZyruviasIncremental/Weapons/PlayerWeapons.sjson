@@ -1,0 +1,41 @@
+{
+  Weapons = [
+    "_append"
+    {
+        Name = "ChaosDoomApplicator"
+        InheritFrom = "AresRetaliate"
+        Projectile = "ChaosDoom"
+    }
+    {
+        Name = "ChaosWeakApplicator",
+        InheritFrom = "DeathAreaWeakenAphrodite"
+    }
+    {
+        Name = "ChaosCritVulnerabilityApplicator",
+        InheritFrom = "CritVulnerabilityWeapon",
+    }
+    {
+        Name = "ChaosJoltedApplicator",
+        InheritFrom = "LightningStrikeRetaliate",
+    }
+    {
+        Name = "ChaosHangoverApplicator",
+        InheritFrom = "DionysusShoutWeapon",
+        Projectile = "ChaosHangover"
+    }
+    {
+        Name = "ChaosShoalsApplicator",
+        InheritFrom = "1_BaseMagicWeapon",
+        Projectile = "PoseidonRushProjectile"
+    }
+    {
+        Name = "ChaosBackstabVulnerabilityApplicator",
+        InheritFrom = "1_BaseMagicWeapon",
+        Projectile = "AthenaRushProjectile",
+    }
+    {
+        Name = "AresDoomSpread"
+        InheritFrom = "AresRetaliate"
+    }
+  ]
+}

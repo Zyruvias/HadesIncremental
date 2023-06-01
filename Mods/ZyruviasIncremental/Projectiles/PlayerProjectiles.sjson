@@ -1,0 +1,15 @@
+{
+    Projectiles = [
+        "_append"
+        {
+            Name = "ChaosDoom"
+            InheritFrom = "AresRetaliate"
+            DamageRadius = 20
+        }
+        {
+            Name = "ChaosHangover"
+            InheritFrom = "DionysusShoutProjectile"
+            DamageRadius = 20
+        }
+    ]
+}

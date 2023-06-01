@@ -10,3 +10,13 @@ Import "stats.lua"
 
 To "Game/Text/en/HelpText.en.sjson"
 SJSON "Localization/helptext.en.sjson"
+
+:: Weapons
+To "Game/Weapons/PlayerWeapons.sjson"
+SJSON "Weapons/PlayerWeapons.sjson"
+To "Game/Weapons/PlayerWeapons.sjson"
+SJSON "Weapons/HermesWeapons.sjson"
+
+:: Projectiles
+To "Game/Projectiles/PlayerProjectiles.sjson"
+SJSON "Projectiles/PlayerProjectiles.sjson"

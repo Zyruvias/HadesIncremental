@@ -49,10 +49,6 @@ function Z.AddTraitToTraitData(args)
     if boonToAdd == nil then
         return
     end
-    DebugPrint { Text = "Trait Added: " .. ModUtil.ToString.Deep(boonToAdd) }
-    ModUtil.Table.Merge(TraitData, {
-        [args.Name] = boonToAdd
-    })
     -- args.LinkedUpgrades for duos / boon prereqs
     if args.AddLinkedUpgrades ~= nil then
         DebugPrint { Text = "Found LinkedUpgrades" }
@@ -64,7 +60,7 @@ function Z.AddTraitToTraitData(args)
         )
     end
     -- TODO: SetupRunData already calls this, see if you can hook into it
-    ProcessDataInheritance( TraitData[args.Name], TraitData )
+    -- ProcessDataInheritance( TraitData[args.Name], TraitData )
 end
 
 function Z.MergeDataTables(args)

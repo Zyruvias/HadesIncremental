@@ -47,9 +47,25 @@
             Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
         }
         {
-            Id = "StrategicCooperationBlessingLegendary_Initial"
-            InheritFrom = "StrategicCooperationBlessingLegendary"
-            Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
+            Id = "ChaosRandomStatusLegendary"
+            DisplayName = "Primordial Soup"
+            Description = "Call down the power of ALL Olympians and overwhelm your enemies with status effects."
+        }
+        {
+            Id = "ChaosRandomStatusLegendary_Complete"
+            InheritFrom = "ChaosRandomStatusLegendary"
+            Description = "Call down the power of ALL Olympians and overwhelm your enemies with status effects."
+        }
+
+        {
+            Id = "DemeterFamineLegendary"
+            DisplayName = "Never Ending Famine"
+            Description = "Non-Boss enemeis start with reduced health."
+        }
+        {
+            Id = "DemeterFamineLegendary_Initial"
+            InheritFrom = "DemeterFamineLegendary"
+            Description = "Non-Boss enemeis start with reduced health."
         }
     ]
 }
