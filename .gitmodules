@@ -1,0 +1,9 @@
+[submodule "Mods/ModUtil"]
+	path = Mods/ModUtil
+	url = https://github.com/SGG-Modding/ModUtil.git
+[submodule "Mods/StyxScribe"]
+	path = Mods/StyxScribe
+	url = https://github.com/SGG-Modding/StyxScribe.git
+[submodule "Mods/ErumiUILib"]
+	path = Mods/ErumiUILib
+	url = https://github.com/erumi321/HadesUILib.git
