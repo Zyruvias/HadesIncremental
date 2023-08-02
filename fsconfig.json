@@ -2,24 +2,23 @@
     "configs":
     [
         {
+            "name":"styxscribe",
+            "enabled": true,
+            "sync":
+            [
+                {
+                    "src": "StyxScribe/Content/Mods",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods"
+                }
+            ]
+        },
+        {
             "name":"zyru_incremental_files",
             "enabled":true,
             "sync":
             [
                 {
-                    "src": "Mods/ZyruviasIncremental",
-                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ZyruviasIncremental",
-                    "bidir":true
-                }
-            ]
-        },
-        {
-            "name":"modpack",
-            "enabled": true,
-            "sync":
-            [
-                {
-                    "src": "Mods",
+                    "src": "Mods/",
                     "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods"
                 }
             ]
@@ -30,9 +29,19 @@
             "sync":
             [
                 {
-                    "src": "Mods/ModUtil",
-                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ModUtil",
-                    "bidir": true
+                    "src": "ModUtil",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods/ModUtil"
+                }
+            ]
+        },
+        {
+            "name":"ErumiUILib",
+            "enabled": true,
+            "sync":
+            [
+                {
+                    "src": "HadesUILib",
+                    "dest": "C:/Program Files (x86)/Steam/steamapps/common/Hades/Content/Mods"
                 }
             ]
         }
