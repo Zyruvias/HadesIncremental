@@ -1,22 +1,3 @@
--- ModUtil.WrapBaseFunction("GetRarityChances", function(baseFunc, args)
---   local chances = baseFunc(args)  
---   local extendedRarityChances = {
---     Heroic = 0.3,
---     Supreme = 0.3,
---     Ultimate = 0.3,
---     Transcendental = 0.3,
---     Mythic = 0.3,
---     Olympic = 0.3
---   }
-
---   for k, v in pairs(extendedRarityChances) do
---     chances[k] = v
---   end
-
---   return chances
--- end, Z)
-
-
 -- HandleUpgradeChoiceSelection for poms
 ModUtil.Path.Wrap("HandleUpgradeChoiceSelection", function (baseFunc, screen, button)
   if button.LootData.Name == "StackUpgrade" then
@@ -127,8 +108,6 @@ ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
 
 end, Z)
 
-local damageSources = {}
-local damageMap = {}
 local ignoreDamageSourceTraitMap = {
   HighHealthDamageMetaUpgrade = true,
   GodEnhancementMetaUpgrade = true,
@@ -139,237 +118,578 @@ local ignoreDamageSourceTraitMap = {
   PerfectDashEmpowerApplicator = true,
 }
 
-OnAnyLoad {
-  function ()
-    damageMap = {}
-  end
-}
+--[[
+  Outline for cleaner implementation
+  ModUtil.Path.Context.Env ("Damage")
+    ModUtil.Path.Wrap ("CalculateDamageMultipliers")
+    ModUtil.Path.Wrap ("DamageEnemy")
+    ModUtil.Path.Wrap ("DamageHero")
+]]--
 
-local addDamageMultiplierWrapper = function (baseFunc, trait, multiplier)
-  -- DebugPrint { Text = tostring(trait.Name) .. " " .. tostring(multiplier) }
-  if ignoreDamageSourceTraitMap[trait.Name] == nil then
-    table.insert(damageSources, { 
-      Name = trait.Name, 
-      Multiplier = multiplier 
-    })
-  end
-  return baseFunc(trait, multiplier)
-end
-
--- TODO: https://discord.com/channels/667753182608359424/667757899111596071/1009525083326390423
--- metatable reference lookup to not destroy potential mod compatibility
-local triggerArgsMeta = { __index = function( s, k, v )
-  local locals = ModUtil.Locals.Stacked(3)
-  locals.addDamageMultiplier = ModUtil.Wrap( locals.addDamageMultiplier, addDamageMultiplierWrapper, Z )
-  setmetatable( s, nil )
-  return rawget( s, k, v )
-end }
-
-
-ModUtil.Path.Wrap("CalculateDamageMultipliers", function( base, attacker, victim, weaponData, triggerArgs )
-  -- DebugPrint{ Text = "Base: " .. tostring(triggerArgs.DamageAmount)}
-  local baseDamage = triggerArgs.DamageAmount
-  damageSources = {}
-  setmetatable( triggerArgs, triggerArgsMeta )
-  local value = base( attacker, victim, weaponData, triggerArgs )
-  setmetatable( triggerArgs, meta )
-
-
-  local uniqueId = tostring(victim.ObjectId)
-    .. (Z.GetSourceDamageName(triggerArgs) or "")
-    .. (tostring(triggerArgs.SourceWeapon) or "")
-  -- DebugPrint { Text = "CALCULATE DAMAGE: " ..uniqueId }
-  -- Aggregate damage sources
-  local d = {}
-  for i, source in pairs(damageSources) do
-    d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
-  end
-  if attacker == CurrentRun.Hero then
-    damageMap[uniqueId] = {
-      BaseDamage = baseDamage,
-      Multipliers = d,
-      TotalMultiplier = value,
-    }
-  end
-
-  return value
-end, Z )
-
-ModUtil.Path.Wrap("DamageEnemy", function(baseFunc, victim, triggerArgs)
-  local armorBeforeAttack = victim.HealthBuffer or 0
-  local res = baseFunc( victim, triggerArgs )
+ModUtil.Path.Context.Wrap("Damage", function ()
   
-  local obj = triggerArgs or {}
-  Z.lta = obj
-  Z.Victim = victim
+  local enemyDamageSources = {}
+  local damageMultiplierMap = {}
   
-  if RequiredKillEnemies[victim.ObjectId] == nil and victim.Name ~= "TrainingMelee" then
-    -- DebugPrint{ Text = "Non-required Enemy Hit"}
-    return
-  end
-  local uniqueId = tostring(victim.ObjectId)
-  .. (Z.GetSourceDamageName(triggerArgs) or "")
-  .. (tostring(triggerArgs.SourceWeapon) or "")
-  -- DebugPrint { Text = "DAMAGE ENEMY: " ..uniqueId }
-  local damageResult = damageMap[uniqueId]
-  if damageResult == nil then
-    DebugPrint { Text = " NULL DAMAGE RESULT FOUND"}
-    Z.Debug = {
-      Victim = victim,
-      UniqueId = uniqueId,
-      Args = triggerArgs
-    }
-    return
-  end
-  
-  local sourceWeaponData = obj.AttackerWeaponData
-  local weapon = nil
-  local sourceName = nil
-  local boonsUsed = {}
+  --[[
+    NOTE: This implementation of the wrap is meant to inject custom behavior in triggerArgs
+    to hook into addDamageMultipliers
+    ModUtil.Path.Wrap("CalculateDamageMultipliers", function( base, attacker, victim, weaponData, triggerArgs )
+      DebugPrint{ Text = "Calling CalculateDamageMultipliers"}
+      enemyDamageSources = {}
+      local baseDamage = triggerArgs.DamageAmount
+      local addDamageMultiplierWrapper = function (baseFunc, trait, multiplier)
+        DebugPrint { Text = tostring(trait.Name) .. " " .. tostring(multiplier) }
+        if ignoreDamageSourceTraitMap[trait.Name] == nil then
+          table.insert(enemyDamageSources, { 
+            Name = trait.Name, 
+            Multiplier = multiplier 
+          })
+        end
+        return baseFunc(trait, multiplier)
+      end
+      
+      -- TODO: https://discord.com/channels/667753182608359424/667757899111596071/1009525083326390423
+      -- metatable reference lookup to not destroy potential mod compatibility
+      local triggerArgsMeta = { 
+        __index = function( s, k, v )
+          local locals = ModUtil.Locals.Stacked(3)
+          DebugPrint { Text = "Stacked(1): " .. _G["k"](ModUtil.Locals.Stacked(1)) }
+          DebugPrint { Text = "Stacked(2): " .. _G["k"](ModUtil.Locals.Stacked(2)) }
+          DebugPrint { Text = "Stacked(3): " .. _G["k"](ModUtil.Locals.Stacked(3)) }
+          DebugPrint { Text = "Stacked(4): " .. _G["k"](ModUtil.Locals.Stacked(4)) }
+          DebugPrint { Text = "Stacked(5): " .. _G["k"](ModUtil.Locals.Stacked(5)) }
+          DebugPrint { Text = "Stacked(6): " .. _G["k"](ModUtil.Locals.Stacked(6)) }
+          DebugPrint { Text = "Stacked(7): " .. _G["k"](ModUtil.Locals.Stacked(7)) }
+          DebugPrint { Text = "Stacked(8): " .. _G["k"](ModUtil.Locals.Stacked(8)) }
+          DebugPrint { Text = "s, k, v: " .. tostring(s) .. " " .. tostring(k) .. " " .. tostring(v)}
+          locals.addDamageMultiplier = ModUtil.Wrap( locals.addDamageMultiplier, addDamageMultiplierWrapper, Z )
+          setmetatable( s, nil )
+          return rawget( s, k, v )
+        end
+      }
 
-  if triggerArgs.EffectName ~= nil then
-    -- DebugPrint({ Text = "EffectName found: ".. obj.EffectName })
-    local traitUsed = Z.EffectToBoonMap[obj.EffectName]
-    if traitUsed ~= nil then
-      -- DebugPrint({ Text = obj.SourceWeapon })
-      -- DebugPrint({ Text = ModUtil.ToString.Deep(traitUsed) })
-      if type(traitUsed) == "table" then
-        traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]
-        -- DebugPrint({ Text = ModUtil.ToString.Shallow(traitUsed) })
-        
-        -- if not defined, it's coming from a source that isn't meant to be tracked
-        if traitUsed == nil then
-          return
+      -- EXPERIMENT: create brand new trigger args object to have diirect control over when its accessed?
+      local newTriggerArgs = ModUtil.Table.Copy.Deep(triggerArgs)
+      -- TODO: triggerArgs has a meta? idk, see discord comment
+      -- setmetatable( triggerArgs, triggerArgsMeta )
+      setmetatable( newTriggerArgs, triggerArgsMeta )
+      local value = base( attacker, victim, weaponData, newTriggerArgs )
+      -- setmetatable( triggerArgs, meta )
+
+      local d = {}
+      DebugPrint { Text = "enemyDamageSources:" .. ModUtil.ToString.Deep(enemyDamageSources)}
+      for i, source in pairs(enemyDamageSources) do
+        d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
+      end
+      damageMultiplierMap = {
+        BaseDamage = baseDamage,
+        Multipliers = d,
+        EnDamage = value,
+      }
+    
+      return value
+    end, Z )
+  ]]--
+
+  -- From Scripts/Combat.lua line
+  ModUtil.Path.Override("CalculateDamageMultipliers", function (attacker, victim, weaponData, triggerArgs)
+      local damageReductionMultipliers = 1
+      local damageMultipliers = 1.0
+      local lastAddedMultiplierName = ""
+
+      -- CHANGES
+      local baseDamage = triggerArgs.DamageAmount
+      -- END CHANGES
+    
+      if ConfigOptionCache.LogCombatMultipliers then
+        DebugPrint({Text = " SourceWeapon : " .. tostring( triggerArgs.SourceWeapon )})
+      end
+    
+      local addDamageMultiplier = function( data, multiplier )
+        -- CHANGES
+        DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
+        if ignoreDamageSourceTraitMap[data.Name] == nil then
+          table.insert(enemyDamageSources, { 
+            Name = data.Name, 
+            Multiplier = multiplier 
+          })
+        end
+        -- END CHANGES
+        if multiplier >= 1.0 then
+          if data.Multiplicative then
+            damageReductionMultipliers = damageReductionMultipliers * multiplier
+          else
+            damageMultipliers = damageMultipliers + multiplier - 1
+          end
+          if ConfigOptionCache.LogCombatMultipliers then
+            lastAddedMultiplierName = data.Name or "Unknown"
+            DebugPrint({Text = " Additive Damage Multiplier (" .. lastAddedMultiplierName .. "):" .. multiplier })
+          end
+        else
+          if data.Additive then
+            damageMultipliers = damageMultipliers + multiplier - 1
+          else
+            damageReductionMultipliers = damageReductionMultipliers * multiplier
+          end
+          if ConfigOptionCache.LogCombatMultipliers then
+            lastAddedMultiplierName = data.Name or "Unknown"
+            DebugPrint({Text = " Multiplicative Damage Reduction (" .. lastAddedMultiplierName .. "):" .. multiplier })
+          end
         end
       end
-      boonsUsed[traitUsed] = damageResult.BaseDamage
-      sourceName = triggerArgs.EffectName
-      weapon = sourceName
+    
+      if triggerArgs.ProjectileAdditiveDamageMultiplier then
+        damageMultipliers = damageMultipliers + triggerArgs.ProjectileAdditiveDamageMultiplier
+      end
+    
+      if victim.IncomingDamageModifiers ~= nil then
+        for i, modifierData in pairs(victim.IncomingDamageModifiers) do
+          if modifierData.GlobalMultiplier ~= nil then
+            addDamageMultiplier( modifierData, modifierData.GlobalMultiplier)
+          end
+          
+          local validWeapon = modifierData.ValidWeaponsLookup == nil or ( modifierData.ValidWeaponsLookup[ triggerArgs.SourceWeapon ] ~= nil and triggerArgs.EffectName == nil )
+    
+          if validWeapon and ( not triggerArgs.AttackerIsObstacle and ( attacker and attacker.DamageType ~= "Neutral" ) or modifierData.IncludeObstacleDamage or modifierData.TrapDamageTakenMultiplier ) then
+            if modifierData.ZeroRangedWeaponAmmoMultiplier and RunWeaponMethod({ Id = victim.ObjectId, Weapon = "RangedWeapon", Method = "GetAmmo" }) == 0 then
+              addDamageMultiplier( modifierData, modifierData.ZeroRangedWeaponAmmoMultiplier)
+            end
+            if modifierData.ValidWeaponMultiplier then
+              addDamageMultiplier( modifierData, modifierData.ValidWeaponMultiplier)
+            end
+            if modifierData.ProjectileDeflectedMultiplier and triggerArgs.ProjectileDeflected then
+              addDamageMultiplier( modifierData, modifierData.ProjectileDeflectedMultiplier)
+            end
+    
+            if modifierData.BossDamageMultiplier and attacker and ( attacker.IsBoss or attacker.IsBossDamage ) then
+              addDamageMultiplier( modifierData, modifierData.BossDamageMultiplier)
+            end
+            if modifierData.LowHealthDamageTakenMultiplier ~= nil and (victim.Health / victim.MaxHealth) <= modifierData.LowHealthThreshold then
+              addDamageMultiplier( modifierData, modifierData.LowHealthDamageTakenMultiplier)
+            end
+            if modifierData.TrapDamageTakenMultiplier ~= nil and (( attacker ~= nil and attacker.DamageType == "Neutral" ) or (attacker == nil and triggerArgs.AttackerName ~= nil and EnemyData[triggerArgs.AttackerName] ~= nil and EnemyData[triggerArgs.AttackerName].DamageType == "Neutral" )) then
+              addDamageMultiplier( modifierData, modifierData.TrapDamageTakenMultiplier)
+            end
+            if modifierData.DistanceMultiplier and triggerArgs.DistanceSquared ~= nil and triggerArgs.DistanceSquared ~= -1 and ( modifierData.DistanceThreshold * modifierData.DistanceThreshold ) <= triggerArgs.DistanceSquared then
+              addDamageMultiplier( modifierData, modifierData.DistanceMultiplier)
+            end
+            if modifierData.ProximityMultiplier and triggerArgs.DistanceSquared ~= nil and triggerArgs.DistanceSquared ~= -1 and ( modifierData.ProximityThreshold * modifierData.ProximityThreshold ) >= triggerArgs.DistanceSquared then
+              addDamageMultiplier( modifierData, modifierData.ProximityMultiplier)
+            end
+            if modifierData.NonTrapDamageTakenMultiplier ~= nil and (( attacker ~= nil and attacker.DamageType ~= "Neutral" ) or (attacker == nil and triggerArgs.AttackerName ~= nil and EnemyData[triggerArgs.AttackerName] ~= nil and EnemyData[triggerArgs.AttackerName].DamageType ~= "Neutral" )) then
+              addDamageMultiplier( modifierData, modifierData.NonTrapDamageTakenMultiplier)
+            end
+            if modifierData.HitVulnerabilityMultiplier and triggerArgs.HitVulnerability then
+              addDamageMultiplier( modifierData, modifierData.HitVulnerabilityMultiplier )
+            end
+            if modifierData.HitArmorMultiplier and triggerArgs.HitArmor then
+              addDamageMultiplier( modifierData, modifierData.HitArmorMultiplier )
+            end
+            if modifierData.NonPlayerMultiplier and attacker ~= CurrentRun.Hero and attacker ~= nil and not HeroData.DefaultHero.HeroAlliedUnits[attacker.Name] then
+              addDamageMultiplier( modifierData, modifierData.NonPlayerMultiplier)
+            end
+            if modifierData.SelfMultiplier and attacker == victim then
+              addDamageMultiplier( modifierData, modifierData.SelfMultiplier)
+            end
+            if modifierData.PlayerMultiplier and attacker == CurrentRun.Hero then
+              addDamageMultiplier( modifierData, modifierData.PlayerMultiplier )
+            end
+          end
+        end
+      end
+    
+      if attacker ~= nil and attacker.OutgoingDamageModifiers ~= nil and ( not weaponData or not weaponData.IgnoreOutgoingDamageModifiers ) then
+        local appliedEffectTable = {}
+        for i, modifierData in pairs(attacker.OutgoingDamageModifiers) do
+          if modifierData.GlobalMultiplier ~= nil then
+            addDamageMultiplier( modifierData, modifierData.GlobalMultiplier)
+          end
+    
+          local validEffect = modifierData.ValidEffects == nil or ( triggerArgs.EffectName ~= nil and Contains(modifierData.ValidEffects, triggerArgs.EffectName ))
+          local validWeapon = modifierData.ValidWeaponsLookup == nil or ( modifierData.ValidWeaponsLookup[ triggerArgs.SourceWeapon ] ~= nil and triggerArgs.EffectName == nil )
+          local validTrait = modifierData.RequiredTrait == nil or ( attacker == CurrentRun.Hero and HeroHasTrait( modifierData.RequiredTrait ) )
+          local validUniqueness = modifierData.Unique == nil or not modifierData.Name or not appliedEffectTable[modifierData.Name]
+          local validEnchantment = true
+          if modifierData.ValidEnchantments and attacker == CurrentRun.Hero then
+            validEnchantment = false
+            if modifierData.ValidEnchantments.TraitDependentWeapons then
+              for traitName, validWeapons in pairs( modifierData.ValidEnchantments.TraitDependentWeapons ) do
+                if Contains( validWeapons, triggerArgs.SourceWeapon) and HeroHasTrait( traitName ) then
+                  validEnchantment = true
+                  break
+                end
+              end
+            end
+    
+            if not validEnchantment and modifierData.ValidEnchantments.ValidWeapons and Contains( modifierData.ValidEnchantments.ValidWeapons, triggerArgs.SourceWeapon ) then
+              validEnchantment = true
+            end
+          end
+    
+          if validUniqueness and validWeapon and validEffect and validTrait and validEnchantment then
+            if modifierData.Name then
+              appliedEffectTable[ modifierData.Name] = true
+            end
+            if modifierData.HighHealthSourceMultiplierData and attacker.Health / attacker.MaxHealth > modifierData.HighHealthSourceMultiplierData.Threshold then
+              addDamageMultiplier( modifierData, modifierData.HighHealthSourceMultiplierData.Multiplier )
+            end
+            if modifierData.PerUniqueGodMultiplier and attacker == CurrentRun.Hero then
+              addDamageMultiplier( modifierData, 1 + ( modifierData.PerUniqueGodMultiplier - 1 ) * GetHeroUniqueGodCount( attacker ))
+            end
+            if modifierData.BossDamageMultiplier and victim.IsBoss then
+              addDamageMultiplier( modifierData, modifierData.BossDamageMultiplier)
+            end
+            if modifierData.ZeroRangedWeaponAmmoMultiplier and RunWeaponMethod({ Id = attacker.ObjectId, Weapon = "RangedWeapon", Method = "GetAmmo" }) == 0 then
+              addDamageMultiplier( modifierData, modifierData.ZeroRangedWeaponAmmoMultiplier)
+            end
+            if modifierData.EffectThresholdDamageMultiplier and triggerArgs.MeetsEffectDamageMultiplier then
+              addDamageMultiplier( modifierData, modifierData.EffectThresholdDamageMultiplier)
+            end
+            if modifierData.PerfectChargeMultiplier and triggerArgs.IsPerfectCharge then
+              addDamageMultiplier( modifierData, modifierData.PerfectChargeMultiplier)
+            end
+    
+            if modifierData.UseTraitValue and attacker == CurrentRun.Hero then
+              addDamageMultiplier( modifierData, GetTotalHeroTraitValue( modifierData.UseTraitValue, { IsMultiplier = modifierData.IsMultiplier }))
+            end
+            if modifierData.HitVulnerabilityMultiplier and triggerArgs.HitVulnerability then
+              addDamageMultiplier( modifierData, modifierData.HitVulnerabilityMultiplier )
+            end
+            if modifierData.HitMaxHealthMultiplier and victim.Health == victim.MaxHealth and (victim.MaxHealthBuffer == nil or victim.HealthBuffer == victim.MaxHealthBuffer ) then
+              addDamageMultiplier( modifierData, modifierData.HitMaxHealthMultiplier )
+            end
+            if modifierData.MinRequiredVulnerabilityEffects and victim.VulnerabilityEffects and TableLength( victim.VulnerabilityEffects ) >= modifierData.MinRequiredVulnerabilityEffects then
+              --DebugPrint({Text = " min required vulnerability " .. modifierData.PerVulnerabilityEffectAboveMinMultiplier})
+              addDamageMultiplier( modifierData, modifierData.PerVulnerabilityEffectAboveMinMultiplier)
+            end
+            if modifierData.HealthBufferDamageMultiplier and victim.HealthBuffer ~= nil and victim.HealthBuffer > 0 then
+              addDamageMultiplier( modifierData, modifierData.HealthBufferDamageMultiplier)
+            end
+            if modifierData.StoredAmmoMultiplier and victim.StoredAmmo ~= nil and not IsEmpty( victim.StoredAmmo ) then
+              local hasExternalStoredAmmo = false
+              for i, storedAmmo in pairs(victim.StoredAmmo) do
+                if storedAmmo.WeaponName ~= "SelfLoadAmmoApplicator" then
+                  hasExternalStoredAmmo = true
+                end
+              end
+              if hasExternalStoredAmmo then
+                addDamageMultiplier( modifierData, modifierData.StoredAmmoMultiplier)
+              end
+            end
+            if modifierData.UnstoredAmmoMultiplier and IsEmpty( victim.StoredAmmo ) then
+              addDamageMultiplier( modifierData, modifierData.UnstoredAmmoMultiplier)
+            end
+            if modifierData.ValidWeaponMultiplier then
+              addDamageMultiplier( modifierData, modifierData.ValidWeaponMultiplier)
+            end
+            if modifierData.RequiredSelfEffectsMultiplier and not IsEmpty(attacker.ActiveEffects) then
+              local hasAllEffects = true
+              for _, effectName in pairs( modifierData.RequiredEffects ) do
+                if not attacker.ActiveEffects[ effectName ] then
+                  hasAllEffects = false
+                end
+              end
+              if hasAllEffects then
+                addDamageMultiplier( modifierData, modifierData.RequiredSelfEffectsMultiplier)
+              end
+            end
+    
+            if modifierData.RequiredEffectsMultiplier and victim and not IsEmpty(victim.ActiveEffects) then
+              local hasAllEffects = true
+              for _, effectName in pairs( modifierData.RequiredEffects ) do
+                if not victim.ActiveEffects[ effectName ] then
+                  hasAllEffects = false
+                end
+              end
+              if hasAllEffects then
+                addDamageMultiplier( modifierData, modifierData.RequiredEffectsMultiplier)
+              end
+            end
+            if modifierData.DistanceMultiplier and triggerArgs.DistanceSquared ~= nil and triggerArgs.DistanceSquared ~= -1 and ( modifierData.DistanceThreshold * modifierData.DistanceThreshold ) <= triggerArgs.DistanceSquared then
+              addDamageMultiplier( modifierData, modifierData.DistanceMultiplier)
+            end
+            if modifierData.ProximityMultiplier and triggerArgs.DistanceSquared ~= nil and triggerArgs.DistanceSquared ~= -1 and ( modifierData.ProximityThreshold * modifierData.ProximityThreshold ) >= triggerArgs.DistanceSquared then
+              addDamageMultiplier( modifierData, modifierData.ProximityMultiplier)
+            end
+            if modifierData.LowHealthDamageOutputMultiplier ~= nil and attacker.Health ~= nil and (attacker.Health / attacker.MaxHealth) <= modifierData.LowHealthThreshold then
+              addDamageMultiplier( modifierData, modifierData.LowHealthDamageOutputMultiplier)
+            end
+            if modifierData.TargetHighHealthDamageOutputMultiplier ~= nil and (victim.Health / victim.MaxHealth) < modifierData.TargetHighHealthThreshold then
+              addDamageMultiplier( modifierData, modifierData.TargetHighHealthDamageOutputMultiplier)
+            end
+            if modifierData.FriendMultiplier and ( victim == attacker or ( attacker.Charmed and victim == CurrentRun.Hero ) or ( not attacker.Charmed and victim ~= CurrentRun.Hero and not HeroData.DefaultHero.HeroAlliedUnits[victim.Name] )) then
+              addDamageMultiplier( modifierData, modifierData.FriendMultiplier )
+            end
+            if modifierData.PlayerMultiplier and victim == CurrentRun.Hero then
+              addDamageMultiplier( modifierData, modifierData.PlayerMultiplier )
+            end
+            if modifierData.NonPlayerMultiplier and victim ~= CurrentRun.Hero and not HeroData.DefaultHero.HeroAlliedUnits[victim.Name] then
+              addDamageMultiplier( modifierData, modifierData.NonPlayerMultiplier )
+            end
+            if modifierData.FinalShotMultiplier and CurrentRun.CurrentRoom.ZeroAmmoVolley and CurrentRun.CurrentRoom.ZeroAmmoVolley[ triggerArgs.ProjectileVolley ] then
+              addDamageMultiplier( modifierData, modifierData.FinalShotMultiplier)
+            end
+            if modifierData.LoadedAmmoMultiplier and CurrentRun.CurrentRoom.LoadedAmmo and CurrentRun.CurrentRoom.LoadedAmmo > 0 then
+              addDamageMultiplier( modifierData, modifierData.LoadedAmmoMultiplier)
+            end
+            if modifierData.SpeedDamageMultiplier then
+              local baseSpeed = GetBaseDataValue({ Type = "Unit", Name = "_PlayerUnit", Property = "Speed" })
+              local speedModifier = CurrentRun.CurrentRoom.SpeedModifier or 1
+              local currentSpeed = GetUnitDataValue({ Id = CurrentRun.Hero.ObjectId, Property = "Speed" }) * speedModifier
+              if currentSpeed > baseSpeed then
+                addDamageMultiplier( modifierData, 1 + modifierData.SpeedDamageMultiplier * ( currentSpeed/baseSpeed - 1 ))
+              end
+            end
+    
+            if modifierData.ActiveDashWeaponMultiplier and triggerArgs.BlinkWeaponActive then
+              addDamageMultiplier( modifierData, modifierData.ActiveDashWeaponMultiplier )
+            end
+    
+            if modifierData.EmptySlotMultiplier and modifierData.EmptySlotValidData then
+              local filledSlots = {}
+    
+              for i, traitData in pairs( attacker.Traits ) do
+                if traitData.Slot then
+                  filledSlots[traitData.Slot] = true
+                end
+              end
+    
+              for key, weaponList in pairs( modifierData.EmptySlotValidData ) do
+                if not filledSlots[key] and Contains( weaponList, triggerArgs.SourceWeapon ) then
+                  addDamageMultiplier( modifierData, modifierData.EmptySlotMultiplier )
+                end
+              end
+            end
+          end
+        end
+      end
+    
+      if weaponData ~= nil then
+        if attacker == victim and weaponData.SelfMultiplier then
+          addDamageMultiplier( { Name = weaponData.Name, Multiplicative = true }, weaponData.SelfMultiplier)
+        end
+    
+        if weaponData.OutgoingDamageModifiers ~= nil and not weaponData.IgnoreOutgoingDamageModifiers then
+          for i, modifierData in pairs(weaponData.OutgoingDamageModifiers) do
+            if modifierData.NonPlayerMultiplier and victim ~= CurrentRun.Hero and not HeroData.DefaultHero.HeroAlliedUnits[victim.Name] then
+              addDamageMultiplier( modifierData, modifierData.NonPlayerMultiplier)
+            end
+            if modifierData.PlayerMultiplier and ( victim == CurrentRun.Hero or HeroData.DefaultHero.HeroAlliedUnits[victim.Name] ) then
+              addDamageMultiplier( modifierData, modifierData.PlayerMultiplier)
+            end
+            if modifierData.PlayerSummonMultiplier and HeroData.DefaultHero.HeroAlliedUnits[victim.Name] then
+              addDamageMultiplier( modifierData, modifierData.PlayerSummonMultiplier)
+            end
+          end
+        end
+      end
+    
+      if ConfigOptionCache.LogCombatMultipliers and triggerArgs and triggerArgs.AttackerName and triggerArgs.DamageAmount then
+        DebugPrint({Text = triggerArgs.AttackerName .. ": Base Damage : " .. triggerArgs.DamageAmount .. " Damage Bonus: " .. damageMultipliers .. ", Damage Reduction: " .. damageReductionMultipliers })
+      end
+
+      local d = {}
+      DebugPrint { Text = "enemyDamageSources:" .. ModUtil.ToString.Deep(enemyDamageSources)}
+      for i, source in pairs(enemyDamageSources) do
+        d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
+      end
+      damageMultiplierMap = {
+        BaseDamage = baseDamage,
+        Multipliers = d,
+        ResultingDamage = baseDamage * damageMultipliers * damageReductionMultipliers,
+      }
+
+      return damageMultipliers * damageReductionMultipliers
+  end, Z)
+  
+  ModUtil.Path.Wrap("DamageEnemy", function(baseFunc, victim, triggerArgs)
+    local armorBeforeAttack = victim.HealthBuffer or 0
+    local res = baseFunc( victim, triggerArgs )
+    
+    local obj = triggerArgs or {}
+    Z.lta = obj
+    Z.Victim = victim
+    Z.DamageMap = damageMultiplierMap
+    
+    if RequiredKillEnemies[victim.ObjectId] == nil and victim.Name ~= "TrainingMelee" then
+      -- DebugPrint{ Text = "Non-required Enemy Hit"}
+      return
     end
-  elseif sourceWeaponData ~= nil then
-    weapon = sourceWeaponData
-    sourceName = weapon.Name
-    -- Actual source can vary within sourceWeaponData
-    if weapon.Name == "RushWeapon" then
-      for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if trait.Slot == "Rush" then
-          boonsUsed[trait.Name] = damageResult.BaseDamage
-          sourceName = trait.Name
+
+    local damageResult = damageMultiplierMap
+    if damageResult == nil then
+      DebugPrint { Text = " NULL DAMAGE RESULT FOUND"}
+      Z.Debug = {
+        Victim = victim,
+        Args = triggerArgs
+      }
+      return
+    end
+    
+    local sourceWeaponData = obj.AttackerWeaponData
+    local weapon = nil
+    local sourceName = nil
+    local boonsUsed = {}
+  
+    if triggerArgs.EffectName ~= nil then
+      -- DebugPrint({ Text = "EffectName found: ".. obj.EffectName })
+      local traitUsed = Z.EffectToBoonMap[obj.EffectName]
+      if traitUsed ~= nil then
+        -- DebugPrint({ Text = obj.SourceWeapon })
+        -- DebugPrint({ Text = ModUtil.ToString.Deep(traitUsed) })
+        if type(traitUsed) == "table" then
+          traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]
+          -- DebugPrint({ Text = ModUtil.ToString.Shallow(traitUsed) })
+          
+          -- if not defined, it's coming from a source that isn't meant to be tracked
+          if traitUsed == nil then
+            return
+          end
         end
+        boonsUsed[traitUsed] = damageResult.BaseDamage
+        sourceName = triggerArgs.EffectName
+        weapon = sourceName
       end
-    elseif weapon.Name == "RangedWeapon" then
-      for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if trait.Slot == "Ranged" then
-          boonsUsed[trait.Name] = damageResult.BaseDamage
-          sourceName = trait.Name
-        end
-      end
-    elseif Z.WeaponToBoonMap[weapon.Name] ~= nil then
+    elseif sourceWeaponData ~= nil then
+      weapon = sourceWeaponData
       sourceName = weapon.Name
-      boonsUsed[Z.WeaponToBoonMap[weapon.Name]] = true
-    end
-    -- end sourceWeaponData variance check
-  elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
-    weapon = ProjectileData[triggerArgs.SourceWeapon]
-    local traitUsed = Z.ProjectileToBoonMap[weapon.Name]
-    if traitUsed ~= nil then
-      boonsUsed[traitUsed] = damageResult.BaseDamage
-    end
-
-    sourceName = weapon.Name
-  elseif Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
-    weapon = Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
-    sourceName = weapon
-    boonsUsed[Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]] = damageResult.BaseDamage
-  elseif triggerArgs.AttackerIsObstacle then
-    if HeroHasTrait("BonusCollisionTrait") then
-      boonsUsed["BonusCollisionTrait"] = damageResult.BaseDamage
-    end
-  elseif triggerArgs.ProjectileDeflected then
-    if HeroHasTrait("AthenaShieldTrait") then
-      boonsUsed["AthenaShieldTrait"] = damageResult.BaseDamage
-    end
-  end
+      -- Actual source can vary within sourceWeaponData
+      if weapon.Name == "RushWeapon" then
+        for k, trait in pairs(CurrentRun.Hero.Traits) do
+          if trait.Slot == "Rush" then
+            boonsUsed[trait.Name] = damageResult.BaseDamage
+            sourceName = trait.Name
+          end
+        end
+      elseif weapon.Name == "RangedWeapon" then
+        for k, trait in pairs(CurrentRun.Hero.Traits) do
+          if trait.Slot == "Ranged" then
+            boonsUsed[trait.Name] = damageResult.BaseDamage
+            sourceName = trait.Name
+          end
+        end
+      elseif Z.WeaponToBoonMap[weapon.Name] ~= nil then
+        sourceName = weapon.Name
+        boonsUsed[Z.WeaponToBoonMap[weapon.Name]] = true
+      end
+      -- end sourceWeaponData variance check
+    elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
+      weapon = ProjectileData[triggerArgs.SourceWeapon]
+      local traitUsed = Z.ProjectileToBoonMap[weapon.Name]
+      if traitUsed ~= nil then
+        boonsUsed[traitUsed] = damageResult.BaseDamage
+      end
   
-  -- { Base Damage: int, Multipliers: {}, TotalMultiplier}
-  for name, multiplier in pairs(damageResult.Multipliers) do
-    local damageProportion = damageResult.BaseDamage * (multiplier - 1)
-    local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
-    if trait ~= nil then
-      DebugPrint{ Text = tostring(trait) .. ": " .. tostring(damageProportion)}
-      boonsUsed[trait] = (boonsUsed[trait] or 0) + damageProportion
-    end
-  end
-
-
-
-  -- START DEBUG
-  Z.Weapon = weapon
-  Z.BoonsUsed = boonsUsed
-  -- END DEBUG
-
-  if obj.IsCrit then
-    -- TODO: distribute "exp" by source amount
-    -- OnEffectApply version???
-    if victim.ActiveEffectsAtDamageStart ~= nil and victim.ActiveEffectsAtDamageStart.CritVulnerability then
-      -- HM
-      boonsUsed["CritVulnerabilityTrait"] = true
-    else
-      boonsUsed["CritBonusTrait"] = true
-    end
-    -- DR clause, OnEffectApply
-
-    -- CleanKill
-    if HeroHasTrait("ArtemisCriticalTrait") then
-      boonsUsed["ArtemisCriticalTrait"] = true
-    end
-    -- Hide Breakerf
-    if HeroHasTrait("CriticalBufferMultiplierTrait") and armorBeforeAttack > 0 then
-      boonsUsed["CriticalBufferMultiplierTrait"] = true
-    end
-  end
-
-
-
-  -- Do this instead of intercepting engine trait changes, last resort :(
-  if Z.HailMaryMap[sourceName] ~= nil then
-    -- DebugPrint({ Text = "Searching for ".. sourceName .. " in HailMaryMap"})
-    for k, trait in pairs(Z.HailMaryMap[sourceName]) do
-      if HeroHasTrait(trait) then
-        boonsUsed[trait] = damageResult.BaseDamage
+      sourceName = weapon.Name
+    elseif Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
+      weapon = Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
+      sourceName = weapon
+      boonsUsed[Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]] = damageResult.BaseDamage
+    elseif triggerArgs.AttackerIsObstacle then
+      if HeroHasTrait("BonusCollisionTrait") then
+        boonsUsed["BonusCollisionTrait"] = damageResult.BaseDamage
+      end
+    elseif triggerArgs.ProjectileDeflected then
+      if HeroHasTrait("AthenaShieldTrait") then
+        boonsUsed["AthenaShieldTrait"] = damageResult.BaseDamage
       end
     end
-  end
-
-  -- Apply all boons tracked in this damage source computation
-  for k,v in pairs(boonsUsed) do
-    Z.TrackBoonEffect(k, v)
-  end
-
-  -- DebugPrint({ Text = text })
-  return res
-
-end, Z)
-
-ModUtil.Path.Wrap("DamageHero", function(baseFunc, victim, args) 
-  Z.Victim = victim
-  -- Z.Args = args
-  baseFunc(victim, args)
-  for key, trait in pairs(victim.IncomingDamageModifiers) do
-    if Z.DamageModifiersToBoonMap[trait.Name] ~= nil then
-      -- TODO: Track when these effects are ACTUALLY Active
-      Z.TrackBoonEffect(Z.DamageModifiersToBoonMap[trait.Name])
+    
+    -- { Base Damage: int, Multipliers: {}, ResultingDamage}
+    for name, multiplier in pairs(damageResult.Multipliers) do
+      local damageProportion = damageResult.BaseDamage * (multiplier - 1)
+      local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
+      if trait ~= nil then
+        DebugPrint{ Text = tostring(trait) .. ": " .. tostring(damageProportion)}
+        boonsUsed[trait] = (boonsUsed[trait] or 0) + damageProportion
+      end
     end
-  end
-  if args.AttackerTable == nil or args.AttackerTable.OutgoingDamageModifiers == nil then
-    return
-  end
-
-  for key, trait in pairs(args.AttackerTable.OutgoingDamageModifiers) do
-    if trait.Name == "ReduceDamageOutput" and HeroHasTrait("AphroditePotencyTrait") then
-      Z.TrackBoonEffect("AphroditePotencyTrait")
+  
+    -- START DEBUG
+    Z.Weapon = weapon
+    Z.BoonsUsed = boonsUsed
+    -- END DEBUG
+  
+    if obj.IsCrit then
+      -- TODO: distribute "exp" by source amount
+      -- OnEffectApply version???
+      if victim.ActiveEffectsAtDamageStart ~= nil and victim.ActiveEffectsAtDamageStart.CritVulnerability then
+        -- HM
+        boonsUsed["CritVulnerabilityTrait"] = true
+      else
+        boonsUsed["CritBonusTrait"] = true
+      end
+      -- DR clause, OnEffectApply
+  
+      -- CleanKill
+      if HeroHasTrait("ArtemisCriticalTrait") then
+        boonsUsed["ArtemisCriticalTrait"] = true
+      end
+      -- Hide Breakerf
+      if HeroHasTrait("CriticalBufferMultiplierTrait") and armorBeforeAttack > 0 then
+        boonsUsed["CriticalBufferMultiplierTrait"] = true
+      end
     end
-  end
+  
+  
+  
+    -- Do this instead of intercepting engine trait changes, last resort :(
+    if Z.HailMaryMap[sourceName] ~= nil then
+      -- DebugPrint({ Text = "Searching for ".. sourceName .. " in HailMaryMap"})
+      for k, trait in pairs(Z.HailMaryMap[sourceName]) do
+        if HeroHasTrait(trait) then
+          boonsUsed[trait] = damageResult.BaseDamage
+        end
+      end
+    end
+  
+    -- Apply all boons tracked in this damage source computation
+    for k,v in pairs(boonsUsed) do
+      Z.TrackBoonEffect(k, v)
+    end
+  
+    -- DebugPrint({ Text = text })
+    return res
+  
+  end, Z)
+  
+  ModUtil.Path.Wrap("DamageHero", function(baseFunc, victim, args) 
+    baseFunc(victim, args)
+    local boonsUsed = {}
+
+    -- damage calculation
+    -- log(ratio) = log(mult1) + log(mult2) + mult(3)
+    -- contribution for mult1 = log(mult1) / [log(ratio)]
+    -- ratio is 20% reduction? (base - result) / base
+    local damageResult = damageMultiplierMap
+    local endRatio = (damageResult.BaseDamage  - damageResult.ResultingDamage) / damageResult.BaseDamage
+    DebugPrint {
+      Text = "Final Reduction Ratio: (" ..
+      tostring(damageResult.BaseDamage) .. " - " ..
+      tostring(damageResult.ResultingDamage) .. ") / " ..
+      tostring(damageResult.BaseDamage) .. " = " .. endRatio
+    }
+    for name, multiplier in pairs(damageResult.Multipliers) do
+      local multiplierContribution = math.log(multiplier) / math.log(1 - endRatio)
+      DebugPrint {
+        Text = "Multiplier contribution for" .. name .. ": (" ..
+        tostring(math.log(1 - multiplier)) ..") / " ..
+        tostring(math.log(1 - endRatio)) .. " = " .. multiplierContribution
+      }
+      local boonExpProportion = damageResult.BaseDamage * multiplierContribution
+      local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
+      if trait ~= nil then
+        DebugPrint{ Text = tostring(trait) .. ": " .. tostring(boonExpProportion) .. " " .. tostring(multiplierContribution)}
+        boonsUsed[trait] = (boonsUsed[trait] or 0) + boonExpProportion
+      end
+    end
+  
+    for k,v in pairs(boonsUsed) do
+      Z.TrackBoonEffect(k, v)
+    end
+  end, Z)
+
 end, Z)
 
 function Z.TrackBoonEffect ( traitName, damageValue )

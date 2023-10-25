@@ -857,68 +857,68 @@ Z.UpgradeData = {
         }
     },
 
-    HermesAfterImageLegendaryUpgrade = {
-        Name = "HermesAfterImageLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.HERMES,
-        OnApplyFunction = "Z.AddTraitToTraitData",
-        OnApplyFunctionArgs = { 
-            Name = "HermesAfterImageLegendary",
-            AddLinkedUpgrades = true,
-            LinkedUpgradeName = "HermesUpgrade",
-            LinkedUpgrades = {
-                OneFromEachSet = {
-                    {
-                        "HermesWeaponTrait",
-                        "HermesSecondaryTrait",
-                        "RapidCastTrait",
-                        "AmmoReloadTrait",
-                        "AmmoReclaimTrait",
-                        "BonusDashTrait",
-                    },
-                    {
-                        -- ATTACK
-                        "AresWeaponTrait",
-                        "AphroditeWeaponTrait",
-                        "AthenaWeaponTrait",
-                        "ArtemisWeaponTrait",
-                        "PoseidonWeaponTrait",
-                        "DionysusWeaponTrait",
-                        "DemeterWeaponTrait",
-                        "ZeusWeaponTrait",
-                        -- SPECIAL
-                        "AresSecondaryTrait",
-                        "AphroditeSecondaryTrait",
-                        "AthenaSecondaryTrait",
-                        "ArtemisSecondaryTrait",
-                        "PoseidonSecondaryTrait",
-                        "DionysusSecondaryTrait",
-                        "DemeterSecondaryTrait",
-                        "ZeusSecondaryTrait",
-                        -- RANGED -- TODO: Beowulf casts
-                        "AresRangedTrait",
-                        "AphroditeRangedTrait",
-                        "AthenaRangedTrait",
-                        "ArtemisRangedTrait",
-                        "PoseidonRangedTrait",
-                        "DionysusRangedTrait",
-                        "DemeterRangedTrait",
-                        "ZeusRangedTrait",
-                        -- DASH
-                        "AresRushTrait",
-                        "AphroditeRushTrait",
-                        "AthenaRushTrait",
-                        "ArtemisRushTrait",
-                        "PoseidonRushTrait",
-                        "DionysusRushTrait",
-                        "DemeterRushTrait",
-                        "ZeusRushTrait",
-                    }
-                },
-            }
-        }
-    },
+    -- HermesAfterImageLegendaryUpgrade = {
+    --     Name = "HermesAfterImageLegendaryUpgrade",
+    --     Cost = 0,
+    --     CostType = "",
+    --     Source = Z.UpgradeSourceEnums.HERMES,
+    --     OnApplyFunction = "Z.AddTraitToTraitData",
+    --     OnApplyFunctionArgs = { 
+    --         Name = "HermesAfterImageLegendary",
+    --         AddLinkedUpgrades = true,
+    --         LinkedUpgradeName = "HermesUpgrade",
+    --         LinkedUpgrades = {
+    --             OneFromEachSet = {
+    --                 {
+    --                     "HermesWeaponTrait",
+    --                     "HermesSecondaryTrait",
+    --                     "RapidCastTrait",
+    --                     "AmmoReloadTrait",
+    --                     "AmmoReclaimTrait",
+    --                     "BonusDashTrait",
+    --                 },
+    --                 {
+    --                     -- ATTACK
+    --                     "AresWeaponTrait",
+    --                     "AphroditeWeaponTrait",
+    --                     "AthenaWeaponTrait",
+    --                     "ArtemisWeaponTrait",
+    --                     "PoseidonWeaponTrait",
+    --                     "DionysusWeaponTrait",
+    --                     "DemeterWeaponTrait",
+    --                     "ZeusWeaponTrait",
+    --                     -- SPECIAL
+    --                     "AresSecondaryTrait",
+    --                     "AphroditeSecondaryTrait",
+    --                     "AthenaSecondaryTrait",
+    --                     "ArtemisSecondaryTrait",
+    --                     "PoseidonSecondaryTrait",
+    --                     "DionysusSecondaryTrait",
+    --                     "DemeterSecondaryTrait",
+    --                     "ZeusSecondaryTrait",
+    --                     -- RANGED -- TODO: Beowulf casts
+    --                     "AresRangedTrait",
+    --                     "AphroditeRangedTrait",
+    --                     "AthenaRangedTrait",
+    --                     "ArtemisRangedTrait",
+    --                     "PoseidonRangedTrait",
+    --                     "DionysusRangedTrait",
+    --                     "DemeterRangedTrait",
+    --                     "ZeusRangedTrait",
+    --                     -- DASH
+    --                     "AresRushTrait",
+    --                     "AphroditeRushTrait",
+    --                     "AthenaRushTrait",
+    --                     "ArtemisRushTrait",
+    --                     "PoseidonRushTrait",
+    --                     "DionysusRushTrait",
+    --                     "DemeterRushTrait",
+    --                     "ZeusRushTrait",
+    --                 }
+    --             },
+    --         }
+    --     }
+    -- },
 
      -- ARES LEGENDARY
      AresMurderousEfficacyLegendaryUpgrade = {
@@ -942,24 +942,24 @@ Z.UpgradeData = {
     },
 
     -- ZEUS LEGENDARY
-    ZeusChainRangeLegendaryUpgrade = {
-        Name = "ZeusChainRangeLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.ZEUS,
-        OnApplyFunction = "Z.AddTraitToTraitData",
-        OnApplyFunctionArgs = { 
-            Name = "ZeusChainRangeLegendary",
-            AddLinkedUpgrades = true,
-            LinkedUpgradeName = "ZeusUpgrade",
-            LinkedUpgrades = {
-                OneFromEachSet = {
-                    {  "ZeusRangedTrait", "ZeusWeaponTrait", },
-                    { "ZeusBonusBounceTrait" },
-                }
-            }
-        }
-    },
+    -- ZeusChainRangeLegendaryUpgrade = {
+    --     Name = "ZeusChainRangeLegendaryUpgrade",
+    --     Cost = 0,
+    --     CostType = "",
+    --     Source = Z.UpgradeSourceEnums.ZEUS,
+    --     OnApplyFunction = "Z.AddTraitToTraitData",
+    --     OnApplyFunctionArgs = { 
+    --         Name = "ZeusChainRangeLegendary",
+    --         AddLinkedUpgrades = true,
+    --         LinkedUpgradeName = "ZeusUpgrade",
+    --         LinkedUpgrades = {
+    --             OneFromEachSet = {
+    --                 {  "ZeusRangedTrait", "ZeusWeaponTrait", },
+    --                 { "ZeusBonusBounceTrait" },
+    --             }
+    --         }
+    --     }
+    -- },
 
 
 }

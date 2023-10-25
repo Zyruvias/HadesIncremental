@@ -284,10 +284,13 @@ function CreateScreenWithCloseButton( name, args )
     if IsScreenOpen( screen.Name ) then
 		return
 	end
-	OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-	HideCombatUI(name)
-	FreezePlayerUnit()
-	EnableShopGamepadCursor()
+    local currentRunInitialized = CurrentRun ~= nil
+	if currentRunInitialized then
+        OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false, SkipBlockTimer = not currentRunInitialized })
+        HideCombatUI(name)
+        FreezePlayerUnit()
+        EnableShopGamepadCursor()
+    end
 
 	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
 
@@ -305,8 +308,10 @@ function CreateScreenWithCloseButton( name, args )
     if _G["Close" .. name .. "Screen"] == nil then
         _G["Close" .. name .. "Screen"] = function()
             CloseScreenByName ( name )
-            if args.CloseScreenFunctionName ~= nil then
-                _G[args.CloseScreenFunctionName]()
+            if args.CloseScreenFunction then
+                args.CloseScreenFunction(args.CloseScreenFunctionArgs)
+            elseif args.CloseScreenFunctionName ~= nil then
+                _G[args.CloseScreenFunctionName](args.CloseScreenFunctionArgs)
             end
         end
     end
@@ -1079,3 +1084,15 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- SetColor{ Id = shrinePointDoor.ObjectId, Color = { 120, 255, 170, 255 } }
     AddToGroup({Id = shrinePointDoor.ObjectId, Name = "ChallengeSelector"})
 end}
+
+-- START SCREEN UPDATE
+-- ModUtil.Path.Context.Wrap("StartNewGame", function ()
+--     ModUtil.Path.Wrap("StartNewRun", function(baseFunc)
+--         DebugPrint { Text = "StartNewRun called from `StartNewGame`" }
+--         CreateScreenWithCloseButton("ModInitialization", {
+--             -- calls baseFunc when closing
+--             CloseScreenFunction = baseFunc,
+
+--         })
+--     end, Z)
+-- end, Z)

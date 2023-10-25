@@ -263,5 +263,6 @@ ModUtil.LoadOnce( function ( )
   --   MaxHealth = 50000,
   -- })
   -- AddTraitToHero{TraitName="ChaosRandomStatusLegendary"}
-  AddTraitToHero({TraitName="ZeusChainRangeLegendary"})
+  -- AddTraitToHero({TraitName="ZeusChainRangeLegendary"})
+  -- ConfigOptionCache.LogCombatMultipliers = true
 end)
