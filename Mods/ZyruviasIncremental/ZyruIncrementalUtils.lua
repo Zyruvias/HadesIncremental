@@ -77,7 +77,7 @@ function AddGodExperience ( god, amount )
     return
   end
 
-  local godData = GameState.ZyruIncremental.GodData[god]
+  local godData = Z.Data.GodData[god]
 
   if godData == nil then
     DebugPrint { Text = "godData was somehow undefined... god: " .. god }
@@ -116,7 +116,7 @@ local defaultStddev = 1
 local rarityArray = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic" }
 function Z.ComputeRarityForGod( god )
   
-  local godData = GameState.ZyruIncremental.GodData[god] or {}
+  local godData = Z.Data.GodData[god] or {}
   local rarityBonus = godData.RarityBonus or 0
 
   -- God's Pride
@@ -150,7 +150,7 @@ end
 Z.RarityArrayMap = {}
 function Z.ComputeRarityArrayForGod( god )
   local chosenGod = god or "Zeus"
-  local godData = GameState.ZyruIncremental.GodData[chosenGod]
+  local godData = Z.Data.GodData[chosenGod]
   local rarityBonus = godData.RarityBonus
   if Z.RarityArrayMap[tostring(rarityBonus)] ~= nil then
     return Z.RarityArrayMap[tostring(rarityBonus)]

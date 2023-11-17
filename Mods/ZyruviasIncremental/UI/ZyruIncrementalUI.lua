@@ -1,7 +1,7 @@
 local CreateBoonPresentation = function (screen, traitName, x, y)
 
     -- fetchInfo
-    local zyruBoonData = GameState.ZyruIncremental.BoonData[traitName]
+    local zyruBoonData = Z.Data.BoonData[traitName]
     local trait = TraitData[traitName]
 
     --setup UI info
@@ -133,8 +133,8 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
 
 end
 
-ModUtil.Path.Wrap("CloseRunClearScreen", function (base, ...) 
-    local value = base( ... )
+ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
+    local value = baseFunc( ... )
 
     ScreenAnchors.ZyruBoonProgress = { Components = {} }
 	local screen = ScreenAnchors.ZyruBoonProgress
@@ -177,7 +177,7 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (base, ...)
     local boonsToDisplay = {}
 
     for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if GameState.ZyruIncremental.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
+        if Z.Data.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
             table.insert(boonsToDisplay, trait.Name)
         end
     end
@@ -285,12 +285,13 @@ function CreateScreenWithCloseButton( name, args )
 		return
 	end
     local currentRunInitialized = CurrentRun ~= nil
-	if currentRunInitialized then
-        OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false, SkipBlockTimer = not currentRunInitialized })
-        HideCombatUI(name)
+    OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
+    HideCombatUI(name)
+    if not args.DontFreezePlayerUnit then
         FreezePlayerUnit()
-        EnableShopGamepadCursor()
     end
+    EnableShopGamepadCursor()
+
 
 	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
 
@@ -303,7 +304,7 @@ function CreateScreenWithCloseButton( name, args )
     components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
 	Attach({ Id = components.CloseButton.Id, DestinationId = components.Background.Id, OffsetX = 3, OffsetY = 480 })
 	components.CloseButton.OnPressedFunctionName = "Close" .. name .. "Screen"
-	components.CloseButton.ControlHotkey = "Cancel"
+	-- components.CloseButton.ControlHotkey = "Cancel"
 
     if _G["Close" .. name .. "Screen"] == nil then
         _G["Close" .. name .. "Screen"] = function()
@@ -390,8 +391,8 @@ function CanPurchaseUpgrade( upgrade )
     if 
         upgrade.CostType ~= nil
         and upgrade.Cost ~= nil
-        and GameState.ZyruIncremental.Currencies[upgrade.source] ~= nil
-        and GameState.ZyruIncremental.Currencies[upgrade.source] >= upgrade.Cost
+        and Z.Data.Currencies[upgrade.source] ~= nil
+        and Z.Data.Currencies[upgrade.source] >= upgrade.Cost
     then
         return true
     end
@@ -401,7 +402,7 @@ end
 function CreateUpgradeListItem( upgrade )
 
     
---[[
+    --[[
     Upgrade shape: {
         Name -- TODO: is this necessary
         CostType
@@ -908,7 +909,7 @@ function CreateZyruBoonProgressInfo( screen, component, args )
 	SetTraitTrayDetails( { TraitData = newTraitData, ForBoonInfo = true }, component, traitInfo.RarityBox, traitInfo.TitleBox, traitInfo.Patch, traitInfo.Icon )
 
     -- show boon level in top right corner
-    local boonData = GameState.ZyruIncremental.BoonData[traitName]
+    local boonData = Z.Data.BoonData[traitName]
     if boonData == nil then
         DebugPrint { Text = "nil trait data for " .. traitName .. " at " .. index }
         return
@@ -1086,13 +1087,122 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
 end}
 
 -- START SCREEN UPDATE
--- ModUtil.Path.Context.Wrap("StartNewGame", function ()
---     ModUtil.Path.Wrap("StartNewRun", function(baseFunc)
---         DebugPrint { Text = "StartNewRun called from `StartNewGame`" }
---         CreateScreenWithCloseButton("ModInitialization", {
---             -- calls baseFunc when closing
---             CloseScreenFunction = baseFunc,
 
---         })
---     end, Z)
--- end, Z)
+
+local cabinetId = nil
+
+function ModInitializationScreen ()
+    local onFinish = function ()
+        Z.Data.SeenInitialMenuScreen = true
+        ActivatedObjects[cabinetId] = nil
+        if Z.Data.FileOptions.StartingPoint == "Epilogue" then
+            Z.InitializeEpilogueStartSaveData()
+        end
+    end
+    local screen = CreateScreenWithCloseButton("ModInitialization", {
+        CloseScreenFunction = onFinish
+    })
+    local components = screen.Components
+
+    -- 
+    -- Title TODO: fix title
+    CreateTextBox({ Id = components.Background.Id, Text = "Incremental Overhaul Mod",
+    Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
+    OffsetY = -450, Justification = "Center" })
+    -- Suytitle
+    CreateTextBox({ Id = components.Background.Id, Text = "Setup your mod experience here before continuing...",
+        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
+        OffsetY = -400, Justification = "Center" })
+
+
+    -- Starting Point
+    components.StartingPointTextBox = CreateTextBox({ Id = components.Background.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint,
+        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
+        OffsetY = -100, Justification = "Center" })
+    components.YesButton = CreateScreenComponent({ Name = "BoonSlot1", Group = group, Scale = 0.35, })
+    SetScaleX({Id = components.YesButton.Id, Fraction = 0.75})
+    SetScaleY({Id = components.YesButton.Id, Fraction = 1.15})
+    Attach({ Id = components.YesButton.Id, DestinationId = components.Background.Id, OffsetX = -150, OffsetY = 75 })
+    components.YesButtonText =  CreateTextBox({ Id = components.YesButton.Id, Text = " Epilogue ",
+        FontSize = 28, OffsetX = 0, OffsetY = 0, Width = 720, Color = Color.LimeGreen, Font = "AlegreyaSansSCLight",
+        ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2}, Justification = "Center"
+    })
+    components.YesButton.OnPressedFunctionName = function(screen, button)
+        Z.Data.FileOptions.StartingPoint = "Epilogue"
+        ModifyTextBox{ Id = components.YesButtonText.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint, }
+    end
+    
+    components.NoButton = CreateScreenComponent({ Name = "BoonSlot1", Group = group, Scale = 0.35, })
+    SetScaleX({Id = components.NoButton.Id, Fraction = 0.75})
+    SetScaleY({Id = components.NoButton.Id, Fraction = 1.15})
+    Attach({ Id = components.NoButton.Id, DestinationId = components.Background.Id, OffsetX = 150, OffsetY = 75 })
+    components.NoButtonText = CreateTextBox({ Id = components.NoButton.Id, Text = "Fresh File",
+        FontSize = 26, OffsetX = 0, OffsetY = 0, Width = 720, Color = Color.Red, Font = "AlegreyaSansSCLight",
+        ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2}, Justification = "Center"
+    })
+    components.NoButton.OnPressedFunctionName = function(screen, button)
+        Z.Data.FileOptions.StartingPoint = "Fresh File"
+        ModifyTextBox{ Id = components.NoButtonText.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint, }
+    end
+
+    thread(HandleWASDInput, screen)
+    HandleScreenInput(screen)
+end
+
+ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
+
+    if Z.Data.SeenInitialMenuScreen then
+        return base(currentRun, currentRoom)
+    end
+
+    base(currentRun, currentRoom)
+    LoadPackages({Name = "DeathArea"})
+    local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
+    selector.BlockExitUntilUsed = true
+    selector.BlockExitText = "Mod Setup Not Completed..."
+    selector.UseText = "{I} Begin Incremental Journey"
+    selector.OnUsedFunctionName = "ModInitializationScreen"
+    selector.Activate = true
+    selector.ShrinePointReq = 0
+
+    selector.ObjectId = SpawnObstacle({
+        Name = "HouseFileCabinet03",
+        Group = "Standing",
+        DestinationId = CurrentRun.Hero.ObjectId,
+        ForceToValidLocation = true,
+        AttachedTable = selector,
+        OffsetX = 2550,
+        OffsetY = -950,
+    })
+    cabinetId = selector.ObjectId
+    SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
+    SetColor{ Id = selector.ObjectId, Color = { 120, 255, 0, 255 } }
+    SetupObstacle( selector )
+    
+    
+end, Z)
+
+function Z.TestFrameworkMenu()
+    local screen = Z.CreateMenu("Test", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    Name = "TestField",
+                    Text = "This is a test of the National Emergency Broadcast System",
+                    X = 500,
+                    Y = 500,
+                }
+            },
+            {
+                Type = "Button",
+                SubType = "Close",
+                Args = {
+                    Name = "CloseButton",
+                    OffsetY = 480,
+                },
+            }
+        }
+    })
+end

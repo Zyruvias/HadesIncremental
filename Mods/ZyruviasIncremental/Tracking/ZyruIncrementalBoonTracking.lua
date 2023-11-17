@@ -25,7 +25,7 @@ function Z.TrackDrop(source, amount)
   end
   
   DebugPrint { Text = "Drop Tracked: " .. source .. " for " .. tostring(amount) }
-  local dropData = GameState.ZyruIncremental.DropData[source]
+  local dropData = Z.Data.DropData[source]
   dropData.Count = dropData.Count + 1
   dropData.Amount = dropData.Amount + amount
   dropData.Experience = dropData.Experience + Z.DropExperienceFactor[source] * amount
@@ -693,7 +693,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
 end, Z)
 
 function Z.TrackBoonEffect ( traitName, damageValue )
-  if GameState.ZyruIncremental == nil or traitName == nil then
+  if Z.Data == nil or traitName == nil then
     return
   end
 
@@ -707,9 +707,9 @@ function Z.TrackBoonEffect ( traitName, damageValue )
     return
   end
 
-  if GameState.ZyruIncremental.BoonData[traitName] == nil then
+  if Z.Data.BoonData[traitName] == nil then
     DebugPrint({ Text =  traitName .. " initialized" })
-    GameState.ZyruIncremental.BoonData[traitName] = {
+    Z.Data.BoonData[traitName] = {
       Count = 0,
       Value = 0,
       Experience = 0,
@@ -717,7 +717,7 @@ function Z.TrackBoonEffect ( traitName, damageValue )
     }
   end
 
-  local saveTraitData = GameState.ZyruIncremental.BoonData[traitName]
+  local saveTraitData = Z.Data.BoonData[traitName]
 
   -- assign use count, damage, experience
   local expGained = 0
@@ -1060,13 +1060,15 @@ end)
 
 ---- DROP DATA SCALING
 -- TODO - ApplyConsumableItemResourceMultiplier wrap
-local getMaxHealthScalar = function () 
-  local level = GameState.ZyruIncremental.DropData.RoomRewardMaxHealthDrop.Level or 0
+local getMaxHealthScalar = function ()
+  if GameState.ZyruviIncremental == nil then return 1 end
+  local level = Z.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
   return (1 + (level - 1) * 0.1)
 end
 
 local getCoinScalar = function ()
-  local level = GameState.ZyruIncremental.DropData.RoomRewardMoneyDrop.Level or 0
+  if GameState.ZyruviIncremental == nil then return 1 end
+  local level = Z.Data.DropData.RoomRewardMoneyDrop.Level or 0
   return (1 + (level - 1) * 0.1)
 end
 
@@ -1137,10 +1139,10 @@ ModUtil.Path.Wrap("AddTraitToHero", function (baseFunc, args)
 		for s, propertyChange in ipairs(TraitData[args.TraitName][changeKey]) do
 			if propertyChange.BaseMin ~= nil or propertyChange.BaseValue ~= nil then
         -- scale pom value according to pom reward level
-        local pomLevel = GameState.ZyruIncremental.DropData.StackUpgrade.Level
+        local pomLevel = Z.Data.DropData.StackUpgrade.Level
         TraitMultiplierData.DefaultDiminishingReturnsMultiplier = originalPomScaling * (1 + 0.02 * (pomLevel - 1))
         DebugPrint { Text = "setting diminishing returns to " .. TraitMultiplierData.DefaultDiminishingReturnsMultiplier }
-        local saveTraitData = GameState.ZyruIncremental.BoonData[args.TraitName]
+        local saveTraitData = Z.Data.BoonData[args.TraitName]
         if saveTraitData ~= nil then
           local level = saveTraitData.Level or 1
 

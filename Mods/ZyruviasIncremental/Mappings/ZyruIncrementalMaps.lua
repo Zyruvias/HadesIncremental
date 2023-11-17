@@ -1,68 +1,60 @@
 -- SAVE DATA SETUP
-ModUtil.LoadOnce(function ( )
-    if GameState.ZyruIncremental == nil then
-      GameState.ZyruIncremental = {
-        --[[
-          Tracking the following data:
-            - Boon Data:
-              - Use Count
-              - Boon EXP / Level
-            - God Data
-              - God Levels
-            - General Unlocks / Progruns Variables
-              - God Perks / Other gameplay perks
-        ]]-- 
-        BoonData = { }, -- Set Dynamically
-        -- levevl, rarity bonus, experience, max points, current points
-        -- TODO: Poms or hammer rarity?
-        GodData = { 
-          Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-          Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-        },
-        -- track acquisition of runources: health / gold
-        -- meta currencies???
-        DropData = {
-          RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-          RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-          StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-        },
-        -- Dynamically set / prescribed
-        --[[
-          Upgrade shape: {
-            Name
-            CostType
-            Cost
-            OnApplyFunction
-            OnApplyFunctionArgs
-            Purchased
-          }
-        ]]--
-        UpgradeData = {
-          
-        },
-        Currencies = {
-          
-        }
+Z.InitializeSaveData = function ()
+  if Z.Data.Initialized == nil then
+    Z.Data.BoonData = { } -- Set Dynamically
+      -- levevl, rarity bonus, experience, max points, current points
+      -- TODO: Poms or hammer rarity?
+    Z.Data.GodData = { 
+      Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+      Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    }
+    -- track acquisition of runources: health / gold
+    -- meta currencies???
+    Z.Data.DropData = {
+      RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+      RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+      StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    }
+    -- Dynamically set / prescribed
+    --[[
+      Upgrade shape: {
+        Name
+        CostType
+        Cost
+        OnApplyFunction
+        OnApplyFunctionArgs
+        Purchased
       }
-    end
-  end)
-  -- END SAVE DATA SETUP
+    ]]--
+    Z.Data.UpgradeData = {
+      
+    }
+    Z.Data.Currencies = {
+      
+    }
+    Z.Data.FileOptions = {
+      StartingPoint = "Fresh File"
+    }
+    Z.Data.Initialized = true
+  end
+end
 
+ModUtil.LoadOnce(Z.InitializeSaveData)
   function ZyruTestUpgrade(args) 
     DebugPrint { Text = "Upgrade applied with args: " .. ModUtil.ToString.Deep(args)}
   end
 
   -- SAVE DATA UPGRADE PROCESSING
 ModUtil.LoadOnce( function ( )
-  if GameState.ZyruIncremental.UpgradeData == nil then 
+  if Z.Data.UpgradeData == nil then 
     return
   end
 
@@ -79,7 +71,7 @@ ModUtil.LoadOnce( function ( )
   -- })
 
   -- process existing upgrades
-  for i, upgradeName in ipairs(GameState.ZyruIncremental.UpgradeData) do
+  for i, upgradeName in ipairs(Z.Data.UpgradeData) do
     local upgrade = Z.UpgradeData[upgradeName]
     if upgrade == nil then
       DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
@@ -850,7 +842,273 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   return run
 end, Z)
 
-OnAnyLoad{ function ( )
-  -- Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
-  Z.DifficultyModifier = 1
-end }
+-- OnAnyLoad{ function ( )
+--   -- Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
+--   Z.DifficultyModifier = 1
+-- end }
+
+function Z.InitializeEpilogueStartSaveData()
+  -- Max All NPC Hearts
+  GameState.Gift = {
+    NPC_Dusa_01 = {Value = 10, NewTraits = {}},
+    NPC_Hades_01 = {Value = 5, NewTraits = {}},
+    NPC_Skelly_01 = {Value = 9, NewTraits = {}},
+    AphroditeUpgrade = {Value = 7, NewTraits = {}},
+    AresUpgrade = {Value = 7, NewTraits = {}},
+    NPC_FurySister_01 = {Value = 10, NewTraits = {}},
+    NPC_Nyx_01 = {Value = 9, NewTraits = {}},
+    NPC_Charon_01 = {Value = 7, NewTraits = {}},
+    PC_Thanatos_01 = {Value = 10, NewTraits = {}},
+    NPC_Orpheus_01 = {Value = 8, NewTraits = {}},
+    NPC_Persephone_Home_01 = {Value = 9, NewTraits = {}},
+    NPC_Eurydice_01 = {Value = 8, NewTraits = {}},
+    NPC_Patroclus_01 = {Value = 8, NewTraits = {}},
+    DemeterUpgrade = {Value = 7, NewTraits = {}},
+    HermesUpgrade = {Value = 8, NewTraits = {}},
+    NPC_Sisyphus_01 = {Value = 9, NewTraits = {}},
+    TrialUpgrade = {Value = 8, NewTraits = {}},
+    ArtemisUpgrade = {Value = 7, NewTraits = {}},
+    NPC_Achilles_01 = {Value = 9, NewTraits = {}},
+    ZeusUpgrade = {Value = 7, NewTraits = {}},
+    PoseidonUpgrade = {Value = 7, NewTraits = {}},
+    AthenaUpgrade = {Value = 7, NewTraits = {}},
+    NPC_Cerberus_01 = {Value = 9, NewTraits = {}},
+    NPC_Hypnos_01 = {Value = 8, NewTraits = {}},
+    DionysusUpgrade = {Value = 7, NewTraits = {}}
+  }
+  -- Unlock All Keepsakes
+  GameState.KeepsakeChambers = {
+    ForceZeusBoonTrait = 0,
+    ShopDurationTrait = 0,
+    LifeOnUrnTrait = 0,
+    ForceAthenaBoonTrait = 0,
+    ForceAresBoonTrait = 0,
+    DistanceDamageTrait = 0,
+    MaxHealthKeepsakeTrait = 0,
+    HadesShoutKeepsake = 0,
+    ReincarnationTrait = 0,
+    ShieldBossTrait = 0,
+    ForceArtemisBoonTrait = 0,
+    FastClearDodgeBonusTrait = 0,
+    BackstabAlphaStrikeTrait = 0,
+    ChamberStackTrait = 0,
+    ForceDionysusBoonTrait = 0,
+    DirectionalArmorTrait = 0,
+    ShieldAfterHitTrait = 0,
+    ForceDemeterBoonTrait = 0,
+    ChaosBoonTrait = 0,
+    ForcePoseidonBoonTrait = 0,
+    BonusMoneyTrait = 0,
+    PerfectClearDamageBonusTrait = 0,
+    ForceAphroditeBoonTrait = 0,
+    LowHealthDamageTrait = 0,
+    VanillaTrait = 0
+  }
+  -- Unlock All Aspects
+  GameState.WeaponUnlocks = {
+    GunWeapon = {1, 1, 1, 1},
+    SpearWeapon = {1, 1, 1, 1},
+    FistWeapon = {1, 1, 1, 1},
+    SwordWeapon = {1, 1, 1, 1},
+    BowWeapon = {1, 1, 1, 1},
+    ShieldWeapon = {1, 1, 1, 1}
+  }
+  GameState.WeaponsUnlocked = {
+    GunWeapon = true,
+    SpearWeapon = true,
+    FistWeapon = true,
+    SwordWeapon = true,
+    BowWeapon = true,
+    ShieldWeapon = true
+  }
+  GameState.WeaponsTouched = {
+    GunWeapon = true,
+    SpearWeapon = true,
+    FistWeapon = true,
+    SwordWeapon = true,
+    BowWeapon = true,
+    ShieldWeapon = true
+  }
+  -- Unlock Assists
+	GameState.AssistUnlocks = {
+    SisyphusAssistTrait = 4,
+    ThanatosAssistTrait = 4,
+    FuryAssistTrait = 4,
+    DusaAssistTrait = 4,
+    AchillesPatroclusAssistTrait = 4,
+    SkellyAssistTrait = 4
+  }
+  -- Hidden Aspects
+  GameState.SeenWeaponUnlocks = {
+    BowWeapon4 = true,
+    SwordWeapon4 = true,
+    FistWeapon4 = true,
+    GunWeapon4 = true,
+    ShieldWeapon4 = true,
+    SpearWeapon4 = true
+  }
+  TextLinesRecord["NyxRevealsArthurAspect01"] = true
+  TextLinesRecord["AchillesRevealsGuanYuAspect01"] = true
+  TextLinesRecord["ZeusRevealsLuciferAspect01"] = true
+  TextLinesRecord["ArtemisRevealsRamaAspect01"] = true
+  TextLinesRecord["ChaosRevealsBeowulfAspect01"] = true
+  TextLinesRecord["MinotaurRevealsGilgameshAspect01"] = true
+  -- Voice Lines
+  -- Mirror Unlocks
+  GameState.MetaUpgradeStagesUnlocked = 4
+  GameState.MetaUpgradesUnlocked = {
+    FirstStrikeMetaUpgrade = true,
+    MoneyMetaUpgrade = true,
+    NoInvulnerabilityShrineUpgrade = true,
+    StoredAmmoSlowMetaUpgrade = true,
+    EpicHeroicBoonMetaUpgrade = true,
+    EnemySpeedShrineUpgrade = true,
+    BossDifficultyShrineUpgrade = true,
+    RerollPanelMetaUpgrade = true,
+    ExtraChanceMetaUpgrade = true,
+    ShopPricesShrineUpgrade = true,
+    BiomeSpeedShrineUpgrade = true,
+    MinibossCountShrineUpgrade = true,
+    DoorHealMetaUpgrade = true,
+    MetaUpgradeStrikeThroughShrineUpgrade = true,
+    MetaPointCapShrineUpgrade = true,
+    ForceSellShrineUpgrade = true,
+    ReducedLootChoicesShrineUpgrade = true,
+    ExtraChanceReplenishMetaUpgrade = true,
+    StoredAmmoVulnerabilityMetaUpgrade = true,
+    StaminaMetaUpgrade = true,
+    HealthMetaUpgrade = true,
+    GodEnhancementMetaUpgrade = true,
+    RerollMetaUpgrade = true,
+    MetaRewardMultiplierMetaUpgrade = true,
+    ExtraChanceWrathMetaUpgrade = true,
+    UnstoredAmmoVulnerabilityMetaUpgrade = true,
+    HighHealthDamageMetaUpgrade = true,
+    BackstabMetaUpgrade = true,
+    EpicBoonDropMetaUpgrade = true,
+    EnemyCountShrineUpgrade = true,
+    HealingReductionShrineUpgrade = true,
+    InterestMetaUpgrade = true,
+    EnemyHealthShrineUpgrade = true,
+    RareBoonDropMetaUpgrade = true,
+    AmmoMetaUpgrade = true,
+    EnemyDamageShrineUpgrade = true,
+    ReloadAmmoMetaUpgrade = true,
+    RunProgressRewardMetaUpgrade = true,
+    PerfectDashMetaUpgrade = true,
+    HardEncounterShrineUpgrade = true,
+    EnemyShieldShrineUpgrade = true,
+    DarknessHealMetaUpgrade = true,
+    DuoRarityBoonDropMetaUpgrade = true,
+    EnemyEliteShrineUpgrade = true,
+    VulnerabilityEffectBonusMetaUpgrade = true,
+    TrapDamageShrineUpgrade = true
+  }
+  -- TODO: unlock both sides?
+  --[[
+    GameState.MetaUpgradesSelected = {}
+    GameState.MetaUpgradeState = {}
+  ]]
+  -- Quest Data -- complete, allow players to cash them in whenever
+  -- Cosmetics.QuestLog = true for unlock below
+  for k, questName in ipairs( QuestOrderData ) do
+		local questData = QuestData[questName]
+    -- GameState.QuestStatus[questData.Name] = "Complete"
+    ModUtil.Table.Replace(QuestData[questData.Name].UnlockGameStateRequirements, {})
+    ModUtil.Table.Replace(QuestData[questData.Name].CompleteGameStateRequirements, {})
+  end
+  -- GameState.Cosmetics? Maybe not if I can use this... idk
+  GameState.Cosmetics = {
+    -- House Items
+    QuestLog = true,
+    OfficeDoorUnlockItem = true,
+    -- Run progression items / unlocks
+    FishingUnlockItem = true,
+    ShrinePointGates = true,
+    Cosmetic_MusicPlayer = true,
+    TartarusReprieve = true,
+    AsphodelReprieve = true,
+    ElysiumReprieve = true,
+  }
+  
+  -- QoL to disable the tutorials IG?
+  GameState.CompletedObjectiveSets = {
+    SwordTutorial_Arthur = true,
+    GunTutorial_ManualReload = true,
+    UnlockWeapon = true,
+    GunTutorial = true,
+    FistTutorial_FistWeave = true,
+    ShieldTutorial = true,
+    GunTutorial_Lucifer = true,
+    AspectsRevealPrompt = true,
+    SwordTutorial = true,
+    ShieldTutorial_BonusProjectile = true,
+    SpearTutorial = true,
+    FistTutorial_Vacuum = true,
+    FishPrompt = true,
+    SpearTutorial_SpinTravel = true,
+    ShieldTutorial_Grind = true,
+    GiftPrompt = true,
+    FistTutorial_Gilgamesh = true,
+    PerfectClear = true,
+    FistTutorial = true,
+    GiftRackPrompt = true,
+    MetaPrompt = true,
+    TimeChallenge = true,
+    BedPrompt = true,
+    SurvivalChallenge = true,
+    AdvancedTooltipPrompt = true,
+    SpearTutorial_Teleport = true,
+    ShieldTutorial_Beowulf = true,
+    BowTutorial = true,
+    GunTutorial_SelfEmpower = true,
+    ThanatosChallenge = true,
+    BowTutorialLoad = true,
+    Fishing = true
+  }
+  GameState.Resources = {
+    SuperGiftPoints = 0,
+    MetaPoints = 0,
+    LockKeys = 0,
+    SuperLockKeys = 0,
+    Gems = 0,
+    SuperGems = 0,
+    GiftPoints = 0
+  }
+  -- Inspect Points?
+  -- TextSpeechRecord?
+  for npcKey, npcObj in pairs(UnitSetData.NPCs) do
+    DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
+    for propKey, propValue in pairs(npcObj) do
+      if type(propValue) == "table" then
+        -- InteractTextSetLines
+        DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
+        for textKey, textObj in pairs(propValue) do
+          if type(textObj) == "table" and textObj.PlayOnce == true then
+            DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+            TextLinesRecord[textKey] = true
+          end
+        end
+      end
+    end
+  end
+
+  -- LootData Text Lines
+  for lootKey, lootValue in pairs(LootData) do
+    DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
+    for propKey, propValue in pairs(lootValue) do
+      if type(propValue) == "table" then
+        -- InteractTextSetLines
+        DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
+        for textKey, textObj in pairs(propValue) do
+          if type(textObj) == "table" and textObj.PlayOnce == true then
+            DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+            TextLinesRecord[textKey] = true
+          end
+        end
+      end
+    end
+  end
+  
+
+end

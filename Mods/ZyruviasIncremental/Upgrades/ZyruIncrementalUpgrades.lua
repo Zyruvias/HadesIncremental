@@ -1,10 +1,10 @@
 function Z.AddUpgrade(upgradeName, args)
     args = args or {}
-    if GameState.ZyruIncremental == nil or GameState.ZyruIncremental.UpgradeData == nil then
+    if Z.Data == nil or Z.Data.UpgradeData == nil then
         DebugPrint { Text = "GameState not properly defined"}
         return false
     end
-    table.insert(GameState.ZyruIncremental.UpgradeData, upgradeName)
+    table.insert(Z.Data.UpgradeData, upgradeName)
     if args.SkipApply then
         return true
     end
@@ -28,16 +28,16 @@ end
 -- TODO: if using this function for resets, unapply functions or boot to menu
 function Z.RemoveUpgrade(upgradeName, args)
     args = args or {}
-    if GameState.ZyruIncremental == nil or GameState.ZyruIncremental.UpgradeData == nil then
+    if Z.Data == nil or Z.Data.UpgradeData == nil then
         DebugPrint { Text = "GameState not properly defined"}
         return false
     end
 
-    for i,v in ipairs(GameState.ZyruIncremental.UpgradeData) do
+    for i,v in ipairs(Z.Data.UpgradeData) do
         if v == upgradeName then
-            table.remove(GameState.ZyruIncremental.UpgradeData, i)
+            table.remove(Z.Data.UpgradeData, i)
             DebugPrint { Text = "Removing " .. upgradeName .. " from GameState. Current upgrade values:"}
-            DebugPrint { Text = ModUtil.ToString.Shallow(GameState.ZyruIncremental.UpgradeData)}
+            DebugPrint { Text = ModUtil.ToString.Shallow(Z.Data.UpgradeData)}
             return
         end
     end

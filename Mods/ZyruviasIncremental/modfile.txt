@@ -1,11 +1,9 @@
 Import "ZyruIncremental.lua"
-Import "Upgrades/ZyruIncrementalUpgradeData.lua"
-Import "Upgrades/ZyruIncrementalUpgrades.lua"
-Import "ZyruIncrementalBoonData.lua"
-Import "ZyruIncrementalMaps.lua"
+Import "Upgrades/"
+Import "Mappings/"
 Import "ZyruIncrementalUtils.lua"
-Import "ZyruIncrementalBoonTracking.lua"
-Import "ZyruIncrementalUI.lua"
+Import "Tracking/"
+Import "UI/"
 Import "stats.lua"
 
 :: Localization
