@@ -78,7 +78,6 @@ Z.BaseComponents = {
             ScaleX = 1.0,
             X = ScreenCenterX - 240,
             Y = ScreenCenterY,
-            Justification = "Left",
         }
     },
     Background = {

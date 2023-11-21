@@ -859,7 +859,7 @@ function Z.InitializeEpilogueStartSaveData()
     NPC_FurySister_01 = {Value = 10, NewTraits = {}},
     NPC_Nyx_01 = {Value = 9, NewTraits = {}},
     NPC_Charon_01 = {Value = 7, NewTraits = {}},
-    PC_Thanatos_01 = {Value = 10, NewTraits = {}},
+    NPC_Thanatos_01 = {Value = 10, NewTraits = {}},
     NPC_Orpheus_01 = {Value = 8, NewTraits = {}},
     NPC_Persephone_Home_01 = {Value = 9, NewTraits = {}},
     NPC_Eurydice_01 = {Value = 8, NewTraits = {}},
@@ -877,7 +877,6 @@ function Z.InitializeEpilogueStartSaveData()
     NPC_Hypnos_01 = {Value = 8, NewTraits = {}},
     DionysusUpgrade = {Value = 7, NewTraits = {}}
   }
-  -- Unlock All Keepsakes -- TODO: Thanatos Keepsake / assist trait
   GameState.KeepsakeChambers = {
     ForceZeusBoonTrait = 0,
     ShopDurationTrait = 0,
@@ -932,12 +931,12 @@ function Z.InitializeEpilogueStartSaveData()
   }
   -- Unlock Assists
 	GameState.AssistUnlocks = {
-    SisyphusAssistTrait = 4,
-    ThanatosAssistTrait = 4,
-    FuryAssistTrait = 4,
-    DusaAssistTrait = 4,
-    AchillesPatroclusAssistTrait = 4,
-    SkellyAssistTrait = 4
+    SisyphusAssistTrait = 1,
+    ThanatosAssistTrait = 1,
+    FuryAssistTrait = 1,
+    DusaAssistTrait = 1,
+    AchillesPatroclusAssistTrait = 1,
+    SkellyAssistTrait = 1,
   }
   -- Hidden Aspects
   GameState.SeenWeaponUnlocks = {
@@ -1005,11 +1004,6 @@ function Z.InitializeEpilogueStartSaveData()
     VulnerabilityEffectBonusMetaUpgrade = true,
     TrapDamageShrineUpgrade = true
   }
-  -- TODO: unlock both sides?
-  --[[
-    GameState.MetaUpgradesSelected = {}
-    GameState.MetaUpgradeState = {}
-  ]]
   -- Quest Data -- complete, allow players to cash them in whenever
   -- Cosmetics.QuestLog = true for unlock below
   for k, questName in ipairs( QuestOrderData ) do
@@ -1018,7 +1012,7 @@ function Z.InitializeEpilogueStartSaveData()
     ModUtil.Table.Replace(QuestData[questData.Name].UnlockGameStateRequirements, {})
     ModUtil.Table.Replace(QuestData[questData.Name].CompleteGameStateRequirements, {})
   end
-  -- GameState.Cosmetics? Maybe not if I can use this... idk
+  -- Cosmetic Items
   GameState.Cosmetics = {
     -- House Items
     QuestLog = true,
@@ -1030,9 +1024,35 @@ function Z.InitializeEpilogueStartSaveData()
     TartarusReprieve = true,
     AsphodelReprieve = true,
     ElysiumReprieve = true,
+    UnusedWeaponBonusAddGems = true,
+    GiftDropRunProgress = true,
+
+
   }
-  
-  -- QoL to disable the tutorials IG?
+  GameState.CosmeticsAdded = {
+    CodexBoonList = true,
+  }
+  for cosmeticName, cosmeticData in pairs( ConditionalItemData ) do
+		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
+				GameState.CosmeticsAdded[cosmeticName] = true
+			end
+	end
+  for cosmeticName, cosmeticData in pairs( GameData.MiscCosmetics ) do
+		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
+				GameState.CosmeticsAdded[cosmeticName] = true
+			end
+	end
+  for cosmeticName, cosmeticData in pairs( GameData.LoungeCosmetics ) do
+		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
+				GameState.CosmeticsAdded[cosmeticName] = true
+			end
+	end
+  for trackName, trackData in pairs( MusicPlayerTrackData ) do
+		if not trackData.DebugOnly and trackData.ResourceCost ~= nil then
+			GameState.CosmeticsAdded[trackData.Name] = true
+		end
+	end
+  -- QoL to disable the tutorials
   GameState.CompletedObjectiveSets = {
     SwordTutorial_Arthur = true,
     GunTutorial_ManualReload = true,

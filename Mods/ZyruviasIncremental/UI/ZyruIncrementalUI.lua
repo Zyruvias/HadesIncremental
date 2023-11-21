@@ -1383,7 +1383,7 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-			Proportion = 1, UpdateDuration = 2, Text = "Settling familial disputes ..."
+			Proportion = 1, UpdateDuration = 5, Text = "Settling familial disputes ..."
         },
         { Proportion = 0, UpdateDuration = 0},
         {
@@ -1393,7 +1393,7 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            Proportion = 1, UpdateDuration = 2, Text = "Working the House Contractor Overtime (2x pay, of course) ..."
+            Proportion = 1, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ..."
         },
         { Proportion = 0, UpdateDuration = 0},
         {
@@ -1407,7 +1407,6 @@ function CloseInitializationScreen(screen, button)
             }
         },
     }
-    -- TODO: figure out if I should generalize this bullshit
     
     local progressBar = {
         Type = "ProgressBar",
