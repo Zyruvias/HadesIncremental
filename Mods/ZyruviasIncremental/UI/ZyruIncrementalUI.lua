@@ -1091,62 +1091,343 @@ end}
 
 local cabinetId = nil
 
-function ModInitializationScreen ()
-    local onFinish = function ()
-        Z.Data.SeenInitialMenuScreen = true
+function ModInitializationScreen2()
+    local screen = Z.CreateMenu("ModInitialization", {
+        Pages = {
+            [1] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        Text = "Welcome",
+                        FieldName = "WelcomeTitle",
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "WelcomeText",
+                        Text = "Welcome to the Incremental Overhaul Mod. The game has been transformed from a roguelike"
+                        .." with primary emphasis on single runs to large, long term emphasis on metaprogression, unlocks,"
+                        .." practice, and various other points of focus of the Incremental game genre. Please understand that"
+                        .." this mod was intended to be enjoyed at a slower, sustainable pace, and cannot be completed or"
+                        .." fully uncovered in a single session. With that in mind, there are a few starting settings that need"
+                        .." to be configured. Please proceed through the next few pages and answer the questions to begin your"
+                        .." Incremental Journey\\n\\n\\n\\n With love,\\n Zyruvias",
+                    }
+                }
+            },
+            [2] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "ContextTitle",
+                        Text = "Story Context"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "ContextText",
+                        Text = "When you finally resolve the plot of Hades for the first time, you "
+                        .."agree to continue traversing through the underworld more-or-less as a "
+                        .."glorified security analyst. Through your further battles in Tartarus, Asphodel, "
+                        .."Elysium, and Styx, you gather data on everything from the enemies attack patterns, "
+                        .."weaknesses, to environmental perils. You report back to Hades, your father and boss, "
+                        .."and he uses this information to improve the Underworld security, so no soul can escape. "
+                        .."But in reality, your reports and parchmentwork are lit aflame and he does absolutely fucking "
+                        .."nothing with the information. Your clears and field research just becomes easier and more "
+                        .."soul-sucking as time goes on, as you master optimizing the art of escaping the underworld."
+
+                        .."\\n\\n In this mod, Hades will finally respect your work, and begin to improve the security "
+                        .."systems as you progress. The Olympians are well attuned to this new detail, and unanimously "
+                        .."agree to teach you the finer side of their gifts and abilities. A new co-evolution begins; father "
+                        .."against son, spirit against the body. Only one can prevail.\\n\\n Good luck."
+                    }
+                }
+            },
+            [3] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "AcknowledgementsTitle",
+                        Text = "Acknowledgements"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "ContextText",
+                        Text = "A giant thanks to all the support I've gotten over the development of this mod."
+                        .." I will list you by name later. I love you all."
+                    }
+                }
+            },
+            [4] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "DifficultyTitle",
+                        Text = "Difficulty Settings"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "DifficultyText",
+                        Text = "This mod is intended to be difficult by nature of infinite scaling and building off the original game's innate difficulty. Please select your preferred difficulty settings below."
+                    }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    Args = {
+                        FieldName = "DifficultyDropdown",
+                        Group = "DifficultyGroup",
+                        -- X, Y, Items, Name
+                        X = ScreenWidth / 6,
+                        Y = ScreenHeight / 3,
+                        Items = {
+                            Default = {
+                                Text = Z.Data.FileOptions.DifficultySetting or "Standard",
+                                event = function() end
+                            },
+                            { Text = "Easy", event = function () Z.Data.FileOptions.DifficultySetting = "Easy" end },
+                            { Text = "Standard", event = function() Z.Data.FileOptions.DifficultySetting = "Standard" end },
+                            { Text = "Hard", event = function () Z.Data.FileOptions.DifficultySetting = "Hard" end },
+                            { Text = "Freeplay", event = function () Z.Data.FileOptions.DifficultySetting = "Freeplay" end },
+                        }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "DifficultyExplanation",
+                        Text = "Standard - The originally intended difficulty by the developer (that's me!! lmao) - enemies grow in strength "
+                        .."and health, and a few other challenges sneak their way in throughout the course of gameplay. \\n\\n "
+                        
+                        .."Easy - Original intended mechanics, but scaled back to a much more casual experience of the mod. Good "
+                        .."for players still dabbling with Heat in the primary game (under 32 Heat). \\n\\n "
+
+                        .."Hard - Original intended mechanics, but skewed towards significantly harder scaling. Please do not select "
+                        .."this mode unless you are very experienced with Hades AND want pain and suffering. \\n\\n "
+
+                        .."Freeplay -  difficulty scaling is disabled, and you are free to enjoy the content that the mod has to offer without "
+                        .."artificial difficulty gates. Please note that you will become overpowered eventually, and the mod may feel boring in this mode after a certain point."
+                        ,
+                        OffsetX = - ScreenWidth / 4,
+                        OffsetY = - ScreenHeight / 6 - 25,
+                        Width = ScreenWidth * 0.65
+                    }
+                }
+            },
+            [5] = {
+                -- starting point
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "StartingPointTitle",
+                        Text = "Starting Point Settings"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "StartingPointText",
+                        Text = "This mod requires you to start a fresh file since the context of game progression in normal "
+                        .."Hades does not make sense in the context of this mod. However, that does not mean you have to complete "
+                        .."the whole story again. You are free to start a fresh file and re-experience the story, but you may "
+                        .."also skip past the epilogue and start with a state of all base-game features unlocked if you so choose."
+                    }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    Args = {
+                        FieldName = "StartingPointDropdown",
+                        Group = "bleh",
+                        X = ScreenWidth / 2,
+                        Y = ScreenHeight / 2,
+                        Scale = { X = 1.0, Y = 1.0 },
+                        Items = {
+                            Default = {
+                                Text = Z.Data.FileOptions.StartingPoint or "Epilogue",
+                                event = function() end
+                            },
+                            { 
+                                Text = "Fresh File",
+                                event = function ()
+                                    Z.Data.FileOptions.StartingPoint = "Fresh File"
+                                end
+                            },
+                            { 
+                                Text = "Epilogue",
+                                event = function ()
+                                    Z.Data.FileOptions.StartingPoint = "Epilogue"
+                                end
+                            },
+                        }
+                    }
+                }
+            },
+            [6] = {
+                -- progress bars / loading screen / 
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        Text = "Final Step",
+                        FieldName = "finishedTitle"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "FinishedText",
+                        Text = "Click the button below to finish your file configuration. Please note that if you are "
+                        .."starting from the Epilogue file setting, it will take a minute to process save file changes. "
+                        .."Additionally, there are extra miscellaneos settings in the Courtyard when you get there."
+
+                        .. "\\n\\n Thank you for playing <3"
+                    }
+                },
+                {
+                    Type = "Button",
+                    SubType = "Basic",
+                    Args = {
+                        Scale = 1.0,
+                        FieldName = "FinishedFileConfiguration",
+                        Label = {
+                            Type = "Text",
+                            SubType = "Paragraph",
+                            Args = {
+                                FieldName = "FinishedFileConfigurationText",
+                                Text = "Finish",
+                                FontSize = "30",
+                                OffsetY = 0,
+                                OffsetX = 0,
+                                Justification = "Center",
+                            }
+                        },
+                        ComponentArgs = {
+                            OnPressedFunctionName = "CloseInitializationScreen"
+                        }
+                    },
+                }
+
+            }
+        },
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "MenuTitle",
+                    Text = "Incremental Mod Setup",
+                }
+            }
+        }
+    })
+end
+
+function CloseInitializationScreen(screen, button)
+    if Z.Data.FileOptions.StartingPoint == "Fresh File" then
         ActivatedObjects[cabinetId] = nil
-        if Z.Data.FileOptions.StartingPoint == "Epilogue" then
-            Z.InitializeEpilogueStartSaveData()
-        end
+        return CloseScreenByName("ModInitialization")
     end
-    local screen = CreateScreenWithCloseButton("ModInitialization", {
-        CloseScreenFunction = onFinish
-    })
-    local components = screen.Components
-
-    -- 
-    -- Title TODO: fix title
-    CreateTextBox({ Id = components.Background.Id, Text = "Incremental Overhaul Mod",
-    Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
-    OffsetY = -450, Justification = "Center" })
-    -- Suytitle
-    CreateTextBox({ Id = components.Background.Id, Text = "Setup your mod experience here before continuing...",
-        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
-        OffsetY = -400, Justification = "Center" })
 
 
-    -- Starting Point
-    components.StartingPointTextBox = CreateTextBox({ Id = components.Background.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint,
-        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
-        OffsetY = -100, Justification = "Center" })
-    components.YesButton = CreateScreenComponent({ Name = "BoonSlot1", Group = group, Scale = 0.35, })
-    SetScaleX({Id = components.YesButton.Id, Fraction = 0.75})
-    SetScaleY({Id = components.YesButton.Id, Fraction = 1.15})
-    Attach({ Id = components.YesButton.Id, DestinationId = components.Background.Id, OffsetX = -150, OffsetY = 75 })
-    components.YesButtonText =  CreateTextBox({ Id = components.YesButton.Id, Text = " Epilogue ",
-        FontSize = 28, OffsetX = 0, OffsetY = 0, Width = 720, Color = Color.LimeGreen, Font = "AlegreyaSansSCLight",
-        ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2}, Justification = "Center"
-    })
-    components.YesButton.OnPressedFunctionName = function(screen, button)
-        Z.Data.FileOptions.StartingPoint = "Epilogue"
-        ModifyTextBox{ Id = components.YesButtonText.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint, }
-    end
+    -- actually set save data, the dang fools think this is slow :jeb:
+    -- Z.InitializeEpilogueStartSaveData()
+
+    -- wipe the screen
+    Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
+
+    local progressBar = {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "SaveStateBar",
+        }
+    }
+    --[[
+        -- Updating Conversation History ...
+        -- Acquiring Olympian Drama and Hot Goss
+        -- Setting familial disputes ...
+        -- Dusting off Dad's junk in the courtyard ...
+        -- Working the House Contractor Overtime (2x pay, of course)
+        -- 
+    ]]--
+
+    local stages = {
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+        { Proportion = 1 / 7, UpdateDuration = 2},
+    }
+    -- TODO: figure out if I should generalize this bullshit
+    Z.RenderComponent(screen, progressBar)
+
+    progressBar.Args = {
+        Proportion = 1 / 7,
+        UpdateDuration = 2
+    }
+
+    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
     
-    components.NoButton = CreateScreenComponent({ Name = "BoonSlot1", Group = group, Scale = 0.35, })
-    SetScaleX({Id = components.NoButton.Id, Fraction = 0.75})
-    SetScaleY({Id = components.NoButton.Id, Fraction = 1.15})
-    Attach({ Id = components.NoButton.Id, DestinationId = components.Background.Id, OffsetX = 150, OffsetY = 75 })
-    components.NoButtonText = CreateTextBox({ Id = components.NoButton.Id, Text = "Fresh File",
-        FontSize = 26, OffsetX = 0, OffsetY = 0, Width = 720, Color = Color.Red, Font = "AlegreyaSansSCLight",
-        ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2}, Justification = "Center"
-    })
-    components.NoButton.OnPressedFunctionName = function(screen, button)
-        Z.Data.FileOptions.StartingPoint = "Fresh File"
-        ModifyTextBox{ Id = components.NoButtonText.Id, Text = "Where would you like to start? Currently selected: " .. Z.Data.FileOptions.StartingPoint, }
-    end
+    progressBar.Args.Args = {
+        Proportion = 2 / 7,
+        UpdateDuration = 2
+    }
+    
+    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+    
+    progressBar.Args = {
+        Proportion = 1 / 7,
+        UpdateDuration = 2
+    }
 
-    thread(HandleWASDInput, screen)
-    HandleScreenInput(screen)
+    
+    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+    
+    progressBar.Args = {
+        Proportion = 1 / 7,
+        UpdateDuration = 2
+    }
+    
+    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+    
+    progressBar.Args = {
+        Proportion = 1 / 7,
+        UpdateDuration = 2
+    }
+    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+
+    PlayVoiceLines({
+        -- Wha-?
+        { Cue = "/VO/ZagreusField_2462" },
+        -- Ungf no...
+        { Cue = "/VO/ZagreusField_1125" }
+    })
+    
+    ActivatedObjects[cabinetId] = nil
+    CloseScreenByName("ModInitialization")
+    
+    Kill(CurrentRun.Hero)
 end
 
 ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
@@ -1161,7 +1442,7 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     selector.BlockExitUntilUsed = true
     selector.BlockExitText = "Mod Setup Not Completed..."
     selector.UseText = "{I} Begin Incremental Journey"
-    selector.OnUsedFunctionName = "ModInitializationScreen"
+    selector.OnUsedFunctionName = "ModInitializationScreen2"
     selector.Activate = true
     selector.ShrinePointReq = 0
 
@@ -1183,26 +1464,170 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 end, Z)
 
 function Z.TestFrameworkMenu()
-    local screen = Z.CreateMenu("Test", {
+    -- local screen = Z.CreateMenu("Test", {
+    --     Components = {
+    --         {
+    --             Type = "Text",
+    --             SubType = "Note",
+    --             Args = {
+    --                 FieldName = "TestField",
+    --                 Text = "This is a test of the National Emergency Broadcast System",
+    --                 X = 500,
+    --                 Y = 500,
+    --             }
+    --         },
+    --         {
+    --             Type = "Button",
+    --             SubType = "Close",
+    --         },
+    --         {
+    --             Type = "Button",
+    --             SubType = "Basic",
+    --             Args = {
+    --                 FieldName = "LolLmaoButton",
+    --                 -- Label = "Zagreus Voiceline",
+    --                 Label = {
+    --                     Type = "Text",
+    --                     SubType = "Paragraph",
+    --                     Args = {
+    --                         FieldName = "TestField2",
+    --                         Text = "Zagreus Voiceline",
+    --                         Justification = "Center",
+    --                         Color = {255, 255, 0, 255},
+    --                     },
+    --                 },
+    --                 Scale = 1.0,
+    --                 OffsetX = 0,
+    --                 OffsetY = -75,
+    --                 ComponentArgs = {
+    --                     OnPressedFunctionName = "LolLmao"
+    --                 }
+    --             },
+    --         }
+    --     }
+    -- })
+
+    
+    -- local screen2 = Z.CreateMenu("Test", {
+    --     Pages = {
+    --         [1] = {
+    --             {
+    --                 Type = "Text",
+    --                 SubType = "Note",
+    --                 Args = {
+    --                     FieldName = "TestField1",
+    --                     Text = "Paging test ... page 1",
+    --                     X = 500,
+    --                     Y = 500,
+    --                 }
+    --             },
+    --             {
+    --                 Type = "Button",
+    --                 SubType = "Basic",
+    --                 Args = {
+    --                     FieldName = "LolLmaoButton",
+    --                     -- Label = "Zagreus Voiceline",
+    --                     Label = {
+    --                         Type = "Text",
+    --                         SubType = "Paragraph",
+    --                         Args = {
+    --                             FieldName = "TestField2",
+    --                             Text = "Zagreus Voiceline",
+    --                             Justification = "Center",
+    --                             Color = {255, 255, 0, 255},
+    --                         },
+    --                     },
+    --                     Scale = 1.0,
+    --                     OffsetX = 0,
+    --                     OffsetY = -75,
+    --                     ComponentArgs = {
+    --                         OnPressedFunctionName = "LolLmao"
+    --                     }
+    --                 },
+    --             }
+    --         },
+    --         [2] = {
+    --             {
+    --                 Type = "Button",
+    --                 SubType = "Basic",
+    --                 Args = {
+    --                     FieldName = "Page2Button",
+    --                     Label = {
+    --                         Type = "Text",
+    --                         SubType = "Note",
+    --                         Args = {
+    --                             FieldName = "TestField2",
+    --                             Text = "Don't press this button",
+    --                             Justification = "Center",
+    --                             Color = {255, 255, 0, 255},
+    --                         },
+    --                     },
+    --                     Scale = 1.0,
+    --                     OffsetX = 0,
+    --                     OffsetY = 150,
+    --                     ComponentArgs = {
+    --                         OnPressedFunctionName = "LolLmao"
+    --                     }
+    --                 }
+    --             },
+    --         }
+    --     },
+
+    --     Components = {
+    --         {
+    --             Type = "Button",
+    --             SubType = "Close",
+    --         },
+            
+    --         {
+    --             Type = "Text",
+    --             SubType = "Title",
+    --             Args = {
+    --                 FieldName = "PagingTitle",
+    --                 Text = "Autopaging Menu",
+    --             }
+    --         },
+    --     }
+    -- })
+
+    local screen3
+    thread( function ()
+        wait(1)
+        Z.UpdateProgressBar(ScreenAnchors["Test"], {
+            Type = "ProgressBar",
+            SubType = "Standard",
+            Args = {
+                FieldName = "testprogress",
+                Proportion = 0.75,
+                UpdateDuration = 2.0,
+            }
+        })
+    end)
+
+    screen3 = Z.CreateMenu("Test", {
         Components = {
-            {
-                Type = "Text",
-                SubType = "Title",
-                Args = {
-                    Name = "TestField",
-                    Text = "This is a test of the National Emergency Broadcast System",
-                    X = 500,
-                    Y = 500,
-                }
-            },
             {
                 Type = "Button",
                 SubType = "Close",
+            },
+            {
+                Type = "ProgressBar",
+                SubType = "Standard",
                 Args = {
-                    Name = "CloseButton",
-                    OffsetY = 480,
-                },
+                    FieldName = "testprogress",
+                    Proportion = 0.5
+                }
             }
         }
     })
 end
+
+
+OnAnyLoad{ "RoomPreRun",
+    function () 
+      wait(3.0)
+      Z.TestFrameworkMenu()
+    end
+  }
+
+  ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)

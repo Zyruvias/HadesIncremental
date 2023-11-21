@@ -41,7 +41,8 @@ Z.InitializeSaveData = function ()
       
     }
     Z.Data.FileOptions = {
-      StartingPoint = "Fresh File"
+      StartingPoint = "Ppilogue",
+      Difficulty = "Standard"
     }
     Z.Data.Initialized = true
   end
@@ -814,10 +815,10 @@ end, Z)
 
 local function ComputeDifficultyModifier (fileDifficulty, property) 
   local fileDifficultyMap = {
-    EASY = 1.01,
-    MEDIUM = 1.025,
-    HARD = 1.05,
-    HELL = 1.07
+    EASY = 1.02,
+    MEDIUM = 1.04,
+    HARD = 1.06,
+    HELL = 1.10
   }
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
   -- if property == "Cost" then
@@ -876,7 +877,7 @@ function Z.InitializeEpilogueStartSaveData()
     NPC_Hypnos_01 = {Value = 8, NewTraits = {}},
     DionysusUpgrade = {Value = 7, NewTraits = {}}
   }
-  -- Unlock All Keepsakes
+  -- Unlock All Keepsakes -- TODO: Thanatos Keepsake / assist trait
   GameState.KeepsakeChambers = {
     ForceZeusBoonTrait = 0,
     ShopDurationTrait = 0,
@@ -1066,6 +1067,7 @@ function Z.InitializeEpilogueStartSaveData()
     BowTutorialLoad = true,
     Fishing = true
   }
+  -- TODO: starting resources?
   GameState.Resources = {
     SuperGiftPoints = 0,
     MetaPoints = 0,

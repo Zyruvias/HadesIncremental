@@ -265,4 +265,5 @@ ModUtil.LoadOnce( function ( )
   -- AddTraitToHero{TraitName="ChaosRandomStatusLegendary"}
   -- AddTraitToHero({TraitName="ZeusChainRangeLegendary"})
   -- ConfigOptionCache.LogCombatMultipliers = true
+  
 end)
