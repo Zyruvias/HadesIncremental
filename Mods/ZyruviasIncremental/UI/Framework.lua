@@ -74,9 +74,9 @@ Z.BaseComponents = {
             Proportion = 0,
             BackgroundColor = {96, 96, 96, 255},
             ForegroundColor = Color.White,
-            ScaleY = 0.05,
-            ScaleX = 0.5,
-            X = ScreenCenterX,
+            ScaleY = 1.0,
+            ScaleX = 1.0,
+            X = ScreenCenterX - 240,
             Y = ScreenCenterY,
             Justification = "Left",
         }
@@ -219,35 +219,35 @@ function Z.RenderComponent(screen, component)
     end
 end
 
+local RECTANGLE_01_HEIGHT = 270
+local RECTANGLE_01_WIDTH = 480
+
+local DEFAULT_SCALE_PROPORTION_Y = 0.05
+local DEFAULT_SCALE_PROPORTION_X = 1
 function Z.RenderProgressBar(screen, component)
-    local RECTANGLE_01_HEIGHT = 270
-    local RECTANGLE_01_WIDTH = 480
 
     local barDefinition = ModUtil.Table.Merge(
         DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
         DeepCopyTable(component.Args)
     )
+    barDefinition.ScaleY = DEFAULT_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = DEFAULT_SCALE_PROPORTION_X * barDefinition.ScaleX
     local components = screen.Components
     local barName = barDefinition.FieldName or ""
 
     local barBackgroundDefinition = {
         Name = barDefinition.Name,
-        X = barDefinition.X + RECTANGLE_01_WIDTH / 2,
+        X = barDefinition.X +  barDefinition.ScaleX * DEFAULT_SCALE_PROPORTION_X * RECTANGLE_01_WIDTH / 2,
         Y = barDefinition.Y,
     }
 
-    -- components[barName .. "BarBackground"] = CreateScreenComponent({
-    --     Name = "rectangle01",
-    --     X = offset.X + 230 + RECTANGLE_01_WIDTH / 2,
-    --     Y = offset.Y + 260,
-    --     Color = {32, 32, 32, 255}
-    --  })
     components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
     if barDefinition.Label ~= nil then
         barDefinition.Label.Parent = barName
         Z.RenderText(screen, barDefinition.Label)
     end
     SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
+    SetScaleX{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleX }
     SetScaleY{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleY }
 
     components[barName .. "BarForeground"] = CreateScreenComponent({
@@ -308,13 +308,13 @@ end
 
 function Z.UpdateProgressBar(screen, component, args)
     args = args or {}
-    local RECTANGLE_01_HEIGHT = 270
-    local RECTANGLE_01_WIDTH = 480
     local barDefinition = ModUtil.Table.Merge(
         DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
         DeepCopyTable(component.Args)
     )
-    local barName = barDefinition.FieldName
+    barDefinition.ScaleY = DEFAULT_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = DEFAULT_SCALE_PROPORTION_X * barDefinition.ScaleX
+    local barName = barDefinition.FieldName or ""
     local components = screen.Components
 
     local oldProportion = components[barName .. "BarForeground"].Proportion
@@ -322,16 +322,14 @@ function Z.UpdateProgressBar(screen, component, args)
 
     Move({
         Id = components[barName .. "BarForeground"].Id,
-        OffsetX = barDefinition.X + proportionDelta / 2 * RECTANGLE_01_WIDTH,
+        OffsetX = barDefinition.X + barDefinition.ScaleX * proportionDelta / 2 * RECTANGLE_01_WIDTH,
         OffsetY = barDefinition.Y,
         Duration = barDefinition.UpdateDuration
     })
-    SetScaleX{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.Proportion, Duration = barDefinition.UpdateDuration }
+    SetScaleX{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.ScaleX * barDefinition.Proportion, Duration = barDefinition.UpdateDuration }
     if args.WaitForUpdate then
-        DebugPrint { Text = "Updating from " .. tostring(oldProportion) .. " to " .. tostring(barDefinition.Proportion) .. " over " .. tostring(barDefinition.UpdateDuration)}
         wait(barDefinition.UpdateDuration or 0)
     end
-    -- components[barName .. "BarForeground"].Proportion = barDefinition.Proportion
     
 end
 
@@ -420,6 +418,19 @@ function Z.RenderText(screen, component)
         Id = screen.Components[textDefinition.FieldName].Id,
     })
     return CreateTextBox(finalTextDefinition)
+
+end
+
+function Z.UpdateText(screen, component)
+    -- Get Subtype Defaults abnd Merge
+    local textDefinition = ModUtil.Table.Merge(
+        DeepCopyTable(Z.BaseComponents.Text[component.SubType]),
+        DeepCopyTable(component.Args)
+    )
+    local components = screen.Components
+    ModifyTextBox({
+        Id = components[textDefinition.FieldName].Id, Text = textDefinition.Text
+    })
 
 end
 

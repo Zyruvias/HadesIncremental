@@ -1353,76 +1353,105 @@ function CloseInitializationScreen(screen, button)
 
     -- wipe the screen
     Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
+    --[[
+        -- Updating Conversation History ...
+        -- Acquiring Olympian Drama and Hot Goss
+        -- Settling familial disputes ...
+        -- Dusting off Dad's junk in the courtyard ...
+        -- Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...
+        -- Working the House Contractor Overtime (2x pay, of course) ...
+        -- Killing Zagreus (wha? No... )
+    ]]--
 
+    local stages = {
+        {
+            Proportion = 1, UpdateDuration = 3, Text = "Updating Conversation History ...",
+            -- Noted.
+            Voicelines = {{ Cue = "/VO/ZagreusHome_0378", PreLineWait = 1.0 }}
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+			Proportion = 1, UpdateDuration = 4, Text = "Acquiring Olympian Drama and Hot Goss ...",
+            -- Ooh.
+		    Voicelines = {{ Cue = "/VO/ZagreusField_3379", PreLineWait = 1.5 }},
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+			Proportion = 1, UpdateDuration = 6, Text = "Dusting off Dad's junk in the courtyard ...",
+            -- I see you there.
+            Voicelines = {{ Cue = "/VO/Intercom_0237", PreLineWait = 1.7 }}
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+			Proportion = 1, UpdateDuration = 2, Text = "Settling familial disputes ..."
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+            Proportion = 1, UpdateDuration = 12, Text = "Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...",
+            -- "No... Zagreus, what have you done? You've led them *here*? TODO: one more - boat line rides?
+            Voicelines = {{ Cue = "/VO/Persephone_0060", PreLineWait = 1.5}, }
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+            Proportion = 1, UpdateDuration = 2, Text = "Working the House Contractor Overtime (2x pay, of course) ..."
+        },
+        { Proportion = 0, UpdateDuration = 0},
+        {
+            -- TODO: more stages if ya nasty
+            Proportion = 1, UpdateDuration = 5, Text = "Killing Zagreus ...",
+            Voicelines = {
+                -- Wha-?
+                { Cue = "/VO/ZagreusField_2462" },
+                -- Ungf no...
+                { Cue = "/VO/ZagreusField_1125", PreLineWait = 2.0, }
+            }
+        },
+    }
+    -- TODO: figure out if I should generalize this bullshit
+    
     local progressBar = {
         Type = "ProgressBar",
         SubType = "Standard",
         Args = {
             FieldName = "SaveStateBar",
+            X = ScreenCenterX - 480 * 1.5,
+            ScaleX = 3,
+            ScaleY = 3,
         }
     }
-    --[[
-        -- Updating Conversation History ...
-        -- Acquiring Olympian Drama and Hot Goss
-        -- Setting familial disputes ...
-        -- Dusting off Dad's junk in the courtyard ...
-        -- Working the House Contractor Overtime (2x pay, of course)
-        -- 
-    ]]--
-
-    local stages = {
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
-        { Proportion = 1 / 7, UpdateDuration = 2},
+    local progressText = {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "SaveStateText",
+            Text = "",
+            OffsetY = -100,
+            OffsetX = 0,
+            Width = ScreenWidth * 0.75,
+            Justification = "Center",
+            
+        }
     }
-    -- TODO: figure out if I should generalize this bullshit
     Z.RenderComponent(screen, progressBar)
+    Z.RenderComponent(screen, progressText)
 
-    progressBar.Args = {
-        Proportion = 1 / 7,
-        UpdateDuration = 2
-    }
+    for _, stage in ipairs(stages) do
+        DebugPrint { Text = ModUtil.ToString.Deep(stage)}
+        if stage.Voicelines then
+            thread( PlayVoiceLines, stage.Voicelines )
+        end
 
-    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
-    
-    progressBar.Args.Args = {
-        Proportion = 2 / 7,
-        UpdateDuration = 2
-    }
-    
-    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
-    
-    progressBar.Args = {
-        Proportion = 1 / 7,
-        UpdateDuration = 2
-    }
+        if stage.Text then
+            progressText.Args.Text = stage.Text
+            Z.UpdateText(screen, progressText)
+        end
 
-    
-    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
-    
-    progressBar.Args = {
-        Proportion = 1 / 7,
-        UpdateDuration = 2
-    }
-    
-    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
-    
-    progressBar.Args = {
-        Proportion = 1 / 7,
-        UpdateDuration = 2
-    }
-    Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+        progressBar.Args.Proportion = stage.Proportion
+        progressBar.Args.UpdateDuration = stage.UpdateDuration
+        Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+    end
 
-    PlayVoiceLines({
-        -- Wha-?
-        { Cue = "/VO/ZagreusField_2462" },
-        -- Ungf no...
-        { Cue = "/VO/ZagreusField_1125" }
-    })
+
     
     ActivatedObjects[cabinetId] = nil
     CloseScreenByName("ModInitialization")
