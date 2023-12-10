@@ -258,12 +258,5 @@ SetupRunData()
 -- Dev scripts
 ModUtil.LoadOnce( function ( ) 
   _G["k"] = ModUtil.ToString.TableKeys
-  -- AddTraitToHero { TraitName = "DemeterHermesSynergyTrait" }
-  -- ModUtil.Table.Merge(HeroData.DefaultHero, {
-  --   MaxHealth = 50000,
-  -- })
-  -- AddTraitToHero{TraitName="ChaosRandomStatusLegendary"}
-  -- AddTraitToHero({TraitName="ZeusChainRangeLegendary"})
-  -- ConfigOptionCache.LogCombatMultipliers = true
   
 end)

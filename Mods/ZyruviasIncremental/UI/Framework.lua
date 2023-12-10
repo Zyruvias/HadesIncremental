@@ -66,7 +66,10 @@ Z.BaseComponents = {
         Basic = {
             Name = "BoonSlot1",
             Scale = 0.5,
-        }
+        },
+        Icon = {
+            Name = "BaseInteractableButton",
+        },
     },
     ProgressBar = {
         Standard = {
@@ -96,11 +99,44 @@ Z.BaseComponents = {
             GeneralFontSize = 16,
             Font = "AlegrayaSansSCRegular",
         }
-    }
+    },
+    -- ErumiUI's Scrolling List wrapper
+    List = {
+        Standard = {
+            Name = "MyScrollingList", 
+            Group = "GardenBoxGroup",
+            Scale = {X = 0.6, Y = 1},
+            Padding = {X = 0, Y = 5},
+            X = 300, Y = 200,
+            ImageStyle = {
+                Image = "GUI\\Screens\\SeasonalItem",
+                Offset = {X = -225, Y = 0},
+            },
+            GeneralOffset = {X = -195, Y = -25},
+            GeneralFontSize = 18,
+            Justification = "Left",
+            Font = "AlegreyaSansSCBold",
+            ItemsPerPage = 9,
+            ArrowStyle = {
+                Offset = {X = 325, Y = 0},
+                Scale = 1,
+                CreationPositions = {Style = "TB"}
+            },
+            DescriptionFontSize = 13,
+            DescriptionOffset = {X = -195, Y = 0},
+            DescriptionColor = Color.Yellow,
+            DeEnabledColor = {1,0,0,0.33},
+        }
+    },
+    Icon = {
+        Standard = {
+            Name = "BlankObstacle",
+        },
+    },
 
 }
 
-function GetScreenIdsToDestroy(screen, button) 
+function GetScreenIdsToDestroy(screen) 
     local idsToKeep = screen.PermanentComponents or {}
     -- DebugPrint { Text = ModUtil.ToString.Deep(idsToKeep)}
     local allIds = GetAllIds(screen.Components)
@@ -114,19 +150,30 @@ function GetScreenIdsToDestroy(screen, button)
     return idsToDestroy
 end
 
+function GoToPageFromSource(screen, button)
+    if button.PageIndex == nil then
+        DebugPrint { Text = "You need to set PageIndex on the button, you doofus."}
+    end
+    RenderScreenPage(screen, button, button.PageIndex)
+end
+
+-- Handles non-linear paging
+function RenderScreenPage(screen, button, index)
+    -- Get Non-permanent components and DESTROY them
+    Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
+
+    -- then render it
+    Z.RenderComponents(screen, screen.Pages[index], { Source = button })
+
+end
+
 function ScreenPageRight(screen, button)
     if screen.PageIndex == screen.PageCount then
         return
     end
-
-    -- Get Non-permanent components and DESTROY them
-    Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
-
     -- increment page
     screen.PageIndex = screen.PageIndex + 1
-    -- then render it
-    Z.RenderComponents(screen, screen.Pages[screen.PageIndex])
-
+    RenderScreenPage(screen, button, screen.PageIndex)
 
 end
 
@@ -134,16 +181,8 @@ function ScreenPageLeft(screen, button)
     if screen.PageIndex == 1 then
         return
     end
-
-    -- Get Non-permanent components
-    local idsToDestroy = GetScreenIdsToDestroy(screen, button)
-    -- and DESTROY them
-    Destroy({Ids = idsToDestroy})
-
-    -- increment page
     screen.PageIndex = screen.PageIndex - 1
-    -- then render it
-    Z.RenderComponents(screen, screen.Pages[screen.PageIndex])
+    RenderScreenPage(screen, button, screen.PageIndex)
 end
 
 -- Create Menu
@@ -173,25 +212,27 @@ function Z.CreateMenu(name, args)
     Z.RenderComponents(screen, args.Components)
     if args.Pages ~= nil then
         screen.Pages = args.Pages
-        screen.PageIndex = 1
+        screen.PageIndex = args.InitialPageIndex or 1
         screen.PageCount = TableLength(args.Pages)
         -- Page Left button
-        Z.RenderButton(screen, {
-            Type = "Button",
-            SubType = "MenuLeft",
-            Args = { FieldName = "MenuLeft" }
-        })
-        -- Page Right button
-        Z.RenderButton(screen, {
-            Type = "Button", 
-            SubType = "MenuRight",
-            Args = { FieldName = "MenuRight" }
-        })
+        if (args.PaginationStyle or "Linear") == "Linear" then
+            Z.RenderButton(screen, {
+                Type = "Button",
+                SubType = "MenuLeft",
+                Args = { FieldName = "MenuLeft" }
+            })
+            -- Page Right button
+            Z.RenderButton(screen, {
+                Type = "Button", 
+                SubType = "MenuRight",
+                Args = { FieldName = "MenuRight" }
+            })
+        end
         -- assigns the "core" components to a placeholder ID set to not delete later
         screen.PermanentComponents = GetAllIds(screen.Components)
 
         -- Render first Page
-        Z.RenderComponents(screen, args.Pages[1])
+        Z.RenderComponents(screen, args.Pages[screen.PageIndex])
     end
 
 
@@ -199,8 +240,21 @@ function Z.CreateMenu(name, args)
     return screen
 end
 
-function Z.RenderComponents(screen, componentsToRender)
-    -- -- DebugPrint { Text = "Rendering components... " .. ModUtil.ToString.Deep(componentsToRender)}
+function Z.RenderComponents(screen, componentsToRender, args)    
+    -- Handle rendering overrides
+    if type(componentsToRender) == "string" then
+        if type(_G[componentsToRender]) == "function" then
+            return _G[componentsToRender](screen, args.Source) -- TODO: do secondary args make sense here?
+        end
+    elseif type(componentsToRender) == "function" then
+        return componentsToRender(screen, args.Source)
+    end
+
+    if componentsToRender == nil then
+        DebugPrint { Text = "componentsToRender was nil, not rendering anything"}
+    end
+
+    -- default framework rendering
     for _, component in pairs(componentsToRender) do
         Z.RenderComponent(screen, component)
     end
@@ -215,28 +269,70 @@ function Z.RenderComponent(screen, component)
         Z.RenderDropdown(screen, component)
     elseif component.Type == "ProgressBar" then
         Z.RenderProgressBar(screen, component)
+    elseif component.Type == "List" then
+        Z.RenderList(screen, component)
+    elseif component.Type == "Icon" then
+        Z.RenderIcon(screen, component)
     end
 end
 
-local RECTANGLE_01_HEIGHT = 270
-local RECTANGLE_01_WIDTH = 480
+function Z.RenderIcon(screen, component)
+    local iconDefinition = ModUtil.Table.Merge(
+        DeepCopyTable(Z.BaseComponents.Icon[component.SubType]),
+        DeepCopyTable(component.Args)
+    )
+    local components = screen.Components
+    
+    local iconName = iconDefinition.FieldName
 
-local DEFAULT_SCALE_PROPORTION_Y = 0.05
-local DEFAULT_SCALE_PROPORTION_X = 1
+    components[iconName] = CreateScreenComponent(iconDefinition)
+
+    if iconDefinition.Animation ~= nil then
+        SetAnimation({ DestinationId = components[iconName].Id, Name = iconDefinition.Animation })
+    end
+    if iconDefinition.Scale ~= nil then
+        SetScale({ Id = components[iconName].Id, Fraction = iconDefinition.Scale })
+    end
+
+	Attach({
+        Id = components[iconName].Id,
+        DestinationId = components.Background.Id,
+        OffsetX = iconDefinition.OffsetX,
+        OffsetY = iconDefinition.OffsetY,
+    })
+end
+
+function Z.UpdateIcon(screen, component)
+    args = args or {}
+    local iconDefinition = ModUtil.Table.Merge(
+        DeepCopyTable(Z.BaseComponents.Icon[component.SubType]),
+        DeepCopyTable(component.Args)
+    )
+    local components = screen.Components
+    if iconDefinition.Animation ~= nil then
+        SetAnimation({ DestinationId = components[iconDefinition.FieldName].Id, Name = iconDefinition.Animation })
+    end
+    if iconDefinition.Scale ~= nil then
+        SetScale({ Id = components[iconDefinition.FieldName].Id, Fraction = iconDefinition.Scale })
+    end
+    
+end
+
+-- Create Progress Bar
 function Z.RenderProgressBar(screen, component)
 
     local barDefinition = ModUtil.Table.Merge(
         DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
         DeepCopyTable(component.Args)
     )
-    barDefinition.ScaleY = DEFAULT_SCALE_PROPORTION_Y * barDefinition.ScaleY
-    barDefinition.ScaleX = DEFAULT_SCALE_PROPORTION_X * barDefinition.ScaleX
+    barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local components = screen.Components
     local barName = barDefinition.FieldName or ""
 
     local barBackgroundDefinition = {
         Name = barDefinition.Name,
-        X = barDefinition.X +  barDefinition.ScaleX * DEFAULT_SCALE_PROPORTION_X * RECTANGLE_01_WIDTH / 2,
+        X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH / 2,
         Y = barDefinition.Y,
     }
 
@@ -252,8 +348,8 @@ function Z.RenderProgressBar(screen, component)
     components[barName .. "BarForeground"] = CreateScreenComponent({
         Name = "rectangle01",
         -- add offset based on proportion
-        X = barDefinition.X,
-        Y = barDefinition.Y,
+        X = barBackgroundDefinition.X,
+        Y = barBackgroundDefinition.Y,
     })
     components[barName .. "BarForeground"].Proportion = barDefinition.Proportion
     SetColor{ Id = components[barName .. "BarForeground"].Id, Color = barDefinition.ForegroundColor}
@@ -311,17 +407,16 @@ function Z.UpdateProgressBar(screen, component, args)
         DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
         DeepCopyTable(component.Args)
     )
-    barDefinition.ScaleY = DEFAULT_SCALE_PROPORTION_Y * barDefinition.ScaleY
-    barDefinition.ScaleX = DEFAULT_SCALE_PROPORTION_X * barDefinition.ScaleX
+    barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local barName = barDefinition.FieldName or ""
     local components = screen.Components
 
     local oldProportion = components[barName .. "BarForeground"].Proportion
     local proportionDelta = barDefinition.Proportion - oldProportion
-
     Move({
         Id = components[barName .. "BarForeground"].Id,
-        OffsetX = barDefinition.X + barDefinition.ScaleX * proportionDelta / 2 * RECTANGLE_01_WIDTH,
+        OffsetX = barDefinition.X + barDefinition.ScaleX * proportionDelta / 2 * Z.Constants.Components.RECTANGLE_01_WIDTH,
         OffsetY = barDefinition.Y,
         Duration = barDefinition.UpdateDuration
     })
@@ -346,18 +441,21 @@ function Z.RenderButton(screen, component)
     -- Get Subtype Defaults abnd Merge
     local defaults = DeepCopyTable(Z.BaseComponents.Button[component.SubType])
     local buttonDefinition = ModUtil.Table.Merge(defaults, component.Args or {})
-    -- DebugPrint { Text = "buttonComponentArgs: " .. ModUtil.ToString.Deep(buttonDefinition)}
 
     local components = screen.Components
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
     local buttonComponentName = buttonDefinition.Name or "BaseInteractableButton"
-    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0 }) 
+    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0 })
+    DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
 
-    -- TODO: attachment args? idk
-    -- DebugPrint { Text = ModUtil.ToString.Deep(screen)}
+    if buttonDefinition.Animation ~= nil then
+        SetAnimation({ DestinationId = components[buttonName].Id, Name = buttonDefinition.Animation })
+    end
+
+
 	Attach({
         Id = components[buttonName].Id,
-        DestinationId = screen.Components.Background.Id,
+        DestinationId = components.Background.Id,
         OffsetX = buttonDefinition.OffsetX,
         OffsetY = buttonDefinition.OffsetY,
     })
@@ -390,7 +488,7 @@ function Z.RenderButton(screen, component)
             buttonDefinition.Label.Parent = buttonName
             Z.RenderText(screen, buttonDefinition.Label)
         else
-            -- DebugPrint { Text = "Button.Label definition not properly defined!"}
+            DebugPrint { Text = "Button.Label definition not properly defined!"}
         end
     end
 
@@ -452,7 +550,61 @@ function Z.RenderBackground(screen, component)
     return screen.Components.Background
 end
 
--- Create Progress Bar
-function Z.CreateProgressBar(screen, args)
+function Z.RenderList(screen, component)
     
+    local listDefinition = ModUtil.Table.Merge(
+        DeepCopyTable(Z.BaseComponents.List[component.SubType]),
+        DeepCopyTable(component.Args)
+    )
+
+    -- local upgradesForThisSource = {}
+    -- for i, upgrade in pairs(Z.UpgradeData) do
+    --     if button.Source == upgrade.Source then
+    --         table.insert(upgradesForThisSource, 
+    --             {
+    --                 event = function(list)
+    --                     DebugPrint({Text = "Woah you enabled me"})
+    --                 end,
+    --                 Text = "Purchase Boon: " .. upgrade.Name,
+    --                 -- IsEnabled = savefile does not contain upgrade.Name
+    --                 Description = "bleh",
+    --                 Offset = {X = 0, Y = 0},
+    --                 Justification = "Center",
+    --                 FontSize = 20,
+    --                 Font = "SpectralSCLightTitling",
+    --                 ImageStyle = {
+    --                     Image = "GUI\\Screens\\BoonIcons\\" .. TraitData[upgrade.Name].Icon,
+    --                     Offset = {X = -225, Y = 0},
+    --                     Scale = 0.7, 
+    --                 },
+    --             }
+    --         )
+    --         -- CreateUpgradePurchaseButton(screen, button)-- 
+    --         -- Items = {
+    --     --     {
+    --     --         event = function(list)
+    --     --             DebugPrint({Text = "Woah you enabled me"})
+    --     --         end,
+    --     --         Text = "I'm not enabled",
+    --     --         IsEnabled = false,
+    --     --         Description = "Denabled's desc"
+    --     --         Offset = {X = 0, Y = 0},
+    --     --         Justification = "Center",
+    --     --         FontSize = 20,
+    --     --         Font = "MonospaceTypewriterBold",
+    --     --         ImageStyle = {
+    --     --             Image = "Tilesets\\Gameplay\\Gameplay_Gemstones_01",
+    --     --             Offset = {X = -225, Y = 0},
+    --     --             Scale = 0.7,
+                                            
+    --     --         },
+    --     --     },
+    --     -- },
+    --     end
+    -- end
+
+    -- testing ErumiUILib ScrollingList
+    local myScroll = ErumiUILib.ScrollingList.CreateScrollingList(
+		screen, listDefinition
+    )
 end

@@ -485,27 +485,6 @@ function ShowUpgradeScreenForItem( screen, button )
                     },
                 }
             )
-            -- CreateUpgradePurchaseButton(screen, button)-- 
-            -- Items = {
-        --     {
-        --         event = function(list)
-        --             DebugPrint({Text = "Woah you enabled me"})
-        --         end,
-        --         Text = "I'm not enabled",
-        --         IsEnabled = false,
-        --         Description = "Denabled's desc"
-        --         Offset = {X = 0, Y = 0},
-        --         Justification = "Center",
-        --         FontSize = 20,
-        --         Font = "MonospaceTypewriterBold",
-        --         ImageStyle = {
-        --             Image = "Tilesets\\Gameplay\\Gameplay_Gemstones_01",
-        --             Offset = {X = -225, Y = 0},
-        --             Scale = 0.7,
-                                            
-        --         },
-        --     },
-        -- },
         end
     end
 
@@ -650,9 +629,6 @@ function CreateGodPageButton( screen, god, index )
 	Attach({ Id = godButton.Id, DestinationId = components.Background.Id, OffsetX = xOffset, OffsetY = yOffset })
     godButton.OnPressedFunctionName = "ShowZyruGodProgressScreen"
     godButton.God = god
-
-    -- godButton.OnMouseOverFunctionName = "GrowButtonScale"
-    -- godButton.OnMouseOffFunctionName = "ShrinkButtonScale"
 end
 
 function ShowZyruGodProgressScreen( screen, button )
@@ -686,26 +662,6 @@ function ShowZyruGodProgressScreen( screen, button )
         end
     end
     local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(screen, {
-        -- X, Y, Name, ItemsPerPage, ItemBackground, Items
-        --[[
-            -- Items = {
-        --     {
-        --         event = function,
-        --         Text,
-        --         IsEnabled,
-        --         Description
-        --         Offset = {X = 0, Y = 0},
-        --         Justification = "Center",
-        --         FontSize = 20,
-        --         Font = "MonospaceTypewriterBold",
-        --         ImageStyle = {
-        --             Image = "Tilesets\\Gameplay\\Gameplay_Gemstones_01",
-        --             Offset = {X = -225, Y = 0},
-        --             Scale = 0.7,
-                                            
-        --         },
-        --     },
-        ]]
         Name = button.God .. "ProgressScrollingList",
         ItemsPerPage = 4,
         Scale = {
@@ -734,60 +690,11 @@ function ShowZyruGodProgressScreen( screen, button )
 	HandleScreenInput( screen )
 end
 
-function ScrollingListRenderTest (screen, listItem, listItemArgs)
-    DebugPrint { Text = ModUtil.ToString.Shallow(listItem)}
-    DebugPrint { Text = ModUtil.ToString.Shallow(listItemArgs)}
-end
-
-function ApplyPrestigeSettings ( screen, button )
-    DebugPrint { Text = tostring(button.Difficulty or "you fucked up")}
-end
-
 function ShowZyruResetScreen ()
 	local screen = CreateScreenWithCloseButton ("ZyruReset")
     local components = screen.Components
 
-    -- title
-    CreateTextBox({ Id = components.Background.Id, Text = "Travel back in time to try again ... ?",
-        Font = "SpectralSCLightTitling", FontSize = "24", Color = Color.White,
-        OffsetY = -450, Justification = "Center" })
-
-    CreateTextBox({ Id = components.Background.Id, Text = "Select a new lifetime difficulty setting...",
-        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
-        OffsetY = -300, Justification = "Center" })
-    -- difficulty buttons TODO: abstract formally with difficulties
-    
-    local xPosArray = { 150, 500, 150, 500 }
-    local yPosArray = { 600, 600, 900, 900 }
-    for k, v in ipairs({"Easy", "Medium", "Hard", "Impossible"}) do
-        components[v .. "DetailsBacking"] = CreateScreenComponent({
-            Name = "BoonInfoButton",
-            DestinationId = components.Background.Id,
-            Group = "Combat_Menu_TraitTray_Backing",
-            X = xPosArray[k],
-            Y = yPosArray[k],
-        })
-        
-        CreateTextBoxWithFormat({
-            Id = components[v .. "DetailsBacking"].Id,
-            Width = 300,
-            Justification = "Left",
-            VerticalJustification = "Top",
-            LineSpacingBottom = 8,
-            UseDescription = true,
-            Format = "BaseFormat",
-            VariableAutoFormat = "BoldFormatGraft",
-            TextSymbolScale = 0.8,
-        })
-        
-        SetScaleX({ Id = components[v .. "DetailsBacking"].Id, Fraction = 0.25, Duration = 0.0 })
-        components[v .. "DetailsBacking"].OnPressedFunctionName = "ApplyPrestigeSettings"
-        components[v .. "DetailsBacking"].Difficulty = v
-
-    end 
-
-
-	HandleScreenInput( screen )
+    -- TODO: implement this in new framework
 end
 
 -- function CloseZyruProgressScreen( )
@@ -1265,9 +1172,9 @@ function ModInitializationScreen2()
                                 event = function() end
                             },
                             { 
-                                Text = "Fresh File",
+                                Text = Z.Constants.SaveFile.FRESH_FILE,
                                 event = function ()
-                                    Z.Data.FileOptions.StartingPoint = "Fresh File"
+                                    Z.Data.FileOptions.StartingPoint = Z.Constants.SaveFile.FRESH_FILE
                                 end
                             },
                             { 
@@ -1342,7 +1249,7 @@ function ModInitializationScreen2()
 end
 
 function CloseInitializationScreen(screen, button)
-    if Z.Data.FileOptions.StartingPoint == "Fresh File" then
+    if Z.Data.FileOptions.StartingPoint == Z.Constants.SaveFile.FRESH_FILE then
         ActivatedObjects[cabinetId] = nil
         return CloseScreenByName("ModInitialization")
     end
@@ -1398,7 +1305,7 @@ function CloseInitializationScreen(screen, button)
         { Proportion = 0, UpdateDuration = 0},
         {
             -- TODO: more stages if ya nasty
-            Proportion = 1, UpdateDuration = 5, Text = "Killing Zagreus ...",
+            Proportion = 1, UpdateDuration = 4, Text = "Killing Zagreus ...",
             Voicelines = {
                 -- Wha-?
                 { Cue = "/VO/ZagreusField_2462" },
@@ -1492,159 +1399,25 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 end, Z)
 
 function Z.TestFrameworkMenu()
-    -- local screen = Z.CreateMenu("Test", {
-    --     Components = {
-    --         {
-    --             Type = "Text",
-    --             SubType = "Note",
-    --             Args = {
-    --                 FieldName = "TestField",
-    --                 Text = "This is a test of the National Emergency Broadcast System",
-    --                 X = 500,
-    --                 Y = 500,
-    --             }
-    --         },
-    --         {
-    --             Type = "Button",
-    --             SubType = "Close",
-    --         },
-    --         {
-    --             Type = "Button",
-    --             SubType = "Basic",
-    --             Args = {
-    --                 FieldName = "LolLmaoButton",
-    --                 -- Label = "Zagreus Voiceline",
-    --                 Label = {
-    --                     Type = "Text",
-    --                     SubType = "Paragraph",
-    --                     Args = {
-    --                         FieldName = "TestField2",
-    --                         Text = "Zagreus Voiceline",
-    --                         Justification = "Center",
-    --                         Color = {255, 255, 0, 255},
-    --                     },
-    --                 },
-    --                 Scale = 1.0,
-    --                 OffsetX = 0,
-    --                 OffsetY = -75,
-    --                 ComponentArgs = {
-    --                     OnPressedFunctionName = "LolLmao"
-    --                 }
-    --             },
-    --         }
-    --     }
-    -- })
-
-    
-    -- local screen2 = Z.CreateMenu("Test", {
-    --     Pages = {
-    --         [1] = {
-    --             {
-    --                 Type = "Text",
-    --                 SubType = "Note",
-    --                 Args = {
-    --                     FieldName = "TestField1",
-    --                     Text = "Paging test ... page 1",
-    --                     X = 500,
-    --                     Y = 500,
-    --                 }
-    --             },
-    --             {
-    --                 Type = "Button",
-    --                 SubType = "Basic",
-    --                 Args = {
-    --                     FieldName = "LolLmaoButton",
-    --                     -- Label = "Zagreus Voiceline",
-    --                     Label = {
-    --                         Type = "Text",
-    --                         SubType = "Paragraph",
-    --                         Args = {
-    --                             FieldName = "TestField2",
-    --                             Text = "Zagreus Voiceline",
-    --                             Justification = "Center",
-    --                             Color = {255, 255, 0, 255},
-    --                         },
-    --                     },
-    --                     Scale = 1.0,
-    --                     OffsetX = 0,
-    --                     OffsetY = -75,
-    --                     ComponentArgs = {
-    --                         OnPressedFunctionName = "LolLmao"
-    --                     }
-    --                 },
-    --             }
-    --         },
-    --         [2] = {
-    --             {
-    --                 Type = "Button",
-    --                 SubType = "Basic",
-    --                 Args = {
-    --                     FieldName = "Page2Button",
-    --                     Label = {
-    --                         Type = "Text",
-    --                         SubType = "Note",
-    --                         Args = {
-    --                             FieldName = "TestField2",
-    --                             Text = "Don't press this button",
-    --                             Justification = "Center",
-    --                             Color = {255, 255, 0, 255},
-    --                         },
-    --                     },
-    --                     Scale = 1.0,
-    --                     OffsetX = 0,
-    --                     OffsetY = 150,
-    --                     ComponentArgs = {
-    --                         OnPressedFunctionName = "LolLmao"
-    --                     }
-    --                 }
-    --             },
-    --         }
-    --     },
-
-    --     Components = {
-    --         {
-    --             Type = "Button",
-    --             SubType = "Close",
-    --         },
-            
-    --         {
-    --             Type = "Text",
-    --             SubType = "Title",
-    --             Args = {
-    --                 FieldName = "PagingTitle",
-    --                 Text = "Autopaging Menu",
-    --             }
-    --         },
-    --     }
-    -- })
-
-    local screen3
-    thread( function ()
-        wait(1)
-        Z.UpdateProgressBar(ScreenAnchors["Test"], {
-            Type = "ProgressBar",
-            SubType = "Standard",
-            Args = {
-                FieldName = "testprogress",
-                Proportion = 0.75,
-                UpdateDuration = 2.0,
-            }
-        })
-    end)
-
-    screen3 = Z.CreateMenu("Test", {
+    local screen = Z.CreateMenu("Test", {
         Components = {
             {
                 Type = "Button",
-                SubType = "Close",
+                SubType = "Icon",
+                Args = {
+                    FieldName = "IconTest",
+                    Group = "Combat_Menu_TraitTray",
+                    Animation = "Codex_Portrait_Zagreus",
+                    OffsetX = 0,
+                    OffsetY = 0,
+                    ComponentArgs = {
+                        OnPressedFunctionName = "LolLmao"
+                    }
+                },
             },
             {
-                Type = "ProgressBar",
-                SubType = "Standard",
-                Args = {
-                    FieldName = "testprogress",
-                    Proportion = 0.5
-                }
+                Type = "Button",
+                SubType = "Close",
             }
         }
     })
@@ -1653,9 +1426,223 @@ end
 
 OnAnyLoad{ "RoomPreRun",
     function () 
-      wait(3.0)
-      Z.TestFrameworkMenu()
+        wait(3.0)
+        --   Z.TestFrameworkMenu()
+        ShowZyruProgressScreen2()
     end
-  }
+}
 
-  ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
+ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
+
+function UpdateBoonInfoProgressScreen(screen, boonName)
+
+    -- UPDATE TEXT
+    Z.UpdateText(screen, {
+        Type = "Text",
+        SubType = "Subtitle",
+        Args = {
+            FieldName = "BoonProgressSubtitle",
+            Text = boonName
+        }
+
+    })
+    -- UPDATE ICON
+    Z.UpdateIcon(screen, {
+        Type = "Icon",
+        SubType = "Standard",
+        Args = {
+            FieldName = "BoonProgressBoonIcon",
+            Animation = GetTraitIcon( TraitData[boonName] or {} ),
+            Scale = 4.0
+        }
+    })
+    -- UPDATE PROGRESS BAR
+    -- show boon level in top right corner
+    local boonData = Z.Data.BoonData[boonName] or {}
+
+    local boonLevel = boonData.Level or 1
+    -- show exp to next level, bar in bottom
+
+    local boonExp = boonData.Experience or 0
+    local expBaseline = boonExp - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
+    local expTNL = Z.GetExperienceForNextBoonLevel ( boonLevel ) - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
+    local expProportion = expBaseline / expTNL
+    Z.UpdateProgressBar(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "BoonProgressBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            Proportion = 0,
+            UpdateDuration = 0,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 5,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            -- Label = {
+            --     Text = expBaseline .. " / " .. expTNL .. " = " .. expProportion
+            -- }
+        }
+    })
+    DebugPrint { Text = "updating proportion to " .. tostring(expProportion)}
+    Z.UpdateProgressBar(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "BoonProgressBar",
+            Proportion = expProportion,
+            UpdateDuration = 1,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 5,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+        }
+    })
+    
+
+    -- Z.RenderComponents(screen, components)
+end
+
+function ShowGodProgressScreen(screen, button)
+    DebugPrint { Text = ModUtil.ToString.Deep(button)}
+
+    local boonsToDisplay = BoonInfoScreenData.SortedTraitIndex[button.PageIndex .. "Upgrade"]
+    -- create scrolling list
+    local boonItemsToDisplay = {}
+    for i, boonName in ipairs(boonsToDisplay) do
+        if not TraitData[boonName] then
+            DebugPrint { Text = boonName .. " not found in TraitData" }
+        end
+        if not Contains(TraitData[boonName] and TraitData[boonName].InheritFrom or {}, "SynergyTrait") then
+            table.insert(boonItemsToDisplay, {
+                event = function () 
+                    DebugPrint { Text = "clicked " .. boonName}
+                    UpdateBoonInfoProgressScreen(screen, boonName)
+                end,
+                Text = boonName,
+                ImageStyle = {
+                    Image = GetTraitIcon( TraitData[boonName] or {} ),
+                    Offset = {X = -225, Y = 0},
+                    Scale = 0.7, 
+                },
+            })
+        end
+    end
+
+    -- create title (god name)
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            Args = {
+                FieldName = button.PageIndex .. "ProgressTitle",
+                Text = button.PageIndex, -- todo: generalize args or properties or something??
+            }
+        },
+        {
+            Type = "List",
+            SubType = "Standard",
+            Args = {
+                ItemsPerPage = 7,
+                Items = boonItemsToDisplay,
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            Args = {
+                OffsetX = ScreenWidth / 6,
+                FieldName = "BoonProgressSubtitle",
+                Text = ""
+            }
+        },
+        -- boon icon
+        {
+            Type = "Icon",
+            SubType = "Standard",
+            Args = {
+                FieldName = "BoonProgressBoonIcon",
+                OffsetX = ScreenWidth / 6,
+                OffsetY = -100,
+                Scale = 4,
+            }
+        },
+        -- progress bar
+        {
+            Type = "ProgressBar",
+            SubType = "Standard",
+            Args = {
+                FieldName = "BoonProgressBar",
+                X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+                Y = ScreenCenterY + ScreenHeight / 5,
+                -- BackgroundColor = {0, 0, 0, 0},
+                ScaleX = 1.5,
+                ScaleY = 1.5,
+            }
+        },
+    }
+    Z.RenderComponents(screen, componentsToRender)
+end
+
+function ShowZyruProgressScreen2()
+
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            Args = {
+                FieldName = "ProgressTitle",
+                Text = "Incremental Progress",
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            Args = {
+                FieldName = "ProgressSubtitle",
+                Text = "Click on a God's portrait to see your progress with their gifts!",
+            }
+        }
+    }
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+        table.insert(componentsToRender, {
+            Type = "Button",
+            SubType = "Icon",
+            Args = {
+                FieldName = name .. "Button",
+                Animation = "Codex_Portrait_" .. name,
+                -- series layout
+                OffsetX = - ScreenWidth / 2 + ScreenWidth / 10 * i,
+                ComponentArgs = {
+                    OnPressedFunctionName = "GoToPageFromSource",
+                    PageIndex = name,
+                }
+            }
+        })
+    end
+
+    local pages = {
+        [1] = componentsToRender,
+    }
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+        pages[name] = "ShowGodProgressScreen"
+    end
+
+    local screen = Z.CreateMenu("ProgressScreen", {
+        PaginationStyle = "Keyed",
+        Pages = pages,
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Close",
+                ComponentArgs = {
+                    OnPressedFunctionName = "GoToPageFromSource",
+                    PageIndex = name,
+                }
+            },
+        }
+    })
+end

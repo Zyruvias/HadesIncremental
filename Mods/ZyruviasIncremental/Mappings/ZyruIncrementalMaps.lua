@@ -1,3 +1,47 @@
+Z.Constants = {
+  SaveFile = {
+    -- starting point
+    EPILOGUE = "Epilogue",
+    FRESH_FILE = "Fresh File",
+    -- difficulty
+    EASY = "Easy",
+    STANDARD = "Standard",
+    HARD = "Hard",
+    HELL = "Hell",
+  },
+  Difficulty = {
+    Keys = {
+      HEALTH_SCALIING = "HealthScaling",
+      COST_SCALING = "CostScaling",
+      INCOMING_DAMAGE_SCALING = "IncomingDamageScaling",
+    },
+    HealthScaling = {
+        EASY = 1.02,
+        STANDARD = 1.04,
+        HARD = 1.06,
+        HELL = 1.10
+    },
+    CostScaling = {
+      EASY = 1.00,
+      STANDARD = 1.01,
+      HARD = 1.02,
+      HELL = 1.05
+    },
+    IncomingDamageScaling = {
+      EASY = 1.02,
+      STANDARD = 1.04,
+      HARD = 1.06,
+      HELL = 1.10
+    }
+  },
+  Components = {
+    RECTANGLE_01_HEIGHT = 270,
+    RECTANGLE_01_WIDTH = 480,
+    PROGRESS_BAR_SCALE_PROPORTION_X = 1,
+    PROGRESS_BAR_SCALE_PROPORTION_Y = 0.05
+  }
+}
+
 -- SAVE DATA SETUP
 Z.InitializeSaveData = function ()
   if Z.Data.Initialized == nil then
@@ -41,8 +85,8 @@ Z.InitializeSaveData = function ()
       
     }
     Z.Data.FileOptions = {
-      StartingPoint = "Ppilogue",
-      Difficulty = "Standard"
+      StartingPoint = Z.Constants.SaveFile.EPILOGUE,
+      Difficulty = Z.Constants.SaveFile.STANDARD,
     }
     Z.Data.Initialized = true
   end
@@ -756,7 +800,6 @@ ModUtil.LoadOnce(function ( )
         { Cue = "/VO/Charon_0020" },
     },
     StackUpgrade = {
-      -- TOODO: Persephone's voicelines
       -- Well done, Zagreus.
       { Cue = "/VO/Persephone_0319" },
       -- Excellent work, my son.
@@ -814,39 +857,28 @@ ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, 
 end, Z)
 
 local function ComputeDifficultyModifier (fileDifficulty, property) 
-  local fileDifficultyMap = {
-    EASY = 1.02,
-    MEDIUM = 1.04,
-    HARD = 1.06,
-    HELL = 1.10
-  }
+  local fileDifficultyMap = Z.Constants.Difficulty[property]
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
   -- if property == "Cost" then
   --   difficultyScalar = 1 + (difficultyScalar - 1) / 2
   -- end
-  return math.pow(difficultyScalar, TableLength(GameState.RunHistory))
+  return math.pow(difficultyScalar, TableLength(GameState.RunHistory) - 1)
 end
 
 ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   local run = baseFunc(...)
 
-  -- Add enemy damage modifier to Zagreus
-  -- thread(function ( ) 
-    Z.DifficultyModifier = 1
-    -- Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
-    AddIncomingDamageModifier(CurrentRun.Hero, {
-      Name = "ZyruIncremental",
-      GlobalMultiplier = Z.DifficultyModifier
-    })
-  -- end)
+    -- Z.DifficultyModifier = ComputeDifficultyModifier(
+    --   Z.Data.FileOptions.DifficultySetting,
+    --   Z.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
+    -- )
+    -- AddIncomingDamageModifier(CurrentRun.Hero, {
+    --   Name = "ZyruIncremental",
+    --   GlobalMultiplier = Z.DifficultyModifier
+    -- })
 
   return run
 end, Z)
-
--- OnAnyLoad{ function ( )
---   -- Z.DifficultyModifier = ComputeDifficultyModifier("EASY")
---   Z.DifficultyModifier = 1
--- end }
 
 function Z.InitializeEpilogueStartSaveData()
   -- Max All NPC Hearts
