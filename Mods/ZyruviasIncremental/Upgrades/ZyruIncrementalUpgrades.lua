@@ -80,3 +80,13 @@ function Z.MergeDataArrays(args)
         )
     end
 end
+
+function Z.GetAllUpgradesBySource(source)
+    local toReturn = {}
+    for i, upgrade in ipairs(Z.UpgradeData) do
+        if upgrade.Source == source or upgrade.Sources ~= nil and Contains(upgrade.Sources, source) then
+            table.insert(toReturn, DeepCopyTable(upgrade))
+        end
+    end
+    return toReturn
+end

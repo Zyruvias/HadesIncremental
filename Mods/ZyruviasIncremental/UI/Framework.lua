@@ -274,6 +274,12 @@ function Z.RenderComponent(screen, component)
     elseif component.Type == "Icon" then
         Z.RenderIcon(screen, component)
     end
+
+    -- establish definition on object
+    local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+    if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen) ~= nil then
+        screen[fieldName].Args = component.Args
+    end
 end
 
 function Z.RenderIcon(screen, component)
@@ -358,47 +364,47 @@ function Z.RenderProgressBar(screen, component)
 
     -- -- DebugPrint { Text = ModUtil.ToString.Deep(components)}
     
-    -- TODO: left text / right text 
-    -- -- currentLevel nextLevel text
-    -- traitInfo.CurrentLevel = CreateScreenComponent({
-    --     Id = component.Id,
-    --     Name = "BlankObstacle",
-    --     Group = group,
-    --     X = offset.X + 20,
-    --     Y = offset.Y + 170
-    -- })
-	-- CreateTextBox({
-	-- 	Id = traitInfo.CurrentLevel.Id,
-	-- 	FontSize = 14,
-	-- 	OffsetX = 170,
-	-- 	OffsetY = 90,
-	-- 	Color = color,
-    --     Group = group,
-	-- 	Font = "AlegreyaSansSCLight",
-    --     Text = "Lv. " .. boonData.Level,
-	-- 	ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-	-- 	Justification = "Left",
-	-- })
-
-    -- traitInfo.NextLevel = CreateScreenComponent({
-    --     Id = component.Id,
-    --     Name = "BlankObstacle",
-    --     Group = group,
-    --     X = offset.X + 20,
-    --     Y = offset.Y + 170
-    -- })
-	-- CreateTextBox({
-	-- 	Id = traitInfo.NextLevel.Id,
-	-- 	FontSize = 14,
-	-- 	OffsetX = 170 + RECTANGLE_01_WIDTH + 50,
-	-- 	OffsetY = 90,
-	-- 	Color = color,
-    --     Group = group,
-	-- 	Font = "AlegreyaSansSCLight",
-    --     Text = "Lv. " .. (boonData.Level + 1),
-	-- 	ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-	-- 	Justification = "Left",
-	-- })
+    -- TODO: left text / right text
+    local barText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "BarText",
+            Text = barDefinition.BarText or "",
+            Parent = barName .. "BarBackground",
+            
+            X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH / 2,
+            Y = barDefinition.Y,
+            Justification = "Center"
+        }
+    }
+    Z.RenderText(screen, barText)
+    local leftText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "LeftText",
+            Text = barDefinition.LeftText or "",
+            Parent = barName .. "BarBackground",
+            X = barDefinition.X - 25,
+            Y = barDefinition.Y,
+            Justification = "Right"
+        }
+    }
+    Z.RenderText(screen, leftText)
+    local rightText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "RightText",
+            Text = barDefinition.RightText or "",
+            Parent = barName .. "BarBackground",
+            X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH + 25,
+            Y = barDefinition.Y,
+            Justification = "Left"
+        }
+    }
+    Z.RenderText(screen, rightText)
 end
 
 function Z.UpdateProgressBar(screen, component, args)
@@ -424,6 +430,38 @@ function Z.UpdateProgressBar(screen, component, args)
     if args.WaitForUpdate then
         wait(barDefinition.UpdateDuration or 0)
     end
+
+    -- update texts if provided
+    local barText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "BarText",
+            Text = barDefinition.BarText or "",
+            Parent = barName .. "BarBackground",
+        }
+    }
+    Z.UpdateText(screen, barText)
+    local leftText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "LeftText",
+            Text = barDefinition.LeftText or "",
+            Parent = barName .. "BarBackground"
+        }
+    }
+    Z.UpdateText(screen, leftText)
+    local rightText = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = barName .. "RightText",
+            Text = barDefinition.RightText or "",
+            Parent = barName .. "BarBackground"
+        }
+    }
+    Z.UpdateText(screen, rightText)
     
 end
 
@@ -557,54 +595,16 @@ function Z.RenderList(screen, component)
         DeepCopyTable(component.Args)
     )
 
-    -- local upgradesForThisSource = {}
-    -- for i, upgrade in pairs(Z.UpgradeData) do
-    --     if button.Source == upgrade.Source then
-    --         table.insert(upgradesForThisSource, 
-    --             {
-    --                 event = function(list)
-    --                     DebugPrint({Text = "Woah you enabled me"})
-    --                 end,
-    --                 Text = "Purchase Boon: " .. upgrade.Name,
-    --                 -- IsEnabled = savefile does not contain upgrade.Name
-    --                 Description = "bleh",
-    --                 Offset = {X = 0, Y = 0},
-    --                 Justification = "Center",
-    --                 FontSize = 20,
-    --                 Font = "SpectralSCLightTitling",
-    --                 ImageStyle = {
-    --                     Image = "GUI\\Screens\\BoonIcons\\" .. TraitData[upgrade.Name].Icon,
-    --                     Offset = {X = -225, Y = 0},
-    --                     Scale = 0.7, 
-    --                 },
-    --             }
-    --         )
-    --         -- CreateUpgradePurchaseButton(screen, button)-- 
-    --         -- Items = {
-    --     --     {
-    --     --         event = function(list)
-    --     --             DebugPrint({Text = "Woah you enabled me"})
-    --     --         end,
-    --     --         Text = "I'm not enabled",
-    --     --         IsEnabled = false,
-    --     --         Description = "Denabled's desc"
-    --     --         Offset = {X = 0, Y = 0},
-    --     --         Justification = "Center",
-    --     --         FontSize = 20,
-    --     --         Font = "MonospaceTypewriterBold",
-    --     --         ImageStyle = {
-    --     --             Image = "Tilesets\\Gameplay\\Gameplay_Gemstones_01",
-    --     --             Offset = {X = -225, Y = 0},
-    --     --             Scale = 0.7,
-                                            
-    --     --         },
-    --     --     },
-    --     -- },
-    --     end
-    -- end
-
     -- testing ErumiUILib ScrollingList
     local myScroll = ErumiUILib.ScrollingList.CreateScrollingList(
 		screen, listDefinition
     )
 end
+
+--[[
+
+    TODO: 
+    1) Make most functions create/update where create calls update after initialization of components
+    to minimize code duplication and mistakes\
+    2) more options for fields
+]]

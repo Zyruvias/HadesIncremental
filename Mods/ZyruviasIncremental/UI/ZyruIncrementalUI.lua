@@ -198,18 +198,6 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
     return value
 end, Z)
 
-function CloseZyruBoonProgressScreen( )
-	local screen = ScreenAnchors.ZyruBoonProgress
-	DisableShopGamepadCursor()
-	CloseScreen( GetAllIds( screen.Components ) )
-	PlaySound({ Name = "/SFX/Menu Sounds/GeneralWhooshMENU" })
-	UnfreezePlayerUnit()
-	ToggleControl({ Names = { "AdvancedTooltip" }, Enabled = true })
-	ShowCombatUI("BoonProgressMenu")
-	screen.KeepOpen = false
-	OnScreenClosed({ Flag = screen.Name })
-end
-
 function DisplayExperiencePopup (amount)
     local displayAmount = round(amount)
     if displayAmount <= 0 then
@@ -335,7 +323,7 @@ function CloseScreenByName ( name )
 end
 
 -- Courtyard Upgrade Screen
-function ShowZyruUpgradeScreen()
+function ShowZyruUpgradeScreenOLD()
 	local screen = CreateScreenWithCloseButton("ZyruUpgrade")
     local components = screen.Components
 
@@ -596,332 +584,11 @@ function CreateUpgradePurchaseButton ( screen, button )
 end
 
 -- Courtyard Progress Screen
-function ShowZyruProgressScreen()
-	local screen = CreateScreenWithCloseButton ("ZyruProgress")
-    local components = screen.Components
-    -- Title TODO: fix title
-    CreateTextBox({ Id = components.Background.Id, Text = "God Progression",
-        Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
-        OffsetY = -450, Justification = "Center" })
-    -- Suytitle
-    CreateTextBox({ Id = components.Background.Id, Text = "Select an Olympian to view your progress with their gifts!",
-        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
-        OffsetY = -400, Justification = "Center" })
-    
-    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
-        CreateGodPageButton(screen, name, i)
-    end
-
-	HandleScreenInput( screen )
-end
-
-function CreateGodPageButton( screen, god, index )
-    local xOffset = ScreenWidth / 10 * (-5 + index)
-    local yOffset = (ScreenHeight / 10) * (-0.5 + index % 2)
-    local components = screen.Components
-    local godButton = CreateScreenComponent({
-        Name = "BaseInteractableButton",
-        Group = "Combat_Menu_TraitTray",
-        Color = {1, 1, 1, 1}
-    })
-	components[ "Icon_"..god ] = godButton
-	SetAnimation({ Name = "Codex_Portrait_" .. god, DestinationId = godButton.Id })
-	Attach({ Id = godButton.Id, DestinationId = components.Background.Id, OffsetX = xOffset, OffsetY = yOffset })
-    godButton.OnPressedFunctionName = "ShowZyruGodProgressScreen"
-    godButton.God = god
-end
-
-function ShowZyruGodProgressScreen( screen, button )
-    DebugPrint { Text = ModUtil.ToString.Shallow(screen)}
-    DebugPrint { Text = ModUtil.ToString.Shallow(button)}
-    CloseZyruProgressScreen()
-	local screen = CreateScreenWithCloseButton ("Zyru" .. button.God .. "Progress", {
-        CloseScreenFunctionName = "ShowZyruProgressScreen"
-    })
-    local components = screen.Components
-
-    CreateTextBox({ Id = components.Background.Id, Text = button.God,
-    Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
-    OffsetY = -450, Justification = "Center" })
-
-    -- add scrolling list of items
-    -- get aggregate list of boons used to display
-    local boonsToDisplay = BoonInfoScreenData.SortedTraitIndex[button.God .. "Upgrade"]
-    -- create scrolling list
-    local boonItemsToDisplay = {}
-    for i, boonName in ipairs(boonsToDisplay) do
-        if not TraitData[boonName] then
-            DebugPrint { Text = boonName .. " not found in TraitData" }
-        end
-        if not Contains(TraitData[boonName] and TraitData[boonName].InheritFrom or {}, "SynergyTrait") then
-            table.insert(boonItemsToDisplay, {
-                event = function () end,
-                Text = boonName,
-                RenderCallback = "CreateZyruBoonProgressInfo"
-            })
-        end
-    end
-    local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(screen, {
-        Name = button.God .. "ProgressScrollingList",
-        ItemsPerPage = 4,
-        Scale = {
-            X = 1,
-            Y = 1,
-        },
-        ItemBackground = "BoonInfoButton",
-        Items = boonItemsToDisplay,
-        Group = "GardenBoxGroup",
-        Padding = {X = 0, Y = 90},
-        X = 500, Y = 150,
-        GeneralOffset = {X = 0, Y = 0},
-        GeneralFontSize = 18,
-        Justification = "Left",
-        Font = "AlegreyaSansSCBold",
-        ArrowStyle = {
-            Offset = {X = 700, Y = 0},
-            Scale = 1,
-            CreationPositions = {Style = "TB"}
-        },
-
-
-    })
-
-    
-	HandleScreenInput( screen )
-end
-
 function ShowZyruResetScreen ()
 	local screen = CreateScreenWithCloseButton ("ZyruReset")
     local components = screen.Components
 
     -- TODO: implement this in new framework
-end
-
--- function CloseZyruProgressScreen( )
---     CloseScreenByName("ZyruProgress")
--- end
-
-function CreateZyruBoonProgressInfo( screen, component, args )
-    -- component: id, scrollingListPressedArgs
-    -- DebugPrint { Text = ModUtil.ToString.Shallow(component)}
-    -- args: item / list item component args
-    DebugPrint { Text = "creating Boon Progress for " .. args.Text}
-    -- if true then return end
-    local components = screen.Components
-    for key, value in pairs(components) do
-        DebugPrint { Text = key}
-    end
-    -- DebugPrint { Text = ModUtil.ToString.TableKeys(components)}
-    local scrollingListPressedArgs = component.scrollingListPressedArgs
-    
-    local scrollingList = scrollingListPressedArgs.parent
-    local index = scrollingListPressedArgs.Index - (scrollingList.CurrentPage * scrollingListPressedArgs.Args.ItemsPerPage)
-
-	local traitInfo = {}
-	local offset = { X = 110, Y = BoonInfoScreenData.ButtonStartY + index * BoonInfoScreenData.ButtonYSpacer }
-	local traitName = args.Text
-
-    local group = scrollingListPressedArgs.Args.Group .. "ScrollingList"
-    
-    -- BACKING ALREADY CREATED
-    -- components[traitName .. "DetailsBacking"] = CreateScreenComponent({
-    --     Name = "BoonInfoButton",
-    --     -- DestinationId = components.Background.Id,
-    --     Group = "Combat_Menu_TraitTray_Backing",
-    --     X = offset.X + 455,
-    --     Y = offset.Y + 200
-    -- })
-	
-    -- args.Name .. "ScrollingListBacking" .. k
-    -- destroy the title because we are using the title from the boon info button code
-    -- components[component.Id] = component
-    -- if components[scrollingListPressedArgs.Args.Name .. "ScrollingListBacking" .. index] ~= nil then
-    --     Destroy { Id = scrollingListPressedArgs.Args.Name .. "ScrollingListBacking" .. index }
-    -- end
-    CreateTextBoxWithFormat({
-        Id = component.Id,
-        Group = group,
-        OffsetX = -260,
-        OffsetY = BoonInfoScreenData.DecriptionBoxOffsetY,
-        Width = 665,
-        Justification = "Left",
-        VerticalJustification = "Top",
-        LineSpacingBottom = 8,
-        UseDescription = true,
-        Format = "BaseFormat",
-        VariableAutoFormat = "BoldFormatGraft",
-        TextSymbolScale = 0.8,
-    })
-
-	traitInfo.TitleBox = CreateScreenComponent({
-        Id = component.Id,
-        Name = "BlankObstacle",
-        Group = group,
-        X = offset.X + 20,
-        Y = offset.Y + 170, 
-    })
-	CreateTextBox({
-		-- Id = component.Id,
-		Id = traitInfo.TitleBox.Id,
-        Group = group,
-		FontSize = 25,
-		OffsetX = 170,
-		OffsetY = BoonInfoScreenData.TextBoxOffsetY,
-		Color = color,
-		Font = "AlegreyaSansSCLight",
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Left",
-	})
-
-	traitInfo.RarityBox = CreateScreenComponent({ Name = "BlankObstacle", X = offset.X + 20, Y = offset.Y + 170 })
-	CreateTextBox({
-		Id = traitInfo.RarityBox.Id,
-		FontSize = 25,
-        Group = group,
-		OffsetX = 860,
-		OffsetY = -17,
-		Color = color,
-		Font = "AlegreyaSansSCLight",
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Right",
-	})
-
-	traitInfo.Patch = CreateScreenComponent({
-        Name = "BlankObstacle",
-        Group = group,
-        X = offset.X + 110,
-        Y = offset.Y + 205,
-        Scale = 0.8
-    })
-	SetAnimation({ DestinationId = traitInfo.Patch.Id, Name = "BoonRarityPatch"})
-	SetColor({ Id = traitInfo.Patch.Id, Color = Color.Transparent })
-
-	traitInfo.Frame = CreateScreenComponent({
-        Name = "BoonInfoTraitFrame",
-        X = offset.X + 90,
-        Y = offset.Y + 200,
-        Scale = 0.8,
-        Group = group 
-    })
-	traitInfo.Icon = CreateScreenComponent({
-        Name = "BlankObstacle",
-        X = offset.X + 90,
-        Y = offset.Y + 200,
-        Scale = 0.8,
-        Group = group
-    })
-	local newTraitData =  GetProcessedTraitData({ Unit = CurrentRun.Hero, TraitName = traitName, Rarity = "Common", ForBoonInfo = true })
-	newTraitData.ForBoonInfo = true
-	SetTraitTextData( newTraitData )
-	SetTraitTrayDetails( { TraitData = newTraitData, ForBoonInfo = true }, component, traitInfo.RarityBox, traitInfo.TitleBox, traitInfo.Patch, traitInfo.Icon )
-
-    -- show boon level in top right corner
-    local boonData = Z.Data.BoonData[traitName]
-    if boonData == nil then
-        DebugPrint { Text = "nil trait data for " .. traitName .. " at " .. index }
-        return
-    end
-
-    local boonLevel = boonData.Level
-    -- show exp to next level, bar in bottom
-
-    local boonExp = boonData.Experience
-    local expBaseline = boonExp - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
-    local expTNL = Z.GetExperienceForNextBoonLevel ( boonLevel ) - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
-    local expProportion = expBaseline / expTNL
-
-    local RECTANGLE_01_HEIGHT = 270
-    local RECTANGLE_01_WIDTH = 480
-    DebugPrint { Text = expBaseline .. " / " .. expTNL .. " = " .. expProportion }
-
-    
-
-    traitInfo.ExperienceBarBackground = CreateScreenComponent({
-        Id = component.Id,
-        Name = "rectangle01",
-        Group = group,
-        X = offset.X + 230 + RECTANGLE_01_WIDTH / 2,
-        Y = offset.Y + 260,
-        Color = {32, 32, 32, 255}
-     })
-     CreateTextBox({
-		Id = traitInfo.ExperienceBarBackground.Id,
-		FontSize = 9,
-        Group = group,
-		Color = {0, 0, 0, 255},
-		Font = "AlegreyaSansSC",
-        Text = expBaseline .. " / " .. expTNL,
-		-- ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Center",
-	})
-     SetColor{ Id = traitInfo.ExperienceBarBackground.Id, Color = {96, 96, 96, 255} }
-     SetScaleY{ Id = traitInfo.ExperienceBarBackground.Id, Fraction = 0.05 }
-
-    traitInfo.ExperienceBar = CreateScreenComponent({
-        Id = component.Id,
-        Name = "rectangle01",
-        Group = group,
-        X = offset.X + 230 + RECTANGLE_01_WIDTH * expProportion / 2,
-        Y = offset.Y + 260,
-        Color = Color.White
-     })
-     SetColor{ Id = traitInfo.ExperienceBar.Id, Color = Color.White }
-     SetScaleX{ Id = traitInfo.ExperienceBar.Id, Fraction = expProportion }
-     SetScaleY{ Id = traitInfo.ExperienceBar.Id, Fraction = 0.05 }
-
-    -- currentLevel nextLevel text
-    traitInfo.CurrentLevel = CreateScreenComponent({
-        Id = component.Id,
-        Name = "BlankObstacle",
-        Group = group,
-        X = offset.X + 20,
-        Y = offset.Y + 170
-    })
-	CreateTextBox({
-		Id = traitInfo.CurrentLevel.Id,
-		FontSize = 14,
-		OffsetX = 170,
-		OffsetY = 90,
-		Color = color,
-        Group = group,
-		Font = "AlegreyaSansSCLight",
-        Text = "Lv. " .. boonData.Level,
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Left",
-	})
-
-    traitInfo.NextLevel = CreateScreenComponent({
-        Id = component.Id,
-        Name = "BlankObstacle",
-        Group = group,
-        X = offset.X + 20,
-        Y = offset.Y + 170
-    })
-	CreateTextBox({
-		Id = traitInfo.NextLevel.Id,
-		FontSize = 14,
-		OffsetX = 170 + RECTANGLE_01_WIDTH + 50,
-		OffsetY = 90,
-		Color = color,
-        Group = group,
-		Font = "AlegreyaSansSCLight",
-        Text = "Lv. " .. (boonData.Level + 1),
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Left",
-	})
-
-    -- assign items created to the scrollingList parent
-
-end
-
-function GrowButtonScale ( screen, button )
-    DebugPrint { Text = "LOL" }
-    SetScale { Id = button.Id, Fraction = 1.1 }
-end
-
-function ShrinkButtonScale ( button )
-    DebugPrint { Text = "LMAO" }
-    SetScale { Id = button.Id, Fraction = 1/1.1 }
 end
 
 -- Courtyard Interface
@@ -1271,6 +938,7 @@ function CloseInitializationScreen(screen, button)
     ]]--
 
     local stages = {
+        { Proportion = 0, UpdateDuration = 0},
         {
             Proportion = 1, UpdateDuration = 3, Text = "Updating Conversation History ...",
             -- Noted.
@@ -1424,13 +1092,13 @@ function Z.TestFrameworkMenu()
 end
 
 
-OnAnyLoad{ "RoomPreRun",
-    function () 
-        wait(3.0)
-        --   Z.TestFrameworkMenu()
-        ShowZyruProgressScreen2()
-    end
-}
+-- OnAnyLoad{ "RoomPreRun",
+--     function () 
+--         wait(3.0)
+--         --   Z.TestFrameworkMenu()
+--         -- ShowZyruProgressScreen()
+--     end
+-- }
 
 ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
 
@@ -1467,6 +1135,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     local expBaseline = boonExp - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
     local expTNL = Z.GetExperienceForNextBoonLevel ( boonLevel ) - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
     local expProportion = expBaseline / expTNL
+    local expProportionLabel = tostring(math.floor((1000 * expBaseline) / expTNL) / 10) .. "%"
     Z.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
@@ -1481,12 +1150,11 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
-            -- Label = {
-            --     Text = expBaseline .. " / " .. expTNL .. " = " .. expProportion
-            -- }
+            BarText = tostring(expBaseline .. " / " .. expTNL .. " = " .. expProportionLabel),
+            LeftText = "Level " .. tostring(boonLevel),
+            RightText = "Level " .. tostring(boonLevel + 1)
         }
     })
-    DebugPrint { Text = "updating proportion to " .. tostring(expProportion)}
     Z.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
@@ -1548,6 +1216,7 @@ function ShowGodProgressScreen(screen, button)
             Args = {
                 ItemsPerPage = 7,
                 Items = boonItemsToDisplay,
+                X = 375,
             }
         },
         {
@@ -1583,11 +1252,22 @@ function ShowGodProgressScreen(screen, button)
                 ScaleY = 1.5,
             }
         },
+        {
+            -- TODO: fix this shit
+            Type = "Button",
+            SubType = "Close",
+            Args = {
+                -- OnPressedFunctionName = "GoToPageFromSource",
+            },
+            ComponentArgs = {
+                PageIndex = 1,
+            }
+        },
     }
     Z.RenderComponents(screen, componentsToRender)
 end
 
-function ShowZyruProgressScreen2()
+function ShowZyruProgressScreen()
 
     local componentsToRender = {
         {
@@ -1605,7 +1285,11 @@ function ShowZyruProgressScreen2()
                 FieldName = "ProgressSubtitle",
                 Text = "Click on a God's portrait to see your progress with their gifts!",
             }
-        }
+        },
+        {
+            Type = "Button",
+            SubType = "Close",
+        },
     }
     for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
         table.insert(componentsToRender, {
@@ -1634,15 +1318,150 @@ function ShowZyruProgressScreen2()
     local screen = Z.CreateMenu("ProgressScreen", {
         PaginationStyle = "Keyed",
         Pages = pages,
-        Components = {
-            {
-                Type = "Button",
-                SubType = "Close",
+        Components = {}
+    })
+end
+
+function ShowZyruUpgradeScreen()
+    DebugPrint { Text = "ShowZyruUpgradeScreen"}
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            Args = {
+                FieldName = "UpgradeTitle",
+                Text = "Olympian Upgrades",
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            Args = {
+                FieldName = "UpgradeSubtitle",
+                Text = "Click on a God's portrait to see additional gifts and bonuses they can offer!",
+            }
+        },
+        {
+            Type = "Button",
+            SubType = "Close",
+        },
+    }
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+        table.insert(componentsToRender, {
+            Type = "Button",
+            SubType = "Icon",
+            Args = {
+                FieldName = name .. "Button",
+                Animation = "Codex_Portrait_" .. name,
+                -- series layout
+                OffsetX = - ScreenWidth / 2 + ScreenWidth / 10 * i,
                 ComponentArgs = {
                     OnPressedFunctionName = "GoToPageFromSource",
                     PageIndex = name,
                 }
-            },
-        }
+            }
+        })
+    end
+
+    local pages = {
+        [1] = componentsToRender,
+    }
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+        pages[name] = "ShowGodUpgradeScreen"
+    end
+
+    local screen = Z.CreateMenu("UpgradeScreen", {
+        PaginationStyle = "Keyed",
+        Pages = pages,
+        Components = {}
     })
+end
+
+function ShowGodUpgradeScreen(screen, button)
+    DebugPrint { Text = ModUtil.ToString.Deep(button)}
+
+    -- upgradesTodisplay
+    local upgradesToDisplay = Z.GetAllUpgradesBySource(button.PageIndex)
+    -- create scrolling list
+    local upgradeItemsToDisplay = {}
+    for i, upgradeName in ipairs(upgradesToDisplay) do
+        table.insert(boonItemsToDisplay, {
+            event = function () 
+                DebugPrint { Text = "clicked " .. boonName}
+                UpdateBoonInfoProgressScreen(screen, boonName)
+            end,
+            Text = boonName,
+            ImageStyle = {
+                Image = GetTraitIcon( TraitData[boonName] or {} ),
+                Offset = {X = -225, Y = 0},
+                Scale = 0.7, 
+            },
+        })
+    end
+
+    -- create title (god name)
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            Args = {
+                FieldName = button.PageIndex .. "ProgressTitle",
+                Text = button.PageIndex, -- todo: generalize args or properties or something??
+            }
+        },
+        {
+            Type = "List",
+            SubType = "Standard",
+            Args = {
+                ItemsPerPage = 7,
+                Items = upgradeItemsToDisplay,
+                X = 375,
+            }
+        },
+        -- {
+        --     Type = "Text",
+        --     SubType = "Subtitle",
+        --     Args = {
+        --         OffsetX = ScreenWidth / 6,
+        --         FieldName = "BoonProgressSubtitle",
+        --         Text = ""
+        --     }
+        -- },
+        -- upgrade icon?
+        {
+            Type = "Icon",
+            SubType = "Standard",
+            Args = {
+                FieldName = "UpgradeCurrency",
+                OffsetX = ScreenWidth / 6,
+                OffsetY = -200,
+                Scale = 0.75,
+                Animation = "BoonInfoSymbolZeusIcon",
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Note",
+            Args = {
+                FieldName = "UpgradeCurrencyText",
+                OffsetX = ScreenWidth / 6 - 50,
+                OffsetY = -200,
+                Justification = "Right",
+                FontSize = 20,
+                Text = "Available Zeus Points: " .. tostring(Z.Data.Currencies.Zeus or 0)
+            }
+        },
+        {
+            -- TODO: fix this shit
+            Type = "Button",
+            SubType = "Close",
+            Args = {
+                -- OnPressedFunctionName = "GoToPageFromSource",
+            },
+            -- ComponentArgs = {
+            --     PageIndex = 1,
+            -- }
+        },
+    }
+    Z.RenderComponents(screen, componentsToRender)
 end

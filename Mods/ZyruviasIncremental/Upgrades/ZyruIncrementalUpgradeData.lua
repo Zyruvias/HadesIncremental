@@ -512,9 +512,9 @@ Z.TraitData = {
 -- TODO : constants over magic strings
 Z.UpgradeSourceEnums = {
     ZEUS = "Zeus",
-    NYX = "NYX",
-    POSEIDON = "POSEIDON",
-    APHRODITE = "APHRODITE"
+    NYX = "Nyx",
+    POSEIDON = "Poseidon",
+    APHRODITE = "Aphrodite"
     -- "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
     --     -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
     --     "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
@@ -533,7 +533,6 @@ Z.UpgradeTypeEnums = {
         Cost
         OnApplyFunction
         OnApplyFunctionArgs
-        Purchased
         Source
     }
     ]]--
@@ -558,8 +557,7 @@ Z.UpgradeData = {
                 }
             }
         },
-        Purchased = false,
-        Source =Z.UpgradeSourceEnums.ZEUS
+        Source = Z.UpgradeSourceEnums.ZEUS
     },
 
     PoseidonHermesSynergyTrait = {
