@@ -185,14 +185,42 @@ function ScreenPageLeft(screen, button)
     RenderScreenPage(screen, button, screen.PageIndex)
 end
 
+-- Generates a component definition from either an existing screen component or the base definition
+function GetComponentDefinition(screen, component)
+    -- TODO: do I need to require a type and subtype all the time?
+    local baseDefinition = DeepCopyTable(Z.BaseComponents[component.Type][component.SubType])
+    if baseDefinition == nil then
+        DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
+    end
+    local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+    if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen) ~= nil then
+        DebugPrint { Text = "Reusing component definition for " .. fieldName }
+        baseDefinition = screen[fieldName].Args
+    end
+
+    local componentDefinition = ModUtil.Table.Merge(
+        baseDefinition,
+        DeepCopyTable(component.Args or {})
+    )
+    return componentDefinition
+end
+
+function Z.CreateOrUpdateComponent(screen, component)
+    local componentDefinition = GetComponentDefinition(screen, component)
+    if screen[componentDefinition.FieldName] ~= nil then
+        Z.UpdateComponent(screen, component)
+    else
+        Z.RenderComponent(screen, component)
+    end
+end
+
 -- Create Menu
 function Z.CreateMenu(name, args)
     -- Screen / Hades Framework Setup
     -- DebugPrint { Text = ModUtil.ToString.Deep(args)}
     args = args or {}
-    local screen = { Components = {} }
+    local screen = { Components = {}, Name = name }
     ScreenAnchors[name] = screen
-	screen.Name = name
 
     local components = screen.Components
 
@@ -261,59 +289,56 @@ function Z.RenderComponents(screen, componentsToRender, args)
 end
 
 function Z.RenderComponent(screen, component)
-    if component.Type == "Text" then
-        Z.RenderText(screen, component)
-    elseif component.Type == "Button" then
-        Z.RenderButton(screen, component)
-    elseif component.Type == "Dropdown" then
-        Z.RenderDropdown(screen, component)
-    elseif component.Type == "ProgressBar" then
-        Z.RenderProgressBar(screen, component)
-    elseif component.Type == "List" then
-        Z.RenderList(screen, component)
-    elseif component.Type == "Icon" then
-        Z.RenderIcon(screen, component)
-    end
+    if not component or component.Type == nil then
+        DebugPrint { Text = "No component or no component Type property provided"}
+        return
+    end 
+    if type(Z["Render" .. tostring(component.Type)]) == "function" then
+        Z["Render" .. tostring(component.Type)](screen, component)
 
-    -- establish definition on object
-    local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-    if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen) ~= nil then
-        screen[fieldName].Args = component.Args
+        -- establish definition on screen object for later access
+        local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+        if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
+            DebugPrint { Text = "Setting component definition for " .. fieldName }
+            screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
+        end
+    end
+end
+
+function Z.UpdateComponent(screen, component, args)
+    if not component or component.Type == nil then
+        DebugPrint { Text = "No component or no component Type property provided"}
+        return
+    end 
+    if type(Z["Update" .. tostring(component.Type)]) == "function" then
+        Z["Update" .. tostring(component.Type)](screen, component, args)
+
+        -- reestablish definition on screen object for later access
+        local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+        DebugPrint { Text = "Updating component definition for " .. fieldName }
+        screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
     end
 end
 
 function Z.RenderIcon(screen, component)
-    local iconDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.Icon[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local iconDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
     
     local iconName = iconDefinition.FieldName
 
     components[iconName] = CreateScreenComponent(iconDefinition)
-
-    if iconDefinition.Animation ~= nil then
-        SetAnimation({ DestinationId = components[iconName].Id, Name = iconDefinition.Animation })
-    end
-    if iconDefinition.Scale ~= nil then
-        SetScale({ Id = components[iconName].Id, Fraction = iconDefinition.Scale })
-    end
-
+    -- TODO - Move call after attach for parity with update?
 	Attach({
         Id = components[iconName].Id,
         DestinationId = components.Background.Id,
         OffsetX = iconDefinition.OffsetX,
         OffsetY = iconDefinition.OffsetY,
     })
+    Z.UpdateComponent(screen, component)
 end
 
 function Z.UpdateIcon(screen, component)
-    args = args or {}
-    local iconDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.Icon[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local iconDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
     if iconDefinition.Animation ~= nil then
         SetAnimation({ DestinationId = components[iconDefinition.FieldName].Id, Name = iconDefinition.Animation })
@@ -321,16 +346,14 @@ function Z.UpdateIcon(screen, component)
     if iconDefinition.Scale ~= nil then
         SetScale({ Id = components[iconDefinition.FieldName].Id, Fraction = iconDefinition.Scale })
     end
+
+    
     
 end
 
 -- Create Progress Bar
 function Z.RenderProgressBar(screen, component)
-
-    local barDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local barDefinition = GetComponentDefinition(screen, component)
     barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
     barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local components = screen.Components
@@ -409,10 +432,7 @@ end
 
 function Z.UpdateProgressBar(screen, component, args)
     args = args or {}
-    local barDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.ProgressBar[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local barDefinition = GetComponentDefinition(screen, component)
     barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
     barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local barName = barDefinition.FieldName or ""
@@ -441,7 +461,7 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground",
         }
     }
-    Z.UpdateText(screen, barText)
+    Z.UpdateComponent(screen, barText)
     local leftText = {
         Type = "Text",
         SubType = "Note",
@@ -451,7 +471,7 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground"
         }
     }
-    Z.UpdateText(screen, leftText)
+    Z.UpdateComponent(screen, leftText)
     local rightText = {
         Type = "Text",
         SubType = "Note",
@@ -461,24 +481,19 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground"
         }
     }
-    Z.UpdateText(screen, rightText)
+    Z.UpdateComponent(screen, rightText)
     
 end
 
 function Z.RenderDropdown(screen, component)
-    local dropdownDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.Dropdown[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
     
     ErumiUILib.Dropdown.CreateDropdown(screen, dropdownDefinition)
 end
 
 function Z.RenderButton(screen, component)
-    -- Get Subtype Defaults abnd Merge
-    local defaults = DeepCopyTable(Z.BaseComponents.Button[component.SubType])
-    local buttonDefinition = ModUtil.Table.Merge(defaults, component.Args or {})
+    local buttonDefinition = GetComponentDefinition(screen, component)
 
     local components = screen.Components
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
@@ -526,7 +541,19 @@ function Z.RenderButton(screen, component)
             buttonDefinition.Label.Parent = buttonName
             Z.RenderText(screen, buttonDefinition.Label)
         else
-            DebugPrint { Text = "Button.Label definition not properly defined!"}
+            local buttonLabel = {
+                Type = "Text",
+                SubType = "Note",
+                Args = {
+                    FieldName = buttonName.."Label",
+                    Text = buttonDefinition.Label or "",
+                    OffsetX = buttonDefinition.OffsetX,
+                    OffsetY = buttonDefinition.OffsetY,
+                    Justification = "Center",
+                },
+                Parent = buttonName
+            }
+            Z.RenderText(screen, buttonLabel)
         end
     end
 
@@ -535,33 +562,21 @@ end
 
 -- Create Text Box
 function Z.RenderText(screen, component)
-    -- Get Subtype Defaults abnd Merge
-    local textDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.Text[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local textDefinition = GetComponentDefinition(screen, component)
     -- Create Text
     textDefinition.Name = "BlankObstacle"
     local parentName = component.Parent or "Background"
     textDefinition.DestinationId = screen.Components[parentName].Id
-    
-    screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
 
-    -- -- DebugPrint { Text = ModUtil.ToString.Deep(textDefinition)}
-    -- -- DebugPrint { Text = parentName .. ": " .. ModUtil.ToString.Deep(screen.Components[parentName])}
-    local finalTextDefinition = ModUtil.Table.Merge(textDefinition, {
-        Id = screen.Components[textDefinition.FieldName].Id,
-    })
-    return CreateTextBox(finalTextDefinition)
+    screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
+    textDefinition.Id = screen.Components[textDefinition.FieldName].Id
+    return CreateTextBox(textDefinition)
 
 end
 
 function Z.UpdateText(screen, component)
-    -- Get Subtype Defaults abnd Merge
-    local textDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.Text[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    -- TODO: evaluate if this can even be simplified
+    local textDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
     ModifyTextBox({
         Id = components[textDefinition.FieldName].Id, Text = textDefinition.Text
@@ -589,14 +604,9 @@ function Z.RenderBackground(screen, component)
 end
 
 function Z.RenderList(screen, component)
-    
-    local listDefinition = ModUtil.Table.Merge(
-        DeepCopyTable(Z.BaseComponents.List[component.SubType]),
-        DeepCopyTable(component.Args)
-    )
+    local listDefinition = GetComponentDefinition(screen, component)
 
-    -- testing ErumiUILib ScrollingList
-    local myScroll = ErumiUILib.ScrollingList.CreateScrollingList(
+    local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(
 		screen, listDefinition
     )
 end
@@ -607,4 +617,6 @@ end
     1) Make most functions create/update where create calls update after initialization of components
     to minimize code duplication and mistakes\
     2) more options for fields
+    3) Make labels on components more ubiquotious and add support for either object or plain text
+    4) Make the generic component hooks work for multi-element things...
 ]]

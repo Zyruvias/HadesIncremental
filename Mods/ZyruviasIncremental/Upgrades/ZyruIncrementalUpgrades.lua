@@ -81,12 +81,38 @@ function Z.MergeDataArrays(args)
     end
 end
 
+function Z.HasUpgrade(upgradeName, args)
+    return Contains(Z.Data.UpgradeData, upgradeName)
+end
+
 function Z.GetAllUpgradesBySource(source)
     local toReturn = {}
-    for i, upgrade in ipairs(Z.UpgradeData) do
+    for i, upgrade in pairs(Z.UpgradeData) do
         if upgrade.Source == source or upgrade.Sources ~= nil and Contains(upgrade.Sources, source) then
             table.insert(toReturn, DeepCopyTable(upgrade))
         end
     end
     return toReturn
+end
+
+function Z.AttemptPurchaseUpgrade(screen, button)
+    local upgrade = button.Upgrade
+    if Z.HasUpgrade(upgrade.Name) then
+        -- TODO: CannotPurchaseVoiceLines all but last?
+		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
+        return
+    end
+    local cost = upgrade.Cost or 0
+    local sourceCurrency = upgrade.Source
+    local currentCurrency = Z.Data.Currencies[sourceCurrency] or 0
+    if currentCurrency >= cost then
+        -- add upgrade to save
+        Z.AddUpgrade(upgrade.Name)
+        -- subtract cost
+        Z.Data.GodData.CurrentPoints = Z.Data.GodData.CurrentPoints - cost
+        -- exhibit signs of self awareness
+		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
+    else
+		thread( PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true )
+    end
 end

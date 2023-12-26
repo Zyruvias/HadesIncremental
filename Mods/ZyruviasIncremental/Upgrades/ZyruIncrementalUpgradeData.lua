@@ -508,32 +508,14 @@ Z.TraitData = {
 
 }
 
-
--- TODO : constants over magic strings
-Z.UpgradeSourceEnums = {
-    ZEUS = "Zeus",
-    NYX = "Nyx",
-    POSEIDON = "Poseidon",
-    APHRODITE = "Aphrodite"
-    -- "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
-    --     -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
-    --     "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
-}
-
-Z.UpgradeTypeEnums = {
-    PURCHASE_BOON = "PURCHASE_BOON",
-    MIRROR_UPGRADE = "MIRROR_UPGRADE",
-    UPGRADE_BOON = "UPGRADE_BOON",
-    STANDARD = "STANDARD"
-}
 --[[
     Upgrade shape: {
-        Name -- TODO: is this necessary
-        CostType
+        Name
         Cost
         OnApplyFunction
         OnApplyFunctionArgs
-        Source
+        Source?
+        Sources?
     }
     ]]--
 Z.UpgradeData = {
@@ -543,7 +525,6 @@ Z.UpgradeData = {
     -----------------
     ZeusHermesSynergyTrait = {
         Name = "ZeusHermesSynergyTrait",
-        CostType = "",
         Cost = 0,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -557,7 +538,7 @@ Z.UpgradeData = {
                 }
             }
         },
-        Source = Z.UpgradeSourceEnums.ZEUS
+        Sources = { Z.Constants.Gods.ZEUS, Z.Constants.Gods.HERMES }
     },
 
     PoseidonHermesSynergyTrait = {
@@ -575,7 +556,8 @@ Z.UpgradeData = {
                     { "PoseidonPickedUpMinorLootTrait", "RoomRewardBonusTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.POSEIDON, Z.Constants.Gods.HERMES }
     },
 
     ArtemisHermesSynergyTrait = {
@@ -593,7 +575,8 @@ Z.UpgradeData = {
                     { "ArtemisWeaponTrait", "ArtemisSecondaryTrait", "ArtemisRangedTrait", "ArtemisShoutTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.ARTEMIS, Z.Constants.Gods.HERMES }
     },
     DionysusHermesSynergyTrait = {
         Name = "DionysusHermesSynergyTrait",
@@ -610,7 +593,8 @@ Z.UpgradeData = {
                     { "DionysusWeaponTrait", "DionysusSecondaryTrait", "DionysusRangedTrait", "DionysusShoutTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.DIONYSUS, Z.Constants.Gods.HERMES }
     },
 
     AresHermesSynergyTrait = {
@@ -628,7 +612,8 @@ Z.UpgradeData = {
                     { "IncreasedDamageTrait", "LastStandDamageBonusTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.ARES, Z.Constants.Gods.HERMES }
     },
 
     AphroditeHermesSynergyTrait = {
@@ -646,7 +631,8 @@ Z.UpgradeData = {
                     { "AphroditeWeaponTrait", "AphroditeSecondaryTrait", "AphroditeRangedTrait", "AphroditeRushTrait", "AphroditeRetaliateTrait", "AphroditeDeathTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.APHRODITE, Z.Constants.Gods.HERMES }
     },
 
     DemeterHermesSynergyTrait = {
@@ -664,7 +650,8 @@ Z.UpgradeData = {
                     { "DemeterRangedTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.DEMETER, Z.Constants.Gods.HERMES }
     },
 
     -- TODO: make this
@@ -683,7 +670,8 @@ Z.UpgradeData = {
                     { "DemeterRangedTrait" },
                 }
             }
-        }
+        },
+        Sources = { Z.Constants.Gods.ATHENA, Z.Constants.Gods.HERMES }
     },
 
     -----------------
@@ -716,8 +704,8 @@ Z.UpgradeData = {
         Name = "PoseidonAlternatingTidesUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.POSEIDON,
         OnApplyFunction = "Z.EnablePoseidonVacuumFunction",
+        Source = Z.Constants.Gods.POSEIDON,
     },
 
     -- APHRODITE
@@ -725,7 +713,7 @@ Z.UpgradeData = {
         Name = "SeductiveVictoryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.APHRODITE,
+        Source = Z.Constants.Gods.APHRODITE,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "SeductiveVictoryLegendary",
@@ -745,7 +733,7 @@ Z.UpgradeData = {
         Name = "PermanentVulnerabilityLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.ARTEMIS,
+        Source = Z.Constants.Gods.ARTEMIS,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "PermanentVulnerabilityLegendary",
@@ -762,7 +750,7 @@ Z.UpgradeData = {
         Name = "UnendingHangoverLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.DIONYSUS,
+        Source = Z.Constants.Gods.DIONYSUS,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "UnendingHangoverLegendary",
@@ -782,7 +770,7 @@ Z.UpgradeData = {
         Name = "StrategicCooperationBlessingLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.ATHENA,
+        Source = Z.Constants.Gods.ATHENA,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "StrategicCooperationBlessingLegendary",
@@ -821,7 +809,7 @@ Z.UpgradeData = {
         Name = "ChaosRandomStatusLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.CHAOS,
+        Source = Z.Constants.Gods.CHAOS,
         OnApplyFunctions =  { "Z.AddTraitToTraitData", "Z.MergeDataArrays"},
         OnApplyFunctionArgs = { 
             { Name = "ChaosRandomStatusLegendary" },
@@ -840,7 +828,7 @@ Z.UpgradeData = {
         Name = "DemeterFamineLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.DEMETER,
+        Source = Z.Constants.Gods.DEMETER,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DemeterFamineLegendary",
@@ -859,7 +847,7 @@ Z.UpgradeData = {
     --     Name = "HermesAfterImageLegendaryUpgrade",
     --     Cost = 0,
     --     CostType = "",
-    --     Source = Z.UpgradeSourceEnums.HERMES,
+    --     Source = Z.Constants.Gods.HERMES,
     --     OnApplyFunction = "Z.AddTraitToTraitData",
     --     OnApplyFunctionArgs = { 
     --         Name = "HermesAfterImageLegendary",
@@ -923,7 +911,7 @@ Z.UpgradeData = {
         Name = "AresMurderousEfficacyLegendaryUpgrade",
         Cost = 0,
         CostType = "",
-        Source = Z.UpgradeSourceEnums.ARES,
+        Source = Z.Constants.Gods.ARES,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AresMurderousEfficacyLegendary",
@@ -944,7 +932,7 @@ Z.UpgradeData = {
     --     Name = "ZeusChainRangeLegendaryUpgrade",
     --     Cost = 0,
     --     CostType = "",
-    --     Source = Z.UpgradeSourceEnums.ZEUS,
+    --     Source = Z.Constants.Gods.ZEUS,
     --     OnApplyFunction = "Z.AddTraitToTraitData",
     --     OnApplyFunctionArgs = { 
     --         Name = "ZeusChainRangeLegendary",
@@ -1027,19 +1015,7 @@ OnDodge{ "_PlayerUnit",
                     nearestEnemyId = CurrentRun.Hero.ObjectId
                     createdObstacle = true
                 end
-                -- DebugPrint { Text = tostring(nearestEnemyId)}
                 FireWeaponFromUnit({ Weapon = "AphroditeSuperCharm", Id = CurrentRun.Hero.ObjectId, DestinationId = CurrentRun.Hero.ObjectId, AutoEquip = true, ClearAllFireRequests = true })
-                -- FireWeaponFromUnit({ 
-                --     Weapon = weapon.Weapon,
-                --     AutoEquip = true,
-                --     Id = nearestEnemyId,
-                --     DestinationId = CurrentRun.Hero.ObjectId,
-                --     FireFromTarget = true
-                -- })
-                -- if createdObstacle then
-                --     Destroy({ Id = nearestEnemyId })
-                -- end
-                -- DebugPrint { Text = ModUtil.ToString.Deep(weapon) }
             end
         -- end
 	end

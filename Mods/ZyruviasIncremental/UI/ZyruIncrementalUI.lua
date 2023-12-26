@@ -120,20 +120,12 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
         ShadowOffset={0, 3},
         Justification = "Left",
     })
-    
-	-- 	Text = "LMAO I MADE THIS",
-	-- 	FontSize = 72,
-	-- 	OffsetX = 3, OffsetY = 3,
-	-- 	Color = { 255, 255, 255, 255 },
-	-- 	Font = "AlegreyaSansSCRegular",
-	-- 	ShadowBlur = 0, ShadowColor = {0,0,0,0}, ShadowOffset={0, 3},
-	-- 	Justification = "Left" })
-
     table.insert( components, traitIcon )
 
 end
 
 ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
+    -- TODO: use new framework
     local value = baseFunc( ... )
 
     ScreenAnchors.ZyruBoonProgress = { Components = {} }
@@ -260,56 +252,6 @@ function DisplayBoonLevelupPopup( traitNamesImproved, level )
 	end
 end
 
--- assigns basic global state, creates background and close button
-function CreateScreenWithCloseButton( name, args ) 
-    args = args or {}
-    local screen = { Components = {} }
-    ScreenAnchors[name] = screen
-	screen.Name = name
-
-    local components = screen.Components
-
-    if IsScreenOpen( screen.Name ) then
-		return
-	end
-    local currentRunInitialized = CurrentRun ~= nil
-    OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-    HideCombatUI(name)
-    if not args.DontFreezePlayerUnit then
-        FreezePlayerUnit()
-    end
-    EnableShopGamepadCursor()
-
-
-	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
-
-    components.Background = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
-	SetScale({ Id = components.Background.Id, Fraction = 10 })
-	SetColor({ Id = components.Background.Id, Color = Color.Black })
-	SetAlpha({ Id = components.Background.Id, Fraction = 0 })
-	SetAlpha({ Id = components.Background.Id, Fraction = 0.85, Duration = 0.5 })
-
-    components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
-	Attach({ Id = components.CloseButton.Id, DestinationId = components.Background.Id, OffsetX = 3, OffsetY = 480 })
-	components.CloseButton.OnPressedFunctionName = "Close" .. name .. "Screen"
-	-- components.CloseButton.ControlHotkey = "Cancel"
-
-    if _G["Close" .. name .. "Screen"] == nil then
-        _G["Close" .. name .. "Screen"] = function()
-            CloseScreenByName ( name )
-            if args.CloseScreenFunction then
-                args.CloseScreenFunction(args.CloseScreenFunctionArgs)
-            elseif args.CloseScreenFunctionName ~= nil then
-                _G[args.CloseScreenFunctionName](args.CloseScreenFunctionArgs)
-            end
-        end
-    end
-
-    -- TODO: Figure out system to have HandleScreenInput called by default, possibly callback method
-	-- HandleScreenInput( screen )
-    return screen
-end
-
 function CloseScreenByName ( name )
 	local screen = ScreenAnchors[name]
 	DisableShopGamepadCursor()
@@ -322,272 +264,8 @@ function CloseScreenByName ( name )
 	OnScreenClosed({ Flag = screen.Name })
 end
 
--- Courtyard Upgrade Screen
-function ShowZyruUpgradeScreenOLD()
-	local screen = CreateScreenWithCloseButton("ZyruUpgrade")
-    local components = screen.Components
-
-    -- 
-    -- Title TODO: fix title
-    CreateTextBox({ Id = components.Background.Id, Text = "Upgrades",
-    Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
-    OffsetY = -450, Justification = "Center" })
-    -- Suytitle
-    CreateTextBox({ Id = components.Background.Id, Text = "Purchase powerful boons, abilities, and insights into the finer workings of the underworld!",
-        Font = "AlegreyaSansSCLight", FontSize = "22", Color = Color.White,
-        OffsetY = -400, Justification = "Center" })
-
-    local portraitsToDisplay = {
-        -- Olympians
-        "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
-        -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
-        "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
-    }
-    for i, name in ipairs(portraitsToDisplay) do
-        local index = i
-        local rowIndex = (index - 1) % 9
-        local xOffset = ScreenWidth / 10 * (-5 + rowIndex + 1)
-        local yOffset = 150 + ScreenHeight / 2 *  (math.floor((index - 1) / 9) - 1)
-        local scale = 0.5
-        local components = screen.Components
-        local godButton = CreateScreenComponent({
-            Name = "BaseInteractableButton",
-            Group = "Combat_Menu_TraitTray",
-            Color = {1, 1, 1, 1}
-        })
-        components[ "Icon_"..name ] = godButton
-        SetAnimation({ Name = "Codex_Portrait_" .. name, DestinationId = godButton.Id })
-        Attach({ Id = godButton.Id, DestinationId = components.Background.Id, OffsetX = xOffset, OffsetY = yOffset })
-        SetScale({ Id = godButton.Id, Fraction = scale })
-
-        godButton.OnPressedFunctionName = "ShowUpgradeScreenForItem"
-        godButton.Source = name
-    end
-    
-
-    
-	HandleScreenInput( screen )
-end
-
-function CloseZyruUpgradeScreen( )
-    CloseScreenByName("ZyruUpgrade")
-end
-
-function CanPurchaseUpgrade( upgrade ) 
-    -- ZyruIncremental.GodData[upgrade.source] ? 
-    -- should use ZI.Currencies[source]
-    if 
-        upgrade.CostType ~= nil
-        and upgrade.Cost ~= nil
-        and Z.Data.Currencies[upgrade.source] ~= nil
-        and Z.Data.Currencies[upgrade.source] >= upgrade.Cost
-    then
-        return true
-    end
-    return false
-end
-
-function CreateUpgradeListItem( upgrade )
-
-    
-    --[[
-    Upgrade shape: {
-        Name -- TODO: is this necessary
-        CostType
-        Cost
-        OnApplyFunction
-        OnApplyFunctionArgs
-        Purchased
-        Source
-        ButtonType?
-    }
-    ]]--
-    local defaultButtonStyles = {
-        Font = "SpectralSCLightTitling",
-        FontSize = 20,
-        Justification = "Center",
-    }
-    local button = {
-        IsEnabled = CanPurchaseUpgrade(upgrade)
-    }
-    if upgrade.ButtonType == Z.UpgradeTypeEnums.STANDARD then
-        button = {
-            event = function(list)
-                DebugPrint({Text = "Woah you enabled me"})
-            end,
-            Text = "Purchase Boon: " .. upgrade.Name,
-            -- IsEnabled = savefile does not contain upgrade.Name
-            Description = "bleh",
-            Offset = {X = 0, Y = 0},
-            FontSize = 20,
-            Font = "SpectralSCLightTitling",
-            ImageStyle = {
-                Image = "GUI\\Screens\\BoonIcons\\" .. TraitData[upgrade.Name].Icon,
-                Offset = {X = -225, Y = 0},
-                Scale = 0.7, 
-            },
-        }
-    elseif upgrade.ButtonType == Z.UpgradeTypeEnums.PURCHASE_BOON then
-        
-    end
-
-    return ModUtil.Table.Merge(button, defaultButtonStyles)
-end
-
-function ShowUpgradeScreenForItem( screen, button )
-    
-    CloseZyruUpgradeScreen()
-	local screen = CreateScreenWithCloseButton ("Zyru" .. button.Source .. "Upgrades", {
-        CloseScreenFunctionName = "ShowZyruUpgradeScreen"
-    })
-    local components = screen.Components
-
-    -- TODO: use UI friendly texts
-    CreateTextBox({ Id = components.Background.Id, Text = button.Source,
-    Font = "SpectralSCLightTitling", FontSize = "36", Color = Color.White,
-    OffsetY = -450, Justification = "Center" })
-
-    -- TODO: filter upgrades by type
-    -- CreateUpgreadePurchaseButton for each upgrade
-    -- assign display args to button
-    local upgradesForThisSource = {}
-    for i, upgrade in pairs(Z.UpgradeData) do
-        DebugPrint { Text = "Checking " .. tostring(upgrade.name) .. " " .. tostring(upgrade.Source)}
-        if button.Source == upgrade.Source then
-            table.insert(upgradesForThisSource, 
-                {
-                    event = function(list)
-                        DebugPrint({Text = "Woah you enabled me"})
-                    end,
-                    Text = "Purchase Boon: " .. upgrade.Name,
-                    -- IsEnabled = savefile does not contain upgrade.Name
-                    Description = "bleh",
-                    Offset = {X = 0, Y = 0},
-                    Justification = "Center",
-                    FontSize = 20,
-                    Font = "SpectralSCLightTitling",
-                    ImageStyle = {
-                        Image = "GUI\\Screens\\BoonIcons\\" .. TraitData[upgrade.Name].Icon,
-                        Offset = {X = -225, Y = 0},
-                        Scale = 0.7, 
-                    },
-                }
-            )
-        end
-    end
-
-    -- testing ErumiUILib ScrollingList
-    local myScroll = ErumiUILib.ScrollingList.CreateScrollingList(
-		screen, {
-            Name = "MyScrollingList", 
-            Group = "GardenBoxGroup",
-            Scale = {X = 0.6, Y = 1},
-            Padding = {X = 0, Y = 5},
-            X = 1550, Y = 115,
-            ImageStyle = {
-                Image = "GUI\\Screens\\SeasonalItem",
-                Offset = {X = -225, Y = 0},
-            },
-            GeneralOffset = {X = -195, Y = -25},
-            GeneralFontSize = 18,
-            Justification = "Left",
-            Font = "AlegreyaSansSCBold",
-            ItemsPerPage = 9,
-            ArrowStyle = {
-                Offset = {X = 325, Y = 0},
-                Scale = 1,
-                CreationPositions = {Style = "TB"}
-            },
-            DescriptionFontSize = 13,
-            DescriptionOffset = {X = -195, Y = 0},
-            DescriptionColor = Color.Yellow,
-            DeEnabledColor = {1,0,0,0.33},
-            Items = upgradesForThisSource,
-        
-    })
-    --end testing
-    
-	HandleScreenInput( screen )
-end
-
-function CreateUpgradePurchaseButton ( screen, button )
-    local components = screen.Components
-
-    local traitName = button.UpgradeArgs.TraitName
-
-	local traitInfo = {}
-	local offset = { X = 110, Y = BoonInfoScreenData.ButtonStartY + 1 * BoonInfoScreenData.ButtonYSpacer }
-	components[traitName .. "DetailsBacking"] = CreateScreenComponent({
-        Name = "BoonInfoButton",
-        DestinationId = components.Background.Id,
-        Group = "Combat_Menu_TraitTray_Backing",
-        X = offset.X + 455,
-        Y = offset.Y + 200
-    })
-	
-	CreateTextBoxWithFormat({
-		Id = components[traitName .. "DetailsBacking"].Id,
-		OffsetX = -260,
-		OffsetY = BoonInfoScreenData.DecriptionBoxOffsetY,
-		Width = 665,
-		Justification = "Left",
-		VerticalJustification = "Top",
-		LineSpacingBottom = 8,
-		UseDescription = true,
-		Format = "BaseFormat",
-		VariableAutoFormat = "BoldFormatGraft",
-		TextSymbolScale = 0.8,
-	})
-
-	components[traitName .. "TitleBox"] = CreateScreenComponent({ Name = "BlankObstacle", Group = "Combat_Menu_TraitTray", X = offset.X + 20, Y = offset.Y + 170 })
-	CreateTextBox({
-		Id = components[traitName .. "TitleBox"].Id,
-		FontSize = 25,
-		OffsetX = 170,
-		OffsetY = BoonInfoScreenData.TextBoxOffsetY,
-		Color = color,
-		Font = "AlegreyaSansSCLight",
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Left",
-	})
-
-	components[traitName .. "RarityBox"] = CreateScreenComponent({ Name = "BlankObstacle", Group = "Combat_Menu_TraitTray", X = offset.X + 20, Y = offset.Y + 170 })
-	CreateTextBox({
-		Id = components[traitName .. "RarityBox"].Id,
-		FontSize = 25,
-		OffsetX = 860,
-		OffsetY = -17,
-		Color = color,
-		Font = "AlegreyaSansSCLight",
-		ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
-		Justification = "Right",
-	})
-
-	components[traitName .. "Patch"] = CreateScreenComponent({
-        Name = "BlankObstacle",
-        Group = "Combat_Menu_TraitTray",
-        X = offset.X + 110,
-        Y = offset.Y + 205,
-        Scale = 0.8
-    })
-	SetAnimation({ DestinationId = components[traitName .. "Patch"].Id, Name = "BoonRarityPatch"})
-	SetColor({ Id = components[traitName .. "Patch"].Id, Color = Color.Transparent })
-
-	components[traitName .. "Frame"] = CreateScreenComponent({ Name = "BoonInfoTraitFrame", Group = "Combat_Menu_TraitTray", X = offset.X + 90, Y = offset.Y + 200, Scale = 0.8 })
-	components[traitName .. "Icon"] = CreateScreenComponent({ Name = "BlankObstacle", Group = "Combat_Menu_TraitTray", X = offset.X + 90, Y = offset.Y + 200, Scale = 0.8 })
-	local newTraitData =  GetProcessedTraitData({ Unit = CurrentRun.Hero, TraitName = traitName, Rarity = "Common", ForBoonInfo = true })
-	newTraitData.ForBoonInfo = true
-	SetTraitTextData( newTraitData )
-	SetTraitTrayDetails( { TraitData = newTraitData, ForBoonInfo = true }, components[traitName .. "DetailsBacking"], components[traitName .. "RarityBox"], components[traitName .. "TitleBox"], components[traitName .. "Patch"], components[traitName .. "Icon"] )
-
-    
-end
-
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-	local screen = CreateScreenWithCloseButton ("ZyruReset")
-    local components = screen.Components
-
     -- TODO: implement this in new framework
 end
 
@@ -968,11 +646,35 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            Proportion = 1, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ..."
+            Proportion = 0.6, UpdateDuration = 7, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
+            
+            -- A crimson color for the drapery is sure to be a better fit for the decor.
+            Voicelines = {{ Cue = "/VO/ZagreusHome_1085" } },
+        },
+        {
+            Proportion = 0.6, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
+            -- I did not authorize such an expenditure.
+            Voicelines = {{ Cue = "/VO/Hades_0518" }},
+        },
+        {
+            Proportion = 0.3, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
+            -- You know what, I changed my mind about the drapery.
+            Voicelines = {{ Cue = "/VO/ZagreusHome_1086" }},
+        },
+        {
+            Proportion = 0.8, UpdateDuration = 11, Text = "Working the House Contractor Overtime (2x pay, of course) ...", 
+            Voicelines = {
+                -- A fine hallway requires a fine rug, I always say! I say it sometimes...
+                { Cue = "/VO/ZagreusHome_1710" },
+                -- So wasteful of my realm's resources, boy.
+                { Cue = "/VO/Hades_0643", PreLineWait = 5.80},
+            }
+        },
+        {
+            Proportion = 1, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            -- TODO: more stages if ya nasty
             Proportion = 1, UpdateDuration = 4, Text = "Killing Zagreus ...",
             Voicelines = {
                 -- Wha-?
@@ -1017,7 +719,7 @@ function CloseInitializationScreen(screen, button)
 
         if stage.Text then
             progressText.Args.Text = stage.Text
-            Z.UpdateText(screen, progressText)
+            Z.UpdateComponent(screen, progressText)
         end
 
         progressBar.Args.Proportion = stage.Proportion
@@ -1105,7 +807,7 @@ ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
 function UpdateBoonInfoProgressScreen(screen, boonName)
 
     -- UPDATE TEXT
-    Z.UpdateText(screen, {
+    Z.UpdateComponent(screen, {
         Type = "Text",
         SubType = "Subtitle",
         Args = {
@@ -1115,7 +817,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
 
     })
     -- UPDATE ICON
-    Z.UpdateIcon(screen, {
+    Z.UpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
         Args = {
@@ -1377,26 +1079,92 @@ function ShowZyruUpgradeScreen()
     })
 end
 
-function ShowGodUpgradeScreen(screen, button)
-    DebugPrint { Text = ModUtil.ToString.Deep(button)}
+function GetUpgradeGostText(upgrade)
+    local costText = "Cost: "
+    if upgrade.Sources ~= nil then
+        local sourceCostTexts = {}
+        for i, source in ipairs(upgrade.Sources) do 
+            table.insert(sourceCostTexts, tostring(upgrade.Cost or 0) .. " " .. source .. " Points")
+        end
+        return costText .. ModUtil.String.Join(", ", sourceCostTexts)
+    end
+    return costText .. tostring(upgrade.Cost or 0) .. " " .. upgrade.Source .. " Points"
+end
 
+function UpdateUpgradeInfoScreen(screen, upgrade)
+    -- UPDATE ICON
+    Z.CreateOrUpdateComponent(screen, {
+        Type = "Icon",
+        SubType = "Standard",
+        Args = {
+            FieldName = "UpgradeIcon",
+            Animation = GetTraitIcon( TraitData[upgrade.Name] or {} ),
+            OffsetX = ScreenWidth / 6,
+            OffsetY = -100,
+            Scale = 4,
+        }
+    })
+    Z.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "UpgradeDescriptionText",
+            Text = "",
+            OffsetX = ScreenWidth / 6,
+            OffsetY = 0,
+
+        }
+    })
+    Z.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "UpgradeCostText",
+            Text = GetUpgradeGostText(upgrade),
+            OffsetX = ScreenWidth / 6,
+            OffsetY = 110,
+            Justification = "Center",
+        }
+    })
+    -- Add Purchase Button
+    Z.CreateOrUpdateComponent(screen, {
+        Type = "Button",
+        SubType = "Basic",
+        Args = {
+            FieldName = "PurchaseButton",
+            OffsetX = ScreenWidth / 6,
+            OffsetY = 200,
+            Label = "Purchase Upgrade",
+            ComponentArgs = {
+                OnPressedFunctionName = "Z.AttemptPurchaseUpgrade",
+                Upgrade = upgrade
+            },
+        },
+    })
+end
+
+function GetUpgradeListItem(screen, upgrade)
+    return {
+        event = function () 
+            UpdateUpgradeInfoScreen(screen, upgrade)
+        end,
+        Text = upgrade.Name,
+        Description = "Unlock a new Boon from " .. upgrade.Source,
+        ImageStyle = {
+            Image = GetTraitIcon( TraitData[upgrade.Name] or {} ),
+            Offset = {X = -225, Y = 0},
+            Scale = 0.7, 
+        },
+    }
+end
+
+function ShowGodUpgradeScreen(screen, button)
     -- upgradesTodisplay
     local upgradesToDisplay = Z.GetAllUpgradesBySource(button.PageIndex)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
-    for i, upgradeName in ipairs(upgradesToDisplay) do
-        table.insert(boonItemsToDisplay, {
-            event = function () 
-                DebugPrint { Text = "clicked " .. boonName}
-                UpdateBoonInfoProgressScreen(screen, boonName)
-            end,
-            Text = boonName,
-            ImageStyle = {
-                Image = GetTraitIcon( TraitData[boonName] or {} ),
-                Offset = {X = -225, Y = 0},
-                Scale = 0.7, 
-            },
-        })
+    for i, upgrade in ipairs(upgradesToDisplay) do
+        table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
     end
 
     -- create title (god name)
@@ -1405,7 +1173,7 @@ function ShowGodUpgradeScreen(screen, button)
             Type = "Text",
             SubType = "Title",
             Args = {
-                FieldName = button.PageIndex .. "ProgressTitle",
+                FieldName = button.PageIndex .. "UpgradeTitle",
                 Text = button.PageIndex, -- todo: generalize args or properties or something??
             }
         },
@@ -1433,8 +1201,8 @@ function ShowGodUpgradeScreen(screen, button)
             SubType = "Standard",
             Args = {
                 FieldName = "UpgradeCurrency",
-                OffsetX = ScreenWidth / 6,
-                OffsetY = -200,
+                OffsetX = ScreenWidth / 3,
+                OffsetY = -450,
                 Scale = 0.75,
                 Animation = "BoonInfoSymbolZeusIcon",
             }
@@ -1444,8 +1212,8 @@ function ShowGodUpgradeScreen(screen, button)
             SubType = "Note",
             Args = {
                 FieldName = "UpgradeCurrencyText",
-                OffsetX = ScreenWidth / 6 - 50,
-                OffsetY = -200,
+                OffsetX = ScreenWidth / 3 - 50,
+                OffsetY = -450,
                 Justification = "Right",
                 FontSize = 20,
                 Text = "Available Zeus Points: " .. tostring(Z.Data.Currencies.Zeus or 0)

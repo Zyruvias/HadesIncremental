@@ -39,6 +39,24 @@ Z.Constants = {
     RECTANGLE_01_WIDTH = 480,
     PROGRESS_BAR_SCALE_PROPORTION_X = 1,
     PROGRESS_BAR_SCALE_PROPORTION_Y = 0.05
+  },
+  Gods = {
+    ZEUS = "Zeus",
+    POSEIDON = "Poseidon",
+    ATHENA = "Athena",
+    ARES = "Ares",
+    APHRODITE = "Aphrodite",
+    ARTEMIS = "Artemis",
+    DIONYSUS = "Dionysus",
+    DEMETER = "Demeter",
+    HERMES = "Hermes",
+    CHAOS = "Chaos",
+  },
+  Upgrades = {
+    Types = {
+      PURCHASE_BOON = "Purchase Boon",
+      AUGMENT_RARITY = "Augment Rarity Bonus"
+    },
   }
 }
 
