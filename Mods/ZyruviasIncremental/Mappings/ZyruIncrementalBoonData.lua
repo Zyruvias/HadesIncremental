@@ -18,7 +18,7 @@ local T1RarityTable = {
     Olympic = {
       MinMultiplier = 4.5,
       MaxMultiplier = 5.0,
-    }
+    },
 }
 
 local T2RarityTable = ModUtil.Table.Copy(T1RarityTable)
@@ -28,7 +28,7 @@ local StaticMultiplierTable = {
   Ultimate = { Multiplier = 2.0 },
   Transcendental = { Multiplier = 2.2 },
   Mythic = { Multiplier = 2.6 },
-  Olympic = { Multiplier = 3.0 }
+  Olympic = { Multiplier = 3.0 },
 }
 
 local rarities = { "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic"}
@@ -156,8 +156,8 @@ ModUtil.LoadOnce(function ( )
           Ultimate = { Multiplier = 1.5 },
           Transcendental = { Multiplier = 1.58333 },
           Mythic = { Multiplier = 1.625 },
-          Olympic = { Multiplier = 1.66667 }
-        }
+          Olympic = { Multiplier = 1.66667 },
+        },
       },
       LastStandHealTrait = {
         RarityLevels = StaticMultiplierTable
@@ -186,8 +186,8 @@ ModUtil.LoadOnce(function ( )
         -- increasing DamageRadius
         PropertyChanges = {
           {},
-          { ChangeValue = 1.5}
-        }
+          { ChangeValue = 1.5},
+        },
       },
       AphroditeRushTrait = {
         RarityLevels = scalingTable(1.8, 0.2, 0.4)
@@ -261,7 +261,7 @@ ModUtil.LoadOnce(function ( )
         RarityLevels = scalingTable(1.8, 0.2, 0.4),
         CriticalSuperGainAmount = {
           BaseValue = 1
-        }
+        },
       },
       ArtemisShoutTrait = {
         RarityLevels = scalingTable(1.4, 0.1, 0.2)
@@ -334,8 +334,8 @@ ModUtil.LoadOnce(function ( )
       DemeterRetaliateTrait = {
         RarityLevels = scalingTable(3, 0.5),
         PropertyChanges = {
-          { BaseMin = 40, BaseMax = 40}
-        }
+          { BaseMin = 40, BaseMax = 40},
+        },
       },
       -- Poseidon Boons
       PoseidonRangedTrait = {
@@ -353,12 +353,12 @@ ModUtil.LoadOnce(function ( )
       BonusCollisionTrait = {
         RarityLevels = {
           RarityLevels = scalingTable(2, 0.25)
-        }
+        },
       },
       SlamExplosionTrait = {
         RarityLevels = {
           RarityLevels = scalingTable(3, 0.5)
-        }
+        },
       },
       SlipperyTrait = {
         RarityLevels = scalingTable(3, 0.5)

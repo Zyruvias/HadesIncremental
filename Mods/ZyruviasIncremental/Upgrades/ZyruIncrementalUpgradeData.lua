@@ -63,8 +63,8 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_02",
         OnDamageEnemyFunction = {
             FunctionName = "PoseidonHermesDamageLoot",
-            FunctionArgs = {}
-        }
+            FunctionArgs = {},
+        },
     },
 
     ArtemisHermesSynergyTrait = {
@@ -74,7 +74,7 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_02",
         OnEnemyCrittedFunction = {
             Name = "AddCritSpeedBoost",
-            Args = { }
+            Args = { },
         },
     },
 
@@ -91,8 +91,8 @@ Z.TraitData = {
                 EffectProperty = "StackAmount",
                 DeriveValueFrom = "MaxStacks",
                 ChangeValue = true,
-            }
-        }
+            },
+        },
     },
 
     AresHermesSynergyTrait = {
@@ -102,11 +102,11 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_01",
         OnEnemyKillFunction = {
             Name = "IncreaseBloodlust",
-            Args = {}
+            Args = {},
         },
         OnHeroDamageTakenFunction = {
             Name = "ResetBloodlust",
-            Args = {}
+            Args = {},
         },
         BloodlustDamageMultiplier =  1.01,
         AddOutgoingDamageModifiers =
@@ -139,7 +139,7 @@ Z.TraitData = {
             --     ExtractValue =
             --     {
             --         ExtractAs = "TooltipDamage",
-            --     }
+            --     },
             -- },
             -- {
             --     WeaponName = "DeathAreaWeakenAphrodite",
@@ -184,7 +184,7 @@ Z.TraitData = {
                 ChangeValue = 10,
                 ChangeType = "Multiply"
             },
-        }
+        },
     },
     ChangingTidesLegendary = {
         Name = "ChangingTidesLegendary",
@@ -202,7 +202,7 @@ Z.TraitData = {
         SetupFunction = {
             Name = "Z.SetupSeductiveVictory",
             RunOnce = true,
-        }
+        },
     },
 
     PermanentVulnerabilityLegendary = {
@@ -221,8 +221,8 @@ Z.TraitData = {
                 EffectProperty = "Duration",
                 ChangeValue = 100000,
                 ChangeType = "Absolute",
-            }
-        }
+            },
+        },
     },
 
     UnendingHangoverLegendary = {
@@ -246,7 +246,7 @@ Z.TraitData = {
                 --     WeaponName = "SwordWeapon",
                 --     BaseName = "DamageOverTime",
                 --     BaseProperty = "Duration",
-                -- }
+                -- },
             },
             {
                 WeaponNames = WeaponSets.HeroSecondaryWeapons,
@@ -262,7 +262,7 @@ Z.TraitData = {
                 ChangeType = "Absolute",
                 ChangeValue = 100000,
             },
-        }
+        },
     },
 
     StrategicCooperationBlessingLegendary = {
@@ -371,7 +371,7 @@ Z.TraitData = {
                 ExtractValue =
                 {
                     ExtractAs = "TooltipDamage",
-                }
+                },
             },
             -- Dionysus
             {
@@ -446,7 +446,7 @@ Z.TraitData = {
         Icon = "Demeter_Zeus_01",
         OnHitEnemyFunction = {
             Name = "Z.ApplyAfterImageLegendary"
-        }
+        },
     },
 
     AresMurderousEfficacyLegendary = {
@@ -468,7 +468,7 @@ Z.TraitData = {
 					ExtractAs = "TooltipDamage",
 					Format = "PercentDelta",
 				},
-			}
+			},
 		},
     },
 
@@ -502,9 +502,9 @@ Z.TraitData = {
                 ChangeValue = 100000,
                 ChangeType = "Absolute"
             },
-        }
+        },
 
-    }
+    },
 
 }
 
@@ -535,10 +535,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesWeaponTrait", "HermesSecondaryTrait" },
                     { "ZeusWeaponTrait", "ZeusSecondaryTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.ZEUS, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.ZEUS, Z.Constants.Gods.HERMES },
     },
 
     PoseidonHermesSynergyTrait = {
@@ -554,10 +554,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "ChamberGoldTrait" },
                     { "PoseidonPickedUpMinorLootTrait", "RoomRewardBonusTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.POSEIDON, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.POSEIDON, Z.Constants.Gods.HERMES },
     },
 
     ArtemisHermesSynergyTrait = {
@@ -573,10 +573,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait" },
                     { "ArtemisWeaponTrait", "ArtemisSecondaryTrait", "ArtemisRangedTrait", "ArtemisShoutTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.ARTEMIS, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.ARTEMIS, Z.Constants.Gods.HERMES },
     },
     DionysusHermesSynergyTrait = {
         Name = "DionysusHermesSynergyTrait",
@@ -591,10 +591,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait" },
                     { "DionysusWeaponTrait", "DionysusSecondaryTrait", "DionysusRangedTrait", "DionysusShoutTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.DIONYSUS, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.DIONYSUS, Z.Constants.Gods.HERMES },
     },
 
     AresHermesSynergyTrait = {
@@ -610,10 +610,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait", "FastClearDodgeBonusTrait", "SpeedDamageTrait" },
                     { "IncreasedDamageTrait", "LastStandDamageBonusTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.ARES, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.ARES, Z.Constants.Gods.HERMES },
     },
 
     AphroditeHermesSynergyTrait = {
@@ -629,10 +629,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "DodgeChanceTrait", "HermesShoutDodge" },
                     { "AphroditeWeaponTrait", "AphroditeSecondaryTrait", "AphroditeRangedTrait", "AphroditeRushTrait", "AphroditeRetaliateTrait", "AphroditeDeathTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.APHRODITE, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.APHRODITE, Z.Constants.Gods.HERMES },
     },
 
     DemeterHermesSynergyTrait = {
@@ -648,10 +648,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "RapidCastTrait", "AmmoReloadTrait" },
                     { "DemeterRangedTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.DEMETER, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.DEMETER, Z.Constants.Gods.HERMES },
     },
 
     -- TODO: make this
@@ -668,10 +668,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "RapidCastTrait", "AmmoReloadTrait" },
                     { "DemeterRangedTrait" },
-                }
-            }
+                },
+            },
         },
-        Sources = { Z.Constants.Gods.ATHENA, Z.Constants.Gods.HERMES }
+        Sources = { Z.Constants.Gods.ATHENA, Z.Constants.Gods.HERMES },
     },
 
     -----------------
@@ -722,10 +722,10 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "AphroditeWeaponTrait", "AphroditeSecondaryTrait", "AphroditeRangedTrait", "AphroditeRushTrait"},
-                    { "AphroditeDurationTrait" }
-                }
-            }
-        }
+                    { "AphroditeDurationTrait" },
+                },
+            },
+        },
     },
 
     -- ARTEMIS LEGENDARY
@@ -740,9 +740,9 @@ Z.UpgradeData = {
             AddLinkedUpgrades = true,
             LinkedUpgradeName = "ArtemisUpgrade",
             LinkedUpgrades = {
-                OneOf = { "CritVulnerabilityTrait" }
-            }
-        }
+                OneOf = { "CritVulnerabilityTrait" },
+            },
+        },
     },
 
     -- DIONYSUS LEFENGDARY
@@ -759,10 +759,10 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "DionysusWeaponTrait", "DionysusSecondaryTrait", "DionysusRushTrait", "DionysusShoutTrait", },
-                    { "FountainDamageBonusTrait", "GiftHealthTrait" }
-                }
-            }
-        }
+                    { "FountainDamageBonusTrait", "GiftHealthTrait" },
+                },
+            },
+        },
     },
 
     -- ATHENA LEFENGDARY
@@ -798,10 +798,10 @@ Z.UpgradeData = {
                         "ShieldHitTrait", "CharmTrait", "AresCursedRiftTrait", "MagnetismTrait", "UnstoredAmmoDamageTrait",
                         -- Incremental Legendaries
                         -- TODO: Add these after initial implementation round
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     },
 
     -- CHAOS LEGENDARY
@@ -816,10 +816,10 @@ Z.UpgradeData = {
             { 
                 {
                     Array = "LootData.TrialUpgrade.PermanentTraits",
-                    Value = { "ChaosRandomStatusLegendary" }
-                }
-            }
-        }
+                    Value = { "ChaosRandomStatusLegendary" },
+                },
+            },
+        },
 
     },
 
@@ -837,10 +837,10 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "DemeterWeaponTrait", "DemeterSecondaryTrait", "DemeterRushTrait", "DemeterShoutTrait", },
-                    { "HealingPotencyTrait", "MaximumChillBonusSlow" }
-                }
-            }
-        }
+                    { "HealingPotencyTrait", "MaximumChillBonusSlow" },
+                },
+            },
+        },
     },
 
     -- HermesAfterImageLegendaryUpgrade = {
@@ -900,10 +900,10 @@ Z.UpgradeData = {
     --                     "DionysusRushTrait",
     --                     "DemeterRushTrait",
     --                     "ZeusRushTrait",
-    --                 }
+    --                 },
     --             },
-    --         }
-    --     }
+    --         },
+    --     },
     -- },
 
      -- ARES LEGENDARY
@@ -921,10 +921,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     {  "AresRushTrait", "AresShoutTrait","AresRangedTrait" },
                     { "AresLoadCurseTrait", "AresLongCurseTrait", "AresDragTrait", "AresAoETrait" },
-                    { "AresWeaponTrait", "AresSecondaryTrait", "AresRetaliateTrait"}
-                }
-            }
-        }
+                    { "AresWeaponTrait", "AresSecondaryTrait", "AresRetaliateTrait"},
+                },
+            },
+        },
     },
 
     -- ZEUS LEGENDARY
@@ -942,9 +942,9 @@ Z.UpgradeData = {
     --             OneFromEachSet = {
     --                 {  "ZeusRangedTrait", "ZeusWeaponTrait", },
     --                 { "ZeusBonusBounceTrait" },
-    --             }
-    --         }
-    --     }
+    --             },
+    --         },
+    --     },
     -- },
 
 
@@ -1081,7 +1081,7 @@ function AddCritSpeedBoost(args)
             {
                 ExtractAs = "TooltipSpeed",
                 Format = "PercentDelta",
-            }
+            },
         },
     }
     
@@ -1150,9 +1150,9 @@ function Z.EnablePoseidonVacuumFunction( args )
                 -- { "DemeterRangedTrait" },
                 --TODO: beowulf flare
                 { "PoseidonWeaponTrait", "PoseidonSecondaryTrait", "PoseidonRangedTrait", "PoseidonRushTrait"},
-                { "SlipperyTrait" }
-            }
-        }
+                { "SlipperyTrait" },
+            },
+        },
     })
     -- initial push / pull behavior
     local isActive = true

@@ -1,6 +1,6 @@
 Import "ZyruIncremental.lua"
-Import "Upgrades/"
 Import "Mappings/"
+Import "Upgrades/"
 Import "ZyruIncrementalUtils.lua"
 Import "Tracking/"
 Import "UI/"

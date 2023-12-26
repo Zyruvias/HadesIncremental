@@ -794,13 +794,6 @@ function Z.TestFrameworkMenu()
 end
 
 
--- OnAnyLoad{ "RoomPreRun",
---     function () 
---         wait(3.0)
---         --   Z.TestFrameworkMenu()
---         -- ShowZyruProgressScreen()
---     end
--- }
 
 ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
 
@@ -1186,16 +1179,6 @@ function ShowGodUpgradeScreen(screen, button)
                 X = 375,
             }
         },
-        -- {
-        --     Type = "Text",
-        --     SubType = "Subtitle",
-        --     Args = {
-        --         OffsetX = ScreenWidth / 6,
-        --         FieldName = "BoonProgressSubtitle",
-        --         Text = ""
-        --     }
-        -- },
-        -- upgrade icon?
         {
             Type = "Icon",
             SubType = "Standard",
