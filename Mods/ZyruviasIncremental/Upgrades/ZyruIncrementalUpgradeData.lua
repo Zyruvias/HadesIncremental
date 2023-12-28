@@ -525,7 +525,11 @@ Z.UpgradeData = {
     -----------------
     ZeusHermesSynergyTrait = {
         Name = "ZeusHermesSynergyTrait",
-        Cost = 0,
+        Sources = { Z.Constants.Gods.ZEUS, Z.Constants.Gods.HERMES },
+        Costs = {
+            [Z.Constants.Gods.ZEUS] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "ZeusHermesSynergyTrait",
@@ -538,13 +542,14 @@ Z.UpgradeData = {
                 },
             },
         },
-        Sources = { Z.Constants.Gods.ZEUS, Z.Constants.Gods.HERMES },
     },
 
     PoseidonHermesSynergyTrait = {
         Name = "PoseidonHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.POSEIDON] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "PoseidonHermesSynergyTrait",
@@ -562,8 +567,10 @@ Z.UpgradeData = {
 
     ArtemisHermesSynergyTrait = {
         Name = "ArtemisHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.ARTEMIS] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "ArtemisHermesSynergyTrait",
@@ -580,8 +587,10 @@ Z.UpgradeData = {
     },
     DionysusHermesSynergyTrait = {
         Name = "DionysusHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.DIONYSUS] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DionysusHermesSynergyTrait",
@@ -599,8 +608,10 @@ Z.UpgradeData = {
 
     AresHermesSynergyTrait = {
         Name = "AresHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.ARES] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AresHermesSynergyTrait",
@@ -618,8 +629,10 @@ Z.UpgradeData = {
 
     AphroditeHermesSynergyTrait = {
         Name = "AphroditeHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.APHRODITE] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AphroditeHermesSynergyTrait",
@@ -637,8 +650,10 @@ Z.UpgradeData = {
 
     DemeterHermesSynergyTrait = {
         Name = "DemeterHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.DEMETER] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DemeterHermesSynergyTrait",
@@ -657,8 +672,10 @@ Z.UpgradeData = {
     -- TODO: make this
     AthenaHermesSynergyTrait = {
         Name = "AthenaHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
+        Costs = {
+            [Z.Constants.Gods.ATHENA] = 100,
+            [Z.Constants.Gods.HERMES] = 100,
+        },
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AthenaHermesSynergyTrait",
@@ -702,8 +719,9 @@ Z.UpgradeData = {
     -- POSEIDON
     PoseidonAlternatingTidesUpgrade = {
         Name = "PoseidonAlternatingTidesUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.POSEIDON] = 100,
+        },
         OnApplyFunction = "Z.EnablePoseidonVacuumFunction",
         Source = Z.Constants.Gods.POSEIDON,
     },
@@ -711,8 +729,9 @@ Z.UpgradeData = {
     -- APHRODITE
     SeductiveVictoryUpgrade = {
         Name = "SeductiveVictoryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.APHRODITE] = 100,
+        },
         Source = Z.Constants.Gods.APHRODITE,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -731,8 +750,9 @@ Z.UpgradeData = {
     -- ARTEMIS LEGENDARY
     PermanentVulnerabilityLegendaryUpgrade = {
         Name = "PermanentVulnerabilityLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.ARTEMIS] = 100,
+        },
         Source = Z.Constants.Gods.ARTEMIS,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -748,8 +768,9 @@ Z.UpgradeData = {
     -- DIONYSUS LEFENGDARY
     UnendingHangoverLegendaryUpgrade = {
         Name = "UnendingHangoverLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.DIONYSUS] = 100,
+        },
         Source = Z.Constants.Gods.DIONYSUS,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -768,8 +789,9 @@ Z.UpgradeData = {
     -- ATHENA LEFENGDARY
     StrategicCooperationBlessingLegendaryUpgrade = {
         Name = "StrategicCooperationBlessingLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.ATHENA] = 100,
+        },
         Source = Z.Constants.Gods.ATHENA,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -807,8 +829,9 @@ Z.UpgradeData = {
     -- CHAOS LEGENDARY
     ChaosRandomStatusLegendaryUpgrade = {
         Name = "ChaosRandomStatusLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.CHAOS] = 100,
+        },
         Source = Z.Constants.Gods.CHAOS,
         OnApplyFunctions =  { "Z.AddTraitToTraitData", "Z.MergeDataArrays"},
         OnApplyFunctionArgs = { 
@@ -826,8 +849,9 @@ Z.UpgradeData = {
     -- DEMETER LEGENDARY
     DemeterFamineLegendaryUpgrade = {
         Name = "DemeterFamineLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.DEMETER] = 100,
+        },
         Source = Z.Constants.Gods.DEMETER,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -909,8 +933,9 @@ Z.UpgradeData = {
      -- ARES LEGENDARY
      AresMurderousEfficacyLegendaryUpgrade = {
         Name = "AresMurderousEfficacyLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
+        Costs = {
+            [Z.Constants.Gods.ARES] = 100,
+        },
         Source = Z.Constants.Gods.ARES,
         OnApplyFunction = "Z.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -930,8 +955,9 @@ Z.UpgradeData = {
     -- ZEUS LEGENDARY
     -- ZeusChainRangeLegendaryUpgrade = {
     --     Name = "ZeusChainRangeLegendaryUpgrade",
-    --     Cost = 0,
-    --     CostType = "",
+        -- Costs = {
+        --     [Z.Constants.Gods.ZEUS] = 100,
+        -- },
     --     Source = Z.Constants.Gods.ZEUS,
     --     OnApplyFunction = "Z.AddTraitToTraitData",
     --     OnApplyFunctionArgs = { 
@@ -948,6 +974,31 @@ Z.UpgradeData = {
     -- },
 
 
+    ---------------------
+    -- RARITY UPGRADES --
+    ---------------------
+    ZeusRarityUpgrade = {
+        Name = "ZeusRarityUpgrade",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = Z.Constants.Gods.ZEUS,
+        OnApplyFunction = "AugmentTransientState",
+        OnApplyFunctionArgs = {
+            ZeusRarityBonus = 10,
+        },
+    },
+
+    -------------------
+    -- MISC UPGRADES --
+    -------------------
+    AthenaExperienceUpgrade = {
+        Name = "AthenaExperienceUpgrade",
+        CostsFunctionName = "GetRarityUpgradeCost", -- TODO: actually fix this shit,
+        OnApplyFunction = "AugmentTransientState",
+        OnApplyFunctionArgs = {
+            AthenaExperienceBonus = 5,
+        },
+
+    },
 }
 
 -- Ares Hermes Duo

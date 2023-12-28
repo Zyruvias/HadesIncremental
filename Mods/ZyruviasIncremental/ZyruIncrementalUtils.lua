@@ -151,7 +151,7 @@ Z.RarityArrayMap = {}
 function Z.ComputeRarityArrayForGod( god )
   local chosenGod = god or "Zeus"
   local godData = Z.Data.GodData[chosenGod]
-  local rarityBonus = godData.RarityBonus
+  local rarityBonus = godData.RarityBonus + (ModUtil.Path.Get("TransientState[" ..chosenGod .. "RarityBonus]", Z) or 0)
   if Z.RarityArrayMap[tostring(rarityBonus)] ~= nil then
     return Z.RarityArrayMap[tostring(rarityBonus)]
   end

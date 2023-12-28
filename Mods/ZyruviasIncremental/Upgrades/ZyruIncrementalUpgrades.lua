@@ -95,24 +95,77 @@ function Z.GetAllUpgradesBySource(source)
     return toReturn
 end
 
+function GetUpgradeCost(upgrade)
+    if upgrade.CostsFunctionName ~= nil then
+        return _G[upgrade.CostsFunctionName](upgrade)
+    end
+    return upgrade.Costs
+end
+
+function IsUpgradeAffordable(upgrade)
+    for source, cost in pairs(GetUpgradeCost(upgrade)) do
+        local currentCurrency = Z.Data.GodData[source].CurrentPoints or 0
+        if Z.Data.GodData[source].CurrentPoints < cost then
+            return false
+        end
+    end
+    return true
+end
+
+function SubtractUpgradeCosts(upgrade)
+    for source, cost in pairs(GetUpgradeCost(upgrade)) do
+        local currentCurrency = Z.Data.GodData[source].CurrentPoints or 0
+        Z.Data.GodData[source].CurrentPoints = Z.Data.GodData[source].CurrentPoints - cost
+    end
+end
+
+function GetRarityUpgradeCost(upgrade)
+    -- check number of `source`RarityUpgrades that already exist in the upgrades
+    local cost = 1
+    local costScalingFactor = 2 -- TODO: generalize?
+    for i, upgradeName in ipairs(Z.Data.UpgradeData) do
+        if upgradeName == upgrade.Name then
+            cost = cost + costScalingFactor
+        end
+    end
+    -- upgrade.Costs structure
+    return {
+        [upgrade.Source] = cost
+    }
+end
+
 function Z.AttemptPurchaseUpgrade(screen, button)
     local upgrade = button.Upgrade
     if Z.HasUpgrade(upgrade.Name) then
         -- TODO: CannotPurchaseVoiceLines all but last?
+        DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
 		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
         return
     end
-    local cost = upgrade.Cost or 0
-    local sourceCurrency = upgrade.Source
-    local currentCurrency = Z.Data.Currencies[sourceCurrency] or 0
-    if currentCurrency >= cost then
+    if IsUpgradeAffordable(upgrade) then
         -- add upgrade to save
         Z.AddUpgrade(upgrade.Name)
-        -- subtract cost
-        Z.Data.GodData.CurrentPoints = Z.Data.GodData.CurrentPoints - cost
+        -- subtract Cost
+        SubtractUpgradeCosts(upgrade)
         -- exhibit signs of self awareness
 		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
+        DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
     else
 		thread( PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true )
+        DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
+    end
+    -- reupdate the info screen in case of changing costs or whatever
+    UpdateUpgradeInfoScreen(screen, upgrade)
+end
+
+function AugmentTransientState(args)
+    Z.TransientState = Z.TransientState or {}
+    for name, val in pairs(args) do
+        if type(val) == "number" then
+            Z.TransientState[name] = (Z.TransientState[name] or 0) + val
+        elseif type(val) == "string" then
+            Z.TransientState[name] = val
+        end
+
     end
 end

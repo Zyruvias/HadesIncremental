@@ -594,6 +594,7 @@ function ModInitializationScreen2()
 end
 
 function CloseInitializationScreen(screen, button)
+    Z.Data.SeenInitialMenuScreen = true
     if Z.Data.FileOptions.StartingPoint == Z.Constants.SaveFile.FRESH_FILE then
         ActivatedObjects[cabinetId] = nil
         return CloseScreenByName("ModInitialization")
@@ -601,7 +602,7 @@ function CloseInitializationScreen(screen, button)
 
 
     -- actually set save data, the dang fools think this is slow :jeb:
-    -- Z.InitializeEpilogueStartSaveData()
+    Z.InitializeEpilogueStartSaveData()
 
     -- wipe the screen
     Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
@@ -1074,14 +1075,17 @@ end
 
 function GetUpgradeGostText(upgrade)
     local costText = "Cost: "
-    if upgrade.Sources ~= nil then
-        local sourceCostTexts = {}
-        for i, source in ipairs(upgrade.Sources) do 
-            table.insert(sourceCostTexts, tostring(upgrade.Cost or 0) .. " " .. source .. " Points")
-        end
-        return costText .. ModUtil.String.Join(", ", sourceCostTexts)
+    local costs = GetUpgradeCost(upgrade)
+    DebugPrint { Text = ModUtil.ToString.Deep(costs)}
+    local sourceCostTexts = {}
+    for source, cost in pairs(costs) do 
+        table.insert(sourceCostTexts, tostring(cost or 0) .. " " .. source .. " Points")
     end
-    return costText .. tostring(upgrade.Cost or 0) .. " " .. upgrade.Source .. " Points"
+    if upgrade.Sources ~= nil then
+        -- TODO: generalize
+        return costText .. sourceCostTexts[1] .. " and " .. sourceCostTexts[2]
+    end
+    return costText .. sourceCostTexts[1]
 end
 
 function UpdateUpgradeInfoScreen(screen, upgrade)
@@ -1137,12 +1141,15 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
 end
 
 function GetUpgradeListItem(screen, upgrade)
+    DebugPrint { Text = ModUtil.ToString.Shallow(upgrade)}
+    local description = "Unlock a new Boon from " .. 
+        (upgrade.Source or upgrade.Sources[1] .. " and " .. upgrade.Sources[2])
     return {
         event = function () 
             UpdateUpgradeInfoScreen(screen, upgrade)
         end,
         Text = upgrade.Name,
-        Description = "Unlock a new Boon from " .. upgrade.Source,
+        Description = description,
         ImageStyle = {
             Image = GetTraitIcon( TraitData[upgrade.Name] or {} ),
             Offset = {X = -225, Y = 0},
@@ -1153,12 +1160,14 @@ end
 
 function ShowGodUpgradeScreen(screen, button)
     -- upgradesTodisplay
-    local upgradesToDisplay = Z.GetAllUpgradesBySource(button.PageIndex)
+    local source = button.PageIndex
+    local upgradesToDisplay = Z.GetAllUpgradesBySource(source)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
         table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
     end
+
 
     -- create title (god name)
     local componentsToRender = {
@@ -1166,8 +1175,8 @@ function ShowGodUpgradeScreen(screen, button)
             Type = "Text",
             SubType = "Title",
             Args = {
-                FieldName = button.PageIndex .. "UpgradeTitle",
-                Text = button.PageIndex, -- todo: generalize args or properties or something??
+                FieldName = source .. "UpgradeTitle",
+                Text = source, -- todo: generalize args or properties or something??
             }
         },
         {
@@ -1187,7 +1196,7 @@ function ShowGodUpgradeScreen(screen, button)
                 OffsetX = ScreenWidth / 3,
                 OffsetY = -450,
                 Scale = 0.75,
-                Animation = "BoonInfoSymbolZeusIcon",
+                Animation = "BoonInfoSymbol" .. source .. "Icon",
             }
         },
         {
@@ -1199,7 +1208,7 @@ function ShowGodUpgradeScreen(screen, button)
                 OffsetY = -450,
                 Justification = "Right",
                 FontSize = 20,
-                Text = "Available Zeus Points: " .. tostring(Z.Data.Currencies.Zeus or 0)
+                Text = "Available " .. source .. " Points: " .. tostring(Z.Data.GodData[source].CurrentPoints or 0)
             }
         },
         {

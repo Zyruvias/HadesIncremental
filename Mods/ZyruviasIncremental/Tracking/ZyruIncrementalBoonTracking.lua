@@ -14,8 +14,14 @@ end, Z)
 
 -- this is Eury/pomslice/nectar
 ModUtil.Path.Wrap("AddStackToTraits", function (baseFunc, source, args)
-  Z.TrackDrop("StackUpgrade", (args.NumTraits or 1) * (args.NumStacks or 1) * 75 )
-  return baseFunc(args)
+  if args and args.Thread then
+    -- this calls itself again, wait for those changes to resolve before doing anything 
+    return baseFunc(source, args)
+  end
+  DebugPrint { Text = ModUtil.ToString.Deep(source)}
+  DebugPrint { Text = ModUtil.ToString.Deep(args)}
+  Z.TrackDrop("StackUpgrade", (source.NumTraits or 1) * (source.NumStacks or 1) * 75 )
+  return baseFunc(source, args)
 end, Z)
 
 function Z.TrackDrop(source, amount)
@@ -492,7 +498,9 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       local d = {}
       DebugPrint { Text = "enemyDamageSources:" .. ModUtil.ToString.Deep(enemyDamageSources)}
       for i, source in pairs(enemyDamageSources) do
-        d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
+        if source ~= nil and source.Name ~= nil then
+          d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
+        end
       end
       damageMultiplierMap = {
         BaseDamage = baseDamage,
@@ -663,6 +671,11 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     -- contribution for mult1 = log(mult1) / [log(ratio)]
     -- ratio is 20% reduction? (base - result) / base
     local damageResult = damageMultiplierMap
+    if damageResult == nil or damageResult.BaseDamage == nil then
+      -- PureDamage?
+      DebugPrint { Text = "BaseDamage to Zag nil: " .. ModUtil.ToString.Shallow(args)}
+      return
+    end
     local endRatio = (damageResult.BaseDamage  - damageResult.ResultingDamage) / damageResult.BaseDamage
     DebugPrint {
       Text = "Final Reduction Ratio: (" ..
@@ -748,7 +761,7 @@ function Z.TrackBoonEffect ( traitName, damageValue )
     saveTraitData.Level = saveTraitData.Level + 1
     DebugPrint { Text = traitName .. " has reached level " .. tostring(saveTraitData.Level)}
     -- Add God Levels
-    AddGodExperience(TraitData[traitName].God, saveTraitData.Level - 1)
+    AddGodExperience(Z.BoonToGod[traitName], saveTraitData.Level - 1)
     -- TODO: Add queuing for boon levels/god levels
     -- Add UI level up message
     DisplayBoonLevelupPopup( { traitName }, saveTraitData.Level)
