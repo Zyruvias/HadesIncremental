@@ -1134,6 +1134,14 @@ end, Z)
 local originalIdenticalMultipliers = {}
 local originalPomScaling = TraitMultiplierData.DefaultDiminishingReturnsMultiplier
 
+ModUtil.Path.Wrap("ProcessTraitData", function (baseFunc, args)
+
+  ModUtil.Path.Decorate("GetProcessedValue", function (innerFunc, property, innerArgs)
+    innerFunc(property, innerArgs)
+  end, Z)
+  ModUtil.Path.Decorate.Pop("GetProcessedValue")
+end, Z)
+
 ModUtil.Path.Wrap("AddTraitToHero", function (baseFunc, args)
   if args.TraitName and not args.TraitData then
     args.TraitData = GetProcessedTraitData({ Unit = CurrentRun.Hero, TraitName = args.TraitName, Rarity = args.Rarity })
