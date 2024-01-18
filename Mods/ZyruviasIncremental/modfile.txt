@@ -19,3 +19,7 @@ SJSON "Weapons/HermesWeapons.sjson"
 :: Projectiles
 To "Game/Projectiles/PlayerProjectiles.sjson"
 SJSON "Projectiles/PlayerProjectiles.sjson"
+
+:: GUIAnimations
+To "Game/Animations/GUIAnimations.sjson"
+SJSON "Animations/GUIAnimations.sjson"

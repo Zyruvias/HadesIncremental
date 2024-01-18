@@ -410,211 +410,214 @@ ModUtil.LoadOnce(function ( )
   end, Z)
 
 -- SleepSoul's RCLib mappings as a baseline. Go check out his mods, he's brilliant.
+ModUtil.LoadOnce(function ()
+
   Z.BoonToGod = {
-      -- Uses in-game names for boons.
-      -- Duos
-      BlizzardOrbTrait = Z.Constants.Gods,
-      SlowProjectileTrait = Z.Constants.Gods,
-      SelfLaserTrait = Z.Constants.Gods,
-      JoltDurationTrait = Z.Constants.Gods,
-      HomingLaserTrait = Z.Constants.Gods,
-      PoseidonAresProjectileTrait = Z.Constants.Gods,
-      CurseSickTrait = Z.Constants.Gods,
-      PoisonTickRateTrait = Z.Constants.Gods,
-      ArtemisReflectBuffTrait = Z.Constants.Gods,
-      RaritySuperBoost = Z.Constants.Gods,
-      StationaryRiftTrait = Z.Constants.Gods,
-      HeartsickCritDamageTrait = Z.Constants.Gods,
-      AresHomingTrait = Z.Constants.Gods,
-      IceStrikeArrayTrait = Z.Constants.Gods,
-      ReboundingAthenaCastTrait = Z.Constants.Gods,
-      AmmoBoltTrait = Z.Constants.Gods,
-      DionysusAphroditeStackIncreaseTrait = Z.Constants.Gods,
-      TriggerCurseTrait = Z.Constants.Gods,
-      ArtemisBonusProjectileTrait = Z.Constants.Gods,
-      CastBackstabTrait = Z.Constants.Gods,
-      ImpactBoltTrait = Z.Constants.Gods,
-      LightningCloudTrait = Z.Constants.Gods,
-      RegeneratingCappedSuperTrait = Z.Constants.Gods,
-      PoisonCritVulnerabilityTrait = Z.Constants.Gods,
-      NoLastStandRegenerationTrait = Z.Constants.Gods,
-      ImprovedPomTrait = Z.Constants.Gods,
-      StatusImmunityTrait = Z.Constants.Gods,
-      AutoRetaliateTrait = Z.Constants.Gods,
-      
-      -- Zeus
-      ZeusWeaponTrait = Z.Constants.Gods.ZEUS,
-      ZeusSecondaryTrait = Z.Constants.Gods.ZEUS,
-      ZeusRangedTrait = Z.Constants.Gods.ZEUS,
-      ShieldLoadAmmo_ZeusRangedTrait = Z.Constants.Gods.ZEUS,
-      ZeusRushTrait = Z.Constants.Gods.ZEUS,
-      ZeusShoutTrait = Z.Constants.Gods.ZEUS,
-      
-      ZeusLightningDebuff = Z.Constants.Gods.ZEUS,
-
-      ZeusBonusBounceTrait = Z.Constants.Gods.ZEUS,
-      ZeusBonusBoltTrait = Z.Constants.Gods.ZEUS,
-      ZeusBoltAoETrait = Z.Constants.Gods.ZEUS,
-      RetaliateWeaponTrait = Z.Constants.Gods.ZEUS,
-      PerfectDashBoltTrait = Z.Constants.Gods.ZEUS,
-      SuperGenerationTrait = Z.Constants.Gods.ZEUS,
-      OnWrathDamageBuffTrait = Z.Constants.Gods.ZEUS,
-
-      ZeusChargedBoltTrait = Z.Constants.Gods.ZEUS,
-
-      -- Athena
-      AthenaWeaponTrait = Z.Constants.Gods.ATHENA,
-      AthenaSecondaryTrait = Z.Constants.Gods.ATHENA,
-      AthenaRangedTrait = Z.Constants.Gods.ATHENA,
-      ShieldLoadAmmo_AthenaRangedTrait = Z.Constants.Gods.ATHENA,
-      AthenaRushTrait = Z.Constants.Gods.ATHENA,
-      AthenaShoutTrait = Z.Constants.Gods.ATHENA,
-
-      AthenaBackstabDebuffTrait = Z.Constants.Gods.ATHENA,
-
-      AthenaShieldTrait = Z.Constants.Gods.ATHENA,
-      AthenaRetaliateTrait = Z.Constants.Gods.ATHENA,
-      TrapDamageTrait = Z.Constants.Gods.ATHENA,
-      EnemyDamageTrait = Z.Constants.Gods.ATHENA,
-      LastStandHealTrait = Z.Constants.Gods.ATHENA,
-      LastStandDurationTrait = Z.Constants.Gods.ATHENA,
-      PreloadSuperGenerationTrait = Z.Constants.Gods.ATHENA,
-
-      ShieldHitTrait = Z.Constants.Gods.ATHENA,
-
-      -- Poseidon
-      PoseidonWeaponTrait = Z.Constants.Gods.POSEIDON,
-      PoseidonSecondaryTrait = Z.Constants.Gods.POSEIDON,
-      PoseidonRangedTrait = Z.Constants.Gods.POSEIDON,
-      ShieldLoadAmmo_PoseidonRangedTrait = Z.Constants.Gods.POSEIDON,
-      PoseidonRushTrait = Z.Constants.Gods.POSEIDON,
-      PoseidonShoutTrait = Z.Constants.Gods.POSEIDON,
-
-      SlipperyTrait = Z.Constants.Gods.POSEIDON,
-
-      SlamExplosionTrait = Z.Constants.Gods.POSEIDON,
-      BonusCollisionTrait = Z.Constants.Gods.POSEIDON,
-      EncounterStartOffenseBuffTrait = Z.Constants.Gods.POSEIDON,
-      RandomMinorLootDrop = Z.Constants.Gods.POSEIDON,
-      RoomRewardBonusTrait = Z.Constants.Gods.POSEIDON,
-      BossDamageTrait = Z.Constants.Gods.POSEIDON,
-      DefensiveSuperGenerationTrait = Z.Constants.Gods.POSEIDON,
-      PoseidonShoutDurationTrait = Z.Constants.Gods.POSEIDON,
-
-      DoubleCollisionTrait = Z.Constants.Gods.POSEIDON,
-      FishingTrait = Z.Constants.Gods.POSEIDON,
-
-      -- Ares
-      AresWeaponTrait = Z.Constants.Gods.ARES,
-      AresSecondaryTrait = Z.Constants.Gods.ARES,
-      AresRangedTrait = Z.Constants.Gods.ARES,
-      ShieldLoadAmmo_AresRangedTrait = Z.Constants.Gods.ARES,
-      AresRushTrait = Z.Constants.Gods.ARES,
-      AresShoutTrait = Z.Constants.Gods.ARES,
-
-      AresAoETrait = Z.Constants.Gods.ARES,
-      AresDragTrait = Z.Constants.Gods.ARES,
-      AresRetaliateTrait = Z.Constants.Gods.ARES,
-      IncreasedDamageTrait = Z.Constants.Gods.ARES,
-      OnEnemyDeathDamageInstanceBuffTrait = Z.Constants.Gods.ARES,
-      LastStandDamageBonusTrait = Z.Constants.Gods.ARES,
-      AresLongCurseTrait = Z.Constants.Gods.ARES,
-      AresLoadCurseTrait = Z.Constants.Gods.ARES,
-
-      AresCursedRiftTrait = Z.Constants.Gods.ARES,
-
-      -- Aphrodite
-      AphroditeWeaponTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeSecondaryTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeRangedTrait = Z.Constants.Gods.APHRODITE,
-      ShieldLoadAmmo_AphroditeRangedTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeRushTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeShoutTrait = Z.Constants.Gods.APHRODITE,
-
-      AphroditeDurationTrait = Z.Constants.Gods.APHRODITE,
-      AphroditePotencyTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeWeakenTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeRetaliateTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeDeathTrait = Z.Constants.Gods.APHRODITE,
-      ProximityArmorTrait = Z.Constants.Gods.APHRODITE,
-      HealthRewardBonusTrait = Z.Constants.Gods.APHRODITE,
-      AphroditeRangedBonusTrait = Z.Constants.Gods.APHRODITE,
-
-      CharmTrait = Z.Constants.Gods.APHRODITE,
-
-      -- Artemis
-      ArtemisWeaponTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisSecondaryTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisRangedTrait = Z.Constants.Gods.ARTEMIS,
-      ShieldLoadAmmo_ArtemisRangedTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisRushTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisShoutTrait = Z.Constants.Gods.ARTEMIS,
-
-      CritVulnerabilityTrait = Z.Constants.Gods.ARTEMIS,
-
-      CritBonusTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisSupportingFireTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisAmmoExitTrait = Z.Constants.Gods.ARTEMIS,
-      ArtemisCriticalTrait = Z.Constants.Gods.ARTEMIS,
-      CriticalBufferMultiplierTrait = Z.Constants.Gods.ARTEMIS,
-      CriticalSuperGenerationTrait = Z.Constants.Gods.ARTEMIS,
-
-      MoreAmmoTrait = Z.Constants.Gods.ARTEMIS,
-
-      -- Dionysus
-      DionysusWeaponTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusSecondaryTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusRangedTrait = Z.Constants.Gods.DIONYSUS,
-      ShieldLoadAmmo_DionysusRangedTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusRushTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusShoutTrait = Z.Constants.Gods.DIONYSUS,
-
-      DoorHealTrait = Z.Constants.Gods.DIONYSUS,
-      LowHealthDefenseTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusGiftDrop = Z.Constants.Gods.DIONYSUS,
-      FountainDamageBonusTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusSlowTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusSpreadTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusDefenseTrait = Z.Constants.Gods.DIONYSUS,
-      DionysusPoisonPowerTrait = Z.Constants.Gods.DIONYSUS,
-
-      DionysusComboVulnerability = Z.Constants.Gods.DIONYSUS,
-
-      -- Demeter
-      DemeterWeaponTrait = Z.Constants.Gods.DEMETER,
-      DemeterSecondaryTrait = Z.Constants.Gods.DEMETER,
-      DemeterRangedTrait = Z.Constants.Gods.DEMETER, --BEAM
-      ShieldLoadAmmo_DemeterRangedTrait = Z.Constants.Gods.DEMETER,
-      DemeterRushTrait = Z.Constants.Gods.DEMETER,
-      DemeterShoutTrait = Z.Constants.Gods.DEMETER,
-
-      ZeroAmmoBonusTrait = Z.Constants.Gods.DEMETER,
-      MaximumChillBlast = Z.Constants.Gods.DEMETER,
-      MaximumChillBonusSlow = Z.Constants.Gods.DEMETER,
-      DemeterRetaliateTrait = Z.Constants.Gods.DEMETER,
-      CastNovaTrait = Z.Constants.Gods.DEMETER,
-      HealingPotencyTrait = Z.Constants.Gods.DEMETER,
-      HarvestBoonDrop = Z.Constants.Gods.DEMETER,
-      DemeterRangedBonusTrait = Z.Constants.Gods.DEMETER,
-      InstantChillKill = Z.Constants.Gods.DEMETER,
-
-      -- Hermes
-      BonusDashTrait = Z.Constants.Gods.HERMES,
-      RushSpeedBoostTrait = Z.Constants.Gods.HERMES,
-      MoveSpeedTrait = Z.Constants.Gods.HERMES,
-      RushRallyTrait = Z.Constants.Gods.HERMES,
-      DodgeChanceTrait = Z.Constants.Gods.HERMES,
-      HermesWeaponTrait = Z.Constants.Gods.HERMES,
-      HermesSecondaryTrait = Z.Constants.Gods.HERMES,
-      ChamberGoldTrait = Z.Constants.Gods.HERMES,
-      AmmoReclaimTrait = Z.Constants.Gods.HERMES,
-      RapidCastTrait = Z.Constants.Gods.HERMES,
-      AmmoReloadTrait = Z.Constants.Gods.HERMES,
-      HermesShoutDodge = Z.Constants.Gods.HERMES,
-      RegeneratingSuperTrait = Z.Constants.Gods.HERMES,
-
-      SpeedDamageTrait = Z.Constants.Gods.HERMES,
-
-      MagnetismTrait = Z.Constants.Gods.HERMES,
-      UnstoredAmmoDamageTrait = Z.Constants.Gods.HERMES,
+    -- Uses in-game names for boons.
+    -- Duos
+    BlizzardOrbTrait = Z.Constants.Gods,
+    SlowProjectileTrait = Z.Constants.Gods,
+    SelfLaserTrait = Z.Constants.Gods,
+    JoltDurationTrait = Z.Constants.Gods,
+    HomingLaserTrait = Z.Constants.Gods,
+    PoseidonAresProjectileTrait = Z.Constants.Gods,
+    CurseSickTrait = Z.Constants.Gods,
+    PoisonTickRateTrait = Z.Constants.Gods,
+    ArtemisReflectBuffTrait = Z.Constants.Gods,
+    RaritySuperBoost = Z.Constants.Gods,
+    StationaryRiftTrait = Z.Constants.Gods,
+    HeartsickCritDamageTrait = Z.Constants.Gods,
+    AresHomingTrait = Z.Constants.Gods,
+    IceStrikeArrayTrait = Z.Constants.Gods,
+    ReboundingAthenaCastTrait = Z.Constants.Gods,
+    AmmoBoltTrait = Z.Constants.Gods,
+    DionysusAphroditeStackIncreaseTrait = Z.Constants.Gods,
+    TriggerCurseTrait = Z.Constants.Gods,
+    ArtemisBonusProjectileTrait = Z.Constants.Gods,
+    CastBackstabTrait = Z.Constants.Gods,
+    ImpactBoltTrait = Z.Constants.Gods,
+    LightningCloudTrait = Z.Constants.Gods,
+    RegeneratingCappedSuperTrait = Z.Constants.Gods,
+    PoisonCritVulnerabilityTrait = Z.Constants.Gods,
+    NoLastStandRegenerationTrait = Z.Constants.Gods,
+    ImprovedPomTrait = Z.Constants.Gods,
+    StatusImmunityTrait = Z.Constants.Gods,
+    AutoRetaliateTrait = Z.Constants.Gods,
+    
+    -- Zeus
+    ZeusWeaponTrait = Z.Constants.Gods.ZEUS,
+    ZeusSecondaryTrait = Z.Constants.Gods.ZEUS,
+    ZeusRangedTrait = Z.Constants.Gods.ZEUS,
+    ShieldLoadAmmo_ZeusRangedTrait = Z.Constants.Gods.ZEUS,
+    ZeusRushTrait = Z.Constants.Gods.ZEUS,
+    ZeusShoutTrait = Z.Constants.Gods.ZEUS,
+    
+    ZeusLightningDebuff = Z.Constants.Gods.ZEUS,
+    
+    ZeusBonusBounceTrait = Z.Constants.Gods.ZEUS,
+    ZeusBonusBoltTrait = Z.Constants.Gods.ZEUS,
+    ZeusBoltAoETrait = Z.Constants.Gods.ZEUS,
+    RetaliateWeaponTrait = Z.Constants.Gods.ZEUS,
+    PerfectDashBoltTrait = Z.Constants.Gods.ZEUS,
+    SuperGenerationTrait = Z.Constants.Gods.ZEUS,
+    OnWrathDamageBuffTrait = Z.Constants.Gods.ZEUS,
+    
+    ZeusChargedBoltTrait = Z.Constants.Gods.ZEUS,
+    
+    -- Athena
+    AthenaWeaponTrait = Z.Constants.Gods.ATHENA,
+    AthenaSecondaryTrait = Z.Constants.Gods.ATHENA,
+    AthenaRangedTrait = Z.Constants.Gods.ATHENA,
+    ShieldLoadAmmo_AthenaRangedTrait = Z.Constants.Gods.ATHENA,
+    AthenaRushTrait = Z.Constants.Gods.ATHENA,
+    AthenaShoutTrait = Z.Constants.Gods.ATHENA,
+    
+    AthenaBackstabDebuffTrait = Z.Constants.Gods.ATHENA,
+    
+    AthenaShieldTrait = Z.Constants.Gods.ATHENA,
+    AthenaRetaliateTrait = Z.Constants.Gods.ATHENA,
+    TrapDamageTrait = Z.Constants.Gods.ATHENA,
+    EnemyDamageTrait = Z.Constants.Gods.ATHENA,
+    LastStandHealTrait = Z.Constants.Gods.ATHENA,
+    LastStandDurationTrait = Z.Constants.Gods.ATHENA,
+    PreloadSuperGenerationTrait = Z.Constants.Gods.ATHENA,
+    
+    ShieldHitTrait = Z.Constants.Gods.ATHENA,
+    
+    -- Poseidon
+    PoseidonWeaponTrait = Z.Constants.Gods.POSEIDON,
+    PoseidonSecondaryTrait = Z.Constants.Gods.POSEIDON,
+    PoseidonRangedTrait = Z.Constants.Gods.POSEIDON,
+    ShieldLoadAmmo_PoseidonRangedTrait = Z.Constants.Gods.POSEIDON,
+    PoseidonRushTrait = Z.Constants.Gods.POSEIDON,
+    PoseidonShoutTrait = Z.Constants.Gods.POSEIDON,
+    
+    SlipperyTrait = Z.Constants.Gods.POSEIDON,
+    
+    SlamExplosionTrait = Z.Constants.Gods.POSEIDON,
+    BonusCollisionTrait = Z.Constants.Gods.POSEIDON,
+    EncounterStartOffenseBuffTrait = Z.Constants.Gods.POSEIDON,
+    RandomMinorLootDrop = Z.Constants.Gods.POSEIDON,
+    RoomRewardBonusTrait = Z.Constants.Gods.POSEIDON,
+    BossDamageTrait = Z.Constants.Gods.POSEIDON,
+    DefensiveSuperGenerationTrait = Z.Constants.Gods.POSEIDON,
+    PoseidonShoutDurationTrait = Z.Constants.Gods.POSEIDON,
+    
+    DoubleCollisionTrait = Z.Constants.Gods.POSEIDON,
+    FishingTrait = Z.Constants.Gods.POSEIDON,
+    
+    -- Ares
+    AresWeaponTrait = Z.Constants.Gods.ARES,
+    AresSecondaryTrait = Z.Constants.Gods.ARES,
+    AresRangedTrait = Z.Constants.Gods.ARES,
+    ShieldLoadAmmo_AresRangedTrait = Z.Constants.Gods.ARES,
+    AresRushTrait = Z.Constants.Gods.ARES,
+    AresShoutTrait = Z.Constants.Gods.ARES,
+    
+    AresAoETrait = Z.Constants.Gods.ARES,
+    AresDragTrait = Z.Constants.Gods.ARES,
+    AresRetaliateTrait = Z.Constants.Gods.ARES,
+    IncreasedDamageTrait = Z.Constants.Gods.ARES,
+    OnEnemyDeathDamageInstanceBuffTrait = Z.Constants.Gods.ARES,
+    LastStandDamageBonusTrait = Z.Constants.Gods.ARES,
+    AresLongCurseTrait = Z.Constants.Gods.ARES,
+    AresLoadCurseTrait = Z.Constants.Gods.ARES,
+    
+    AresCursedRiftTrait = Z.Constants.Gods.ARES,
+    
+    -- Aphrodite
+    AphroditeWeaponTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeSecondaryTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeRangedTrait = Z.Constants.Gods.APHRODITE,
+    ShieldLoadAmmo_AphroditeRangedTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeRushTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeShoutTrait = Z.Constants.Gods.APHRODITE,
+    
+    AphroditeDurationTrait = Z.Constants.Gods.APHRODITE,
+    AphroditePotencyTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeWeakenTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeRetaliateTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeDeathTrait = Z.Constants.Gods.APHRODITE,
+    ProximityArmorTrait = Z.Constants.Gods.APHRODITE,
+    HealthRewardBonusTrait = Z.Constants.Gods.APHRODITE,
+    AphroditeRangedBonusTrait = Z.Constants.Gods.APHRODITE,
+    
+    CharmTrait = Z.Constants.Gods.APHRODITE,
+    
+    -- Artemis
+    ArtemisWeaponTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisSecondaryTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisRangedTrait = Z.Constants.Gods.ARTEMIS,
+    ShieldLoadAmmo_ArtemisRangedTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisRushTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisShoutTrait = Z.Constants.Gods.ARTEMIS,
+    
+    CritVulnerabilityTrait = Z.Constants.Gods.ARTEMIS,
+    
+    CritBonusTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisSupportingFireTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisAmmoExitTrait = Z.Constants.Gods.ARTEMIS,
+    ArtemisCriticalTrait = Z.Constants.Gods.ARTEMIS,
+    CriticalBufferMultiplierTrait = Z.Constants.Gods.ARTEMIS,
+    CriticalSuperGenerationTrait = Z.Constants.Gods.ARTEMIS,
+    
+    MoreAmmoTrait = Z.Constants.Gods.ARTEMIS,
+    
+    -- Dionysus
+    DionysusWeaponTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusSecondaryTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusRangedTrait = Z.Constants.Gods.DIONYSUS,
+    ShieldLoadAmmo_DionysusRangedTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusRushTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusShoutTrait = Z.Constants.Gods.DIONYSUS,
+    
+    DoorHealTrait = Z.Constants.Gods.DIONYSUS,
+    LowHealthDefenseTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusGiftDrop = Z.Constants.Gods.DIONYSUS,
+    FountainDamageBonusTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusSlowTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusSpreadTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusDefenseTrait = Z.Constants.Gods.DIONYSUS,
+    DionysusPoisonPowerTrait = Z.Constants.Gods.DIONYSUS,
+    
+    DionysusComboVulnerability = Z.Constants.Gods.DIONYSUS,
+    
+    -- Demeter
+    DemeterWeaponTrait = Z.Constants.Gods.DEMETER,
+    DemeterSecondaryTrait = Z.Constants.Gods.DEMETER,
+    DemeterRangedTrait = Z.Constants.Gods.DEMETER, --BEAM
+    ShieldLoadAmmo_DemeterRangedTrait = Z.Constants.Gods.DEMETER,
+    DemeterRushTrait = Z.Constants.Gods.DEMETER,
+    DemeterShoutTrait = Z.Constants.Gods.DEMETER,
+    
+    ZeroAmmoBonusTrait = Z.Constants.Gods.DEMETER,
+    MaximumChillBlast = Z.Constants.Gods.DEMETER,
+    MaximumChillBonusSlow = Z.Constants.Gods.DEMETER,
+    DemeterRetaliateTrait = Z.Constants.Gods.DEMETER,
+    CastNovaTrait = Z.Constants.Gods.DEMETER,
+    HealingPotencyTrait = Z.Constants.Gods.DEMETER,
+    HarvestBoonDrop = Z.Constants.Gods.DEMETER,
+    DemeterRangedBonusTrait = Z.Constants.Gods.DEMETER,
+    InstantChillKill = Z.Constants.Gods.DEMETER,
+    
+    -- Hermes
+    BonusDashTrait = Z.Constants.Gods.HERMES,
+    RushSpeedBoostTrait = Z.Constants.Gods.HERMES,
+    MoveSpeedTrait = Z.Constants.Gods.HERMES,
+    RushRallyTrait = Z.Constants.Gods.HERMES,
+    DodgeChanceTrait = Z.Constants.Gods.HERMES,
+    HermesWeaponTrait = Z.Constants.Gods.HERMES,
+    HermesSecondaryTrait = Z.Constants.Gods.HERMES,
+    ChamberGoldTrait = Z.Constants.Gods.HERMES,
+    AmmoReclaimTrait = Z.Constants.Gods.HERMES,
+    RapidCastTrait = Z.Constants.Gods.HERMES,
+    AmmoReloadTrait = Z.Constants.Gods.HERMES,
+    HermesShoutDodge = Z.Constants.Gods.HERMES,
+    RegeneratingSuperTrait = Z.Constants.Gods.HERMES,
+    
+    SpeedDamageTrait = Z.Constants.Gods.HERMES,
+    
+    MagnetismTrait = Z.Constants.Gods.HERMES,
+    UnstoredAmmoDamageTrait = Z.Constants.Gods.HERMES,
   }
+end)

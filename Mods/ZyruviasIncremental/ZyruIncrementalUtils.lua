@@ -93,6 +93,10 @@ function AddGodExperience ( god, amount )
   -- gain one rarity bonus % every boon level-up
   godData.RarityBonus = godData.RarityBonus + 1
 
+  -- add points
+  godData.CurrentPoints = godData.CurrentPoints + amount
+  godData.MaxPoints = godData.MaxPoints + amount
+
   -- gain the specified experience
   godData.Experience = godData.Experience + amount
 
@@ -103,10 +107,6 @@ function AddGodExperience ( god, amount )
 
     -- add another rarity bonus
     godData.RarityBonus = godData.RarityBonus + 10
-
-    -- add points
-    godData.CurrentPoints = godData.CurrentPoints + godData.Level - 1
-    godData.MaxPoints = godData.MaxPoints + godData.Level - 1
   end
 
 end

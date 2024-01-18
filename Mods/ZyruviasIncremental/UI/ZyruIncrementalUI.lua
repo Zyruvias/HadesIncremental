@@ -267,6 +267,17 @@ end
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
     -- TODO: implement this in new framework
+    CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+    thread( InCombatTextArgs, {
+        TargetId = CurrentRun.Hero.ObjectId,
+        Text = "Coming Soon!",
+        SkipRise = false,
+        SkipFlash = true,
+        ShadowScale = 0.66,
+        Duration = 1.5,
+        OffsetY = -100 })
+    offsetY = offsetY - 60
+    thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
 end
 
 -- Courtyard Interface
@@ -277,6 +288,15 @@ function LolLmao()
     
     thread( PlayVoiceLines, voiceline )
 end
+
+ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
+    -- TODO: generalize?
+    if not Z.Data.Flags.SeenProgressMenu or not Z.Data.Flags.SeenUpgradeMenu then
+        thread( CannotUseDoorPresentation, {} )
+    else
+        base(usee, args)
+    end
+end, Z)
 
 OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- TODO: selector.BlockExitUntilUsed, selector.BlockExitText
@@ -293,6 +313,11 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         OffsetX = 2000,
         OffsetY = -700,
     })
+    if not Z.Data.Flags.SeenUpgradeMenu then
+        Z.UpgradeMenuObjectId = selector.ObjectId
+        selector.BlockExitUntilUsed = true
+        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+    end
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
     SetColor{ Id = selector.ObjectId, Color = { 120, 255, 170, 255 } }
     SetupObstacle( selector )
@@ -311,6 +336,12 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         OffsetX = 2200,
         OffsetY = -600,
     })
+    
+    if not Z.Data.Flags.SeenProgressMenu then
+        Z.ProgressMenuObjectId = selector.ObjectId
+        selector.BlockExitUntilUsed = true
+        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+    end
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
     SetupObstacle( selector )
     AddToGroup({Id = selector.ObjectId, Name = "ChallengeSelector"})
@@ -324,8 +355,7 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         Name = "ShrinePointDoor",
         Group = "FX_Terrain",
         DestinationId = CurrentRun.Hero.ObjectId,
-        OffsetX = 1000,
-        OffsetY = -600,
+        OffsetX = -1250, OffsetY = -1150,
         AttachedTable = shrinePointDoor
     })
     SetupObstacle( shrinePointDoor )
@@ -334,7 +364,7 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     shrinePointDoor.OnUsedFunctionName = "ShowZyruResetScreen"
     shrinePointDoor.Activate = true
     -- SetScale{ Id = shrinePointDoor.ObjectId, Fraction = 0.17 }
-    -- SetColor{ Id = shrinePointDoor.ObjectId, Color = { 120, 255, 170, 255 } }
+    SetColor{ Id = shrinePointDoor.ObjectId, Color = { 120, 255, 170, 255 } }
     AddToGroup({Id = shrinePointDoor.ObjectId, Name = "ChallengeSelector"})
 end}
 
@@ -344,6 +374,39 @@ end}
 local cabinetId = nil
 
 function ModInitializationScreen2()
+    if not IsEmpty( GameState.RunHistory ) then
+        local screen = Z.CreateMenu("NotFreshFile", {
+            Components = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    Args = {
+                        FieldName = "MenuTitle",
+                        Text = "Incremental Mod Setup",
+                    },
+                    {
+                        Type = "Text",
+                        SubType = "Subtitle",
+                        Args = {
+                            Text = "Existing Save Detected",
+                            FieldName = "WelcomeTitle",
+                        }
+                    },
+                    {
+                        Type = "Text",
+                        SubType = "Paragraph",
+                        Args = {
+                            FieldName = "WelcomeText",
+                            Text = "Hello there,\\n\\n In order to use this mod, you must start a new save file. Your current"
+                            .." savefile progress does not translate well in the new mod systems, so it does not make sense to"
+                            .." allow you to continue. Please create a new file to access the mod setup page and begin your "
+                            .." Incremental Mod Experience.",
+                        }
+                    }
+                }
+            }
+        })
+    end
     local screen = Z.CreateMenu("ModInitialization", {
         Pages = {
             [1] = {
@@ -594,7 +657,7 @@ function ModInitializationScreen2()
 end
 
 function CloseInitializationScreen(screen, button)
-    Z.Data.SeenInitialMenuScreen = true
+    Z.Data.Flags.SeenInitialMenuScreen = true
     if Z.Data.FileOptions.StartingPoint == Z.Constants.SaveFile.FRESH_FILE then
         ActivatedObjects[cabinetId] = nil
         return CloseScreenByName("ModInitialization")
@@ -668,7 +731,7 @@ function CloseInitializationScreen(screen, button)
                 -- A fine hallway requires a fine rug, I always say! I say it sometimes...
                 { Cue = "/VO/ZagreusHome_1710" },
                 -- So wasteful of my realm's resources, boy.
-                { Cue = "/VO/Hades_0643", PreLineWait = 5.80},
+                { Cue = "/VO/Hades_0643", PreLineWait = 4.80},
             }
         },
         {
@@ -738,7 +801,7 @@ end
 
 ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 
-    if Z.Data.SeenInitialMenuScreen then
+    if Z.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
 
@@ -846,7 +909,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
-            BarText = tostring(expBaseline .. " / " .. expTNL .. " = " .. expProportionLabel),
+            BarText = tostring(math.floor(expBaseline)) .. " / " .. tostring(expTNL) .. " = " .. expProportionLabel,
             LeftText = "Level " .. tostring(boonLevel),
             RightText = "Level " .. tostring(boonLevel + 1)
         }
@@ -873,7 +936,12 @@ end
 function ShowGodProgressScreen(screen, button)
     DebugPrint { Text = ModUtil.ToString.Deep(button)}
 
-    local boonsToDisplay = BoonInfoScreenData.SortedTraitIndex[button.PageIndex .. "Upgrade"]
+    local traitIndexName = button.PageIndex .. "Upgrade"
+    if button.PageIndex == "Chaos" then
+        traitIndexName = "TrialUpgrade"
+    end
+
+    local boonsToDisplay = BoonInfoScreenData.SortedTraitIndex[traitIndexName]
     -- create scrolling list
     local boonItemsToDisplay = {}
     for i, boonName in ipairs(boonsToDisplay) do
@@ -964,7 +1032,10 @@ function ShowGodProgressScreen(screen, button)
 end
 
 function ShowZyruProgressScreen()
-
+    Z.Data.Flags.SeenProgressMenu = true
+    if Z.ProgressMenuObjectId ~= nil then
+        ActivatedObjects[Z.ProgressMenuObjectId] = nil
+    end
     local componentsToRender = {
         {
             Type = "Text",
@@ -987,7 +1058,7 @@ function ShowZyruProgressScreen()
             SubType = "Close",
         },
     }
-    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
         table.insert(componentsToRender, {
             Type = "Button",
             SubType = "Icon",
@@ -995,7 +1066,7 @@ function ShowZyruProgressScreen()
                 FieldName = name .. "Button",
                 Animation = "Codex_Portrait_" .. name,
                 -- series layout
-                OffsetX = - ScreenWidth / 2 + ScreenWidth / 10 * i,
+                OffsetX = - ScreenWidth / 2 + ScreenWidth / 11 * i,
                 ComponentArgs = {
                     OnPressedFunctionName = "GoToPageFromSource",
                     PageIndex = name,
@@ -1007,7 +1078,7 @@ function ShowZyruProgressScreen()
     local pages = {
         [1] = componentsToRender,
     }
-    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
+    for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
         pages[name] = "ShowGodProgressScreen"
     end
 
@@ -1019,7 +1090,10 @@ function ShowZyruProgressScreen()
 end
 
 function ShowZyruUpgradeScreen()
-    DebugPrint { Text = "ShowZyruUpgradeScreen"}
+    Z.Data.Flags.SeenUpgradeMenu = true
+    if Z.UpgradeMenuObjectId ~= nil then
+        ActivatedObjects[Z.UpgradeMenuObjectId] = nil
+    end
     local componentsToRender = {
         {
             Type = "Text",

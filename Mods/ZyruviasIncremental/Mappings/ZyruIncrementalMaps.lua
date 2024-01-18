@@ -62,7 +62,7 @@ Z.Constants = {
 
 -- SAVE DATA SETUP
 Z.InitializeSaveData = function ()
-  if Z.Data.Initialized == nil then
+  if not Z.Data.Flags or Z.Data.Flags.Initialized == nil then
     Z.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
       -- TODO: Poms or hammer rarity?
@@ -106,7 +106,9 @@ Z.InitializeSaveData = function ()
       StartingPoint = Z.Constants.SaveFile.EPILOGUE,
       Difficulty = Z.Constants.SaveFile.STANDARD,
     }
-    Z.Data.Initialized = true
+    Z.Data.Flags = {
+      Initialized = true,
+    }
   end
 end
 
@@ -1004,6 +1006,7 @@ function Z.InitializeEpilogueStartSaveData()
   TextLinesRecord["ChaosRevealsBeowulfAspect01"] = true
   TextLinesRecord["MinotaurRevealsGilgameshAspect01"] = true
   -- Voice Lines
+  TextLinesRecord["PoseidonWrathIntro01"] = true
   -- Mirror Unlocks
   GameState.MetaUpgradeStagesUnlocked = 4
   GameState.MetaUpgradesUnlocked = {
@@ -1148,16 +1151,18 @@ function Z.InitializeEpilogueStartSaveData()
     GiftPoints = 0
   }
   -- Inspect Points?
+  -- Codex -- TODO: fill out progress
+  CodexStatus.Enabled = true
   -- TextSpeechRecord?
   for npcKey, npcObj in pairs(UnitSetData.NPCs) do
-    DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
+    -- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
     for propKey, propValue in pairs(npcObj) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-        DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
+        -- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-            DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+            -- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1167,14 +1172,14 @@ function Z.InitializeEpilogueStartSaveData()
 
   -- LootData Text Lines
   for lootKey, lootValue in pairs(LootData) do
-    DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
+    -- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
     for propKey, propValue in pairs(lootValue) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-        DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
+        -- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-            DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+            -- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end

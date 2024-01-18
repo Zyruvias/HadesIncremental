@@ -1,3 +1,26 @@
+FRESH FILE PLAYTHROUGH:
+- Fix Upgrade UI memory leaks
+- crit tracking?
+- EXP drops, colors, grouping? noise reduction / size
+- God Pride Label
+
+
+X block exit with upgrades / progress
+X enforce new file -- TODO: get text to show up
+- survivals / than encounters with limited EXP gains
+X chaos tracking screen -- TODO: track curses or other boons
+- drop tracking screen
+X start with call
+- replaces should be increasing in rarity, not just common
+- respect base rarity of boon offerings
+
+EPILOGUE START:
+X codex should be unlocked
+- codex progress
+- Quest progress is reset if you leave the bedroom
+- 10th run fight at start is WEIRD
+
+
 -- SJSONS for boon rarity texts and other texts
 X Learn WrapInner equivalent for getting boon mappings
 X WeaponSetData for boon mappings for  Trait.AddOutgoingDamageMultiplier.ValidWeapons

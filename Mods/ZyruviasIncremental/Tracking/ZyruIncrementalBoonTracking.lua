@@ -46,11 +46,15 @@ function Z.TrackDrop(source, amount)
   end
 end
 
-ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
+ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- Calculate normal rarity for the sake of Duos / Legendaries, I like the current system.
   DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
   baseFunc(lootData, args)
   Z.DebugLoot = DeepCopyTable(lootData)
+  if lootData.ForceCommon then
+    -- respect common forces from first run or other sources. hammer  / pom later?
+    return
+  end
 
 
   local upgradeOptions = lootData.UpgradeOptions
@@ -97,11 +101,13 @@ ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
     god = nil
   end
   
-  -- TODO: fix hammer spawn / chaos spawn
-  -- TODO: Fix boons
   for i, upgradeData in ipairs(upgradeOptions) do
-    DebugPrint { Text = ModUtil.ToString.Shallow(upgradeData)}
-    if god ~= nil and upgradeData.Rarity ~= "Legendary" then
+    if
+      -- preserve legendary / duo system
+      god ~= nil and upgradeData.Rarity ~= "Legendary"
+      -- respect replace system / rarity
+      and not upgradeData.OldRarity
+    then
       local chosenRarity = Z.ComputeRarityForGod(god)
       DebugPrint { Text = "Rolled " .. chosenRarity }
       if rarityTable[chosenRarity] ~= nil and rarityTable[chosenRarity][upgradeData.ItemName] then
@@ -114,6 +120,28 @@ ModUtil.WrapBaseFunction("SetTraitsOnLoot", function(baseFunc, lootData, args)
 
 end, Z)
 
+-- TODO: override?
+ModUtil.Path.Wrap("GetUpgradedRarity", function (base, baseRarity)
+  -- TODO: limit by seen rarities
+  local rarityTable = {
+      Common = "Rare",
+      Rare = "Epic",
+      Epic = "Heroic",
+      Heroic = "Supreme",
+      Supreme = "Ultimate",
+      Ultimate = "Transcendental",
+      Transcendental = "Mythic",
+      Mythic = "Olympic",
+  }
+  return rarityTable[baseRarity]
+end, Z)
+
+ModUtil.Path.Wrap("GetRarityValue", function (base, rarity)
+	local rarityOrdering = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic", "Legendary" }
+	return GetKey(rarityOrdering, rarity) or 1
+end, Z)
+
+-- TODO: nyx levels?
 local ignoreDamageSourceTraitMap = {
   HighHealthDamageMetaUpgrade = true,
   GodEnhancementMetaUpgrade = true,
@@ -579,7 +607,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
         end
       elseif Z.WeaponToBoonMap[weapon.Name] ~= nil then
         sourceName = weapon.Name
-        boonsUsed[Z.WeaponToBoonMap[weapon.Name]] = true
+        boonsUsed[Z.WeaponToBoonMap[weapon.Name]] = damageResult.BaseDamage
       end
       -- end sourceWeaponData variance check
     elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
@@ -1131,56 +1159,163 @@ ModUtil.Path.Wrap("AddMaxHealth", function (baseFunc, healthGained, source, args
 end, Z)
 
 
-local originalIdenticalMultipliers = {}
-local originalPomScaling = TraitMultiplierData.DefaultDiminishingReturnsMultiplier
-
-ModUtil.Path.Wrap("ProcessTraitData", function (baseFunc, args)
-
-  ModUtil.Path.Decorate("GetProcessedValue", function (innerFunc, property, innerArgs)
-    innerFunc(property, innerArgs)
-  end, Z)
-  ModUtil.Path.Decorate.Pop("GetProcessedValue")
-end, Z)
-
-ModUtil.Path.Wrap("AddTraitToHero", function (baseFunc, args)
-  if args.TraitName and not args.TraitData then
-    args.TraitData = GetProcessedTraitData({ Unit = CurrentRun.Hero, TraitName = args.TraitName, Rarity = args.Rarity })
+-- takes the EXP level of a boon and applies 
+function Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
+  if not propertyChange or type(propertyChange) ~= "table" then
+    return propertyChange
+  end
+  -- attempt recursive strategy e.g. AphroditeWeaponTrait.AddOutgoingDamageModifiers.ValidWeaponMultiplier
+  -- TODO: what do non-pommables do when leveling?
+  if not propertyChange.IdenticalMultiplier then
+    local propertyChangeKVPs = CollapseTableAsOrderedKeyValuePairs(propertyChange)
+		for i, kvp in ipairs( propertyChangeKVPs ) do
+			local key = kvp.Key
+			local value = kvp.Value
+			if key ~= "ExtractValue" and key ~= "ExtractValues" then
+				propertyChange[key] = Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange[key])
+			end
+		end
+		return propertyChange
   end
 
+  local saveTraitData = Z.Data.BoonData[traitName]
+  if saveTraitData == nil then
+    return propertyChange
+  end
 
-  local traitData = args.TraitData
-	local changes = {}
-  if args.TraitData.PropertyChanges ~= nil then
-		table.insert( changes, "PropertyChanges" )
+  -- scale pom value according to pom reward level
+  local pomLevel = Z.Data.DropData.StackUpgrade.Level
+  propertyChange.IdenticalMultiplier.DiminishingReturnsMultiplier = TraitMultiplierData.DefaultDiminishingReturnsMultiplier * (1 + 0.02 * (pomLevel - 1))
+  -- scale identical multiplier (pom base proportion) according to level
+  local level = (saveTraitData.Level - 1) or 0
+  local val = propertyChange.IdenticalMultiplier.Value
+  if val < 0 then -- TODO: figure out other cases?
+    -- val = -0.6 -> 0.4 base proportion
+    -- level 4 => 0.4 base -> (1 + 4 * 0.05) * 0.4 = 0.48
+    -- 0.48 - 1
+    propertyChange.IdenticalMultiplier.Value = (1 + val) * (1 + level * 0.1) - 1
+    DebugPrint { Text = val .. " " .. propertyChange.IdenticalMultiplier.Value }
+  end
+  return propertyChange
+end
+
+-- TraitScripts.lua:236
+-- TODO: wraps / locals / whatever here
+ModUtil.Path.Override("ProcessTraitData", function( args )
+	if args == nil then
+		return
+	elseif ( args.TraitName == nil and args.TraitData == nil ) or args.Unit == nil then
+		return
 	end
-  for i, changeKey in ipairs(changes) do
-    if not TraitData[args.TraitName] or not  TraitData[args.TraitName][changeKey] then
-      break
-    end
-		for s, propertyChange in ipairs(TraitData[args.TraitName][changeKey]) do
-			if propertyChange.BaseMin ~= nil or propertyChange.BaseValue ~= nil then
-        -- scale pom value according to pom reward level
-        local pomLevel = Z.Data.DropData.StackUpgrade.Level
-        TraitMultiplierData.DefaultDiminishingReturnsMultiplier = originalPomScaling * (1 + 0.02 * (pomLevel - 1))
-        DebugPrint { Text = "setting diminishing returns to " .. TraitMultiplierData.DefaultDiminishingReturnsMultiplier }
-        local saveTraitData = Z.Data.BoonData[args.TraitName]
-        if saveTraitData ~= nil then
-          local level = saveTraitData.Level or 1
+	local traitName = args.TraitName
+	local unit = args.Unit
+	local rarity = args.Rarity
+	local fakeStackNum = args.FakeStackNum
 
-          -- cache identical multiplier changes so we don't keep changing the pom value after initial grab
-          if originalIdenticalMultipliers[args.TraitName] == nil then
-            DebugPrint { Text = "Setting originalIM for " .. args.TraitName  .. " to " .. propertyChange.IdenticalMultiplier.Value }
-            originalIdenticalMultipliers[args.TraitName] = propertyChange.IdenticalMultiplier.Value
-          end
-          local val = originalIdenticalMultipliers[args.TraitName]
-          -- val = -0.6 -> 0.4 base proportion
-          -- level 4 => 0.4 base -> (1 + 4 * 0.05) * 0.4 = 0.48
-          -- 0.48 - 1
-          propertyChange.IdenticalMultiplier.Value = (1 + val) * (1 + level * 0.1) - 1
-          DebugPrint { Text = val .. " " .. propertyChange.IdenticalMultiplier.Value }
-        end
+	local traitData = args.TraitData or DeepCopyTable(TraitData[traitName])
+	if traitName == nil then
+		traitName = args.TraitData.Name
+	end
+	traitData.Title = traitData.Name
+
+	local numExisting = GetTraitCount( unit, traitData )
+
+	if args.ForBoonInfo then
+		numExisting = 0
+	end
+
+	local rarityMultiplier = args.RarityMultiplier or 1
+	if rarity ~= nil and traitData.RarityLevels ~= nil and traitData.RarityLevels[rarity] ~= nil and traitData.RarityMultiplier == nil then
+		local rarityData = traitData.RarityLevels[rarity]
+		if rarityData.Multiplier ~= nil then
+			rarityMultiplier = rarityData.Multiplier
+		else
+			rarityMultiplier = RandomFloat(rarityData.MinMultiplier, rarityData.MaxMultiplier)
+		end
+		traitData.Rarity = rarity
+		traitData.RarityMultiplier = rarityMultiplier
+	end
+
+	-- NOTE(Dexter) GetProcessedValue makes calls to the RNG. For determinism, we must iterate in sorted order.
+	local traitDataKVPs = CollapseTableAsOrderedKeyValuePairs(traitData)
+	for i, kvp in ipairs( traitDataKVPs ) do
+		local key = kvp.Key
+		local value = kvp.Value
+		if key ~= "PropertyChanges" and key ~= "EnemyPropertyChanges" and key ~= "WeaponDataOverride" then
+			local propertyRarityMultiplier = rarityMultiplier or 1
+			if traitData[key] and type(traitData[key]) == "table" and traitData[key].CustomRarityMultiplier then
+				local rarityData = traitData[key].CustomRarityMultiplier[traitData.Rarity]
+				if rarityData then
+					if rarityData.Multiplier ~= nil then
+						propertyRarityMultiplier = rarityData.Multiplier
+					else
+						propertyRarityMultiplier = RandomFloat(rarityData.MinMultiplier, rarityData.MaxMultiplier)
+					end
+				end
+			end
+      -- CHANGES
+      if key == "AddOutgoingDamageModifiers" and value ~= nil then
+        value = Z.CalculatePropertyChangeWithGodLevels(traitName, value)
+      end
+      -- END CHANGES
+			traitData[key] = GetProcessedValue(value, { NumExisting = numExisting, RarityMultiplier = propertyRarityMultiplier, FakeStackNum = fakeStackNum })
+		end
+	end
+
+	if not IsEmpty( unit.Traits ) and traitData.RemainingUses ~= nil then
+		for i, data in pairs( GetHeroTraitValues( "TraitDurationIncrease", { Unit = unit })) do
+			if data.ValidTraits == nil or Contains( data.ValidTraits, traitName ) then
+				if traitData.RemainingUses ~= nil then
+					traitData.RemainingUses = traitData.RemainingUses + data.Amount
+				end
 			end
 		end
 	end
-  return baseFunc(args)
-end, Z)
+
+	if traitData.PropertyChanges == nil and traitData.EnemyPropertyChanges == nil then
+		return traitData
+	end
+
+	local changes = {}
+	if traitData.PropertyChanges ~= nil then
+		table.insert( changes, "PropertyChanges" )
+	end
+	if traitData.EnemyPropertyChanges ~= nil then
+		table.insert( changes, "EnemyPropertyChanges" )
+	end
+
+	for i, changeKey in ipairs(changes) do
+		local sortedTraitDataAtChangeKey = CollapseTableOrdered(traitData[changeKey])
+		for s, propertyChange in ipairs(sortedTraitDataAtChangeKey) do
+			if propertyChange.BaseMin ~= nil or propertyChange.BaseValue ~= nil then
+				local propertyRarityMultiplier = rarityMultiplier or 1
+				if propertyChange.CustomRarityMultiplier then
+					local rarityData = propertyChange.CustomRarityMultiplier[traitData.Rarity]
+					if rarityData then
+						if rarityData.Multiplier ~= nil then
+							propertyRarityMultiplier = rarityData.Multiplier
+						else
+							propertyRarityMultiplier = RandomFloat(rarityData.MinMultiplier, rarityData.MaxMultiplier)
+						end
+					end
+				end
+        -- CHANGES
+        if propertyChange ~= nil then
+          propertyChange = Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
+        end
+        -- END CHANGES
+				local newValue = GetProcessedValue(propertyChange, { Unit = unit, NumExisting = numExisting, RarityMultiplier = propertyRarityMultiplier, FakeStackNum = fakeStackNum  })
+				propertyChange.ChangeValue = newValue
+				propertyChange.BaseValue = newValue
+				if propertyChange.ChangeType == nil then
+					if numExisting > 0 then
+						propertyChange.ChangeType = "Add"
+					else
+						propertyChange.ChangeType = "Absolute"
+					end
+				end
+			end
+		end
+	end
+	return traitData
+end)
