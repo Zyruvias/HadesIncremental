@@ -8,6 +8,7 @@ Z.Constants = {
     STANDARD = "Standard",
     HARD = "Hard",
     HELL = "Hell",
+    FREEPLAY = "Freeplay",
   },
   Difficulty = {
     Keys = {
@@ -16,22 +17,22 @@ Z.Constants = {
       INCOMING_DAMAGE_SCALING = "IncomingDamageScaling",
     },
     HealthScaling = {
-        EASY = 1.02,
-        STANDARD = 1.04,
-        HARD = 1.06,
-        HELL = 1.10
+      Easy = 1.02,
+      Standard = 1.04,
+      Hard = 1.06,
+      Hell = 1.10
     },
     CostScaling = {
-      EASY = 1.00,
-      STANDARD = 1.01,
-      HARD = 1.02,
-      HELL = 1.05
+      Easy = 1.00,
+      Standard = 1.01,
+      Hard = 1.02,
+      Hell = 1.05
     },
     IncomingDamageScaling = {
-      EASY = 1.02,
-      STANDARD = 1.04,
-      HARD = 1.06,
-      HELL = 1.10
+      Easy = 1.02,
+      Standard = 1.04,
+      Hard = 1.06,
+      Hell = 1.10
     }
   },
   Components = {
@@ -57,6 +58,11 @@ Z.Constants = {
       PURCHASE_BOON = "Purchase Boon",
       AUGMENT_RARITY = "Augment Rarity Bonus"
     },
+  },
+  Settings = {
+    EXP_ON_HIT = "On hit",
+    EXP_ON_DEATH_BY_BOON = "On kill, aggregated by Boon",
+    EXP_ON_DEATH_BY_GOD = "On kill, aggregated by God",
   }
 }
 
@@ -105,6 +111,7 @@ Z.InitializeSaveData = function ()
     Z.Data.FileOptions = {
       StartingPoint = Z.Constants.SaveFile.EPILOGUE,
       Difficulty = Z.Constants.SaveFile.STANDARD,
+      ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_HIT,
     }
     Z.Data.Flags = {
       Initialized = true,
@@ -142,7 +149,6 @@ ModUtil.LoadOnce( function ( )
       DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
       Z.RemoveUpgrade(upgradeName)
     else
-      -- DebugPrint { Text = ModUtil.ToString.Deep(upgrade)}
       if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
       end
@@ -888,14 +894,17 @@ end
 ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   local run = baseFunc(...)
 
-    -- Z.DifficultyModifier = ComputeDifficultyModifier(
-    --   Z.Data.FileOptions.DifficultySetting,
-    --   Z.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
-    -- )
-    -- AddIncomingDamageModifier(CurrentRun.Hero, {
-    --   Name = "ZyruIncremental",
-    --   GlobalMultiplier = Z.DifficultyModifier
-    -- })
+  if not Z.Data.Flags or not Z.Data.Flags.Initialized then
+    return run
+  end 
+  Z.DifficultyModifier = ComputeDifficultyModifier(
+    Z.Data.FileOptions.DifficultySetting,
+    Z.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
+  )
+  AddIncomingDamageModifier(CurrentRun.Hero, {
+    Name = "ZyruIncremental",
+    GlobalMultiplier = Z.DifficultyModifier
+  })
 
   return run
 end, Z)
@@ -1151,18 +1160,16 @@ function Z.InitializeEpilogueStartSaveData()
     GiftPoints = 0
   }
   -- Inspect Points?
-  -- Codex -- TODO: fill out progress
-  CodexStatus.Enabled = true
   -- TextSpeechRecord?
   for npcKey, npcObj in pairs(UnitSetData.NPCs) do
-    -- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
+DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
     for propKey, propValue in pairs(npcObj) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-        -- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
+DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-            -- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1172,14 +1179,14 @@ function Z.InitializeEpilogueStartSaveData()
 
   -- LootData Text Lines
   for lootKey, lootValue in pairs(LootData) do
-    -- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
+DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
     for propKey, propValue in pairs(lootValue) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-        -- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
+DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-            -- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1187,5 +1194,46 @@ function Z.InitializeEpilogueStartSaveData()
     end
   end
   
+  -- Codex -- enable and fill out progress by threshold and unlock amounts
+  CodexStatus.Enabled = true
+	for chapterName, chapterData in pairs(Codex) do
+    if CodexStatus[chapterName] == nil then
+      CodexStatus[chapterName] = {}
+    end
+		for entryName, entryData in pairs(Codex[chapterName].Entries) do
+      
+      if CodexStatus[chapterName][entryName] == nil then
+        CodexStatus[chapterName][entryName] = {}
+      end
+      for i, entry in ipairs(entryData.Entries) do
+        if entry.UnlockGameStateRequirements then
+          -- unlock required text lines for entry
+          if entry.UnlockGameStateRequirements.RequiredTextLines then
+            for j, line in ipairs(entry.UnlockGameStateRequirements.RequiredTextLines) do
+              TextLinesRecord[line] = true
+            end
+          end
+          if entry.UnlockGameStateRequirements.RequiredAnyTextLines then
+            for j, line in ipairs(entry.UnlockGameStateRequirements.RequiredAnyTextLines) do
+              TextLinesRecord[line] = true
+            end
+          end
+        end
+        -- TODO: this cumulative adding may cause problems. idk though. if you're reading this halp
+        -- unlock UnlockThreshold
+        local incrementValue = entry.UnlockThreshold or 0
+        if entry.UnlockThreshold then
+          IncrementCodexValue(chapterName, entryName, entry.UnlockThreshold  )
+        end
+        -- TODO: is this ...
+        if CodexStatus[chapterName][entryName][i] == nil or type(CodexStatus[chapterName][entryName][i]) ~= "table" then
+          CodexStatus[chapterName][entryName][i] = {}
+        end
+        CodexStatus[chapterName][entryName][i].Unlocked = true
+      end
+		end
+	end
+  UnlockExistingEntries()
+
 
 end

@@ -18,8 +18,6 @@ ModUtil.Path.Wrap("AddStackToTraits", function (baseFunc, source, args)
     -- this calls itself again, wait for those changes to resolve before doing anything 
     return baseFunc(source, args)
   end
-  DebugPrint { Text = ModUtil.ToString.Deep(source)}
-  DebugPrint { Text = ModUtil.ToString.Deep(args)}
   Z.TrackDrop("StackUpgrade", (source.NumTraits or 1) * (source.NumStacks or 1) * 75 )
   return baseFunc(source, args)
 end, Z)
@@ -40,17 +38,78 @@ function Z.TrackDrop(source, amount)
     dropData.Level = dropData.Level + 1
     local voiceLine = GetRandomValue(Z.DropLevelUpVoiceLines[source])
     if voiceLine ~= nil then
-      DebugPrint { Text = ModUtil.ToString.Deep(voiceLine) }
       PlayVoiceLine(voiceLine)
     end
   end
 end
+
+ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
+  -- TODO: override? only calling baseFunc to preserve side effects for mod compatibility
+  baseFunc(args)
+	local name = args.Name
+	local ignoreTempRarityBonus = args.IgnoreTempRarityBonus
+	local referencedTable = "BoonData"
+  local baseRarity = 0
+	if name == "StackUpgrade" then
+		referencedTable = "StackData"
+	elseif name == "WeaponUpgrade" then
+		referencedTable = "WeaponData"
+	elseif name == "HermesUpgrade" then
+		referencedTable = "HermesData"
+  else
+    local godNameFromUpgrade = string.sub(name, 1, string.len(name) - 7)
+    if godNameFromUpgrade == "Trial" then
+      godNameFromUpgrade = "Chaos"
+    end
+    local godData = Z.Data.GodData[godNameFromUpgrade]
+    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState[" ..godNameFromUpgrade .. "RarityBonus]", Z) or 0)
+	end
+
+	local legendaryRoll = CurrentRun.Hero[referencedTable].LegendaryChance or 0
+
+	if CurrentRun.CurrentRoom.BoonRaritiesOverride then
+		legendaryRoll = CurrentRun.CurrentRoom.BoonRaritiesOverride.LegendaryChance or legendaryRoll
+		baseRarity = baseRarity + 100 * CurrentRun.CurrentRoom.BoonRaritiesOverride.RareChance or 0
+	elseif args.BoonRaritiesOverride then
+		legendaryRoll = args.BoonRaritiesOverride.LegendaryChance or legendaryRoll
+		baseRarity = baseRarity + 100 * args.BoonRaritiesOverride.RareChance or 0
+	end
+  -- NOTE: Rare roll mirror upgrade is now resource generation
+	-- local metaupgradeRareBoost = 100 * GetNumMetaUpgrades( "RareBoonDropMetaUpgrade" ) * ( MetaUpgradeData.RareBoonDropMetaUpgrade.ChangeValue - 1 )
+	local metaupgradeEpicBoost = 100 * GetNumMetaUpgrades( "EpicBoonDropMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 ) + GetNumMetaUpgrades( "EpicHeroicBoonMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
+	baseRarity = baseRarity + metaupgradeEpicBoost
+  local metaupgradeLegendaryBoost = GetNumMetaUpgrades( "DuoRarityBoonDropMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
+	legendaryRoll = legendaryRoll + metaupgradeLegendaryBoost
+
+	local rarityTraits = GetHeroTraitValues("RarityBonus", { UnlimitedOnly = ignoreTempRarityBonus })
+	for i, rarityTraitData in pairs(rarityTraits) do
+		if rarityTraitData.RequiredGod == nil or rarityTraitData.RequiredGod == name then
+			if rarityTraitData.RareBonus then
+				baseRarity = baseRarity + 100 * rarityTraitData.RareBonus
+			end
+      -- TODO: Figure out Exclusive Access and if other epic sources make sense to preserve
+			-- if rarityTraitData.EpicBonus then
+			-- 	epicRoll = epicRoll + rarityTraitData.EpicBonus
+			-- end
+			if rarityTraitData.LegendaryBonus then
+				legendaryRoll = legendaryRoll + rarityTraitData.LegendaryBonus
+			end
+		end
+	end
+
+  local chances = Z.ComputeRarityDistribution( baseRarity )
+	chances.Legendary = legendaryRoll
+  -- DebugPrint { Text = "Chances at " .. tostring(baseRarity) .."%: " .. ModUtil.ToString.Deep(chances)}
+  return chances
+end, Z)
+
 
 ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- Calculate normal rarity for the sake of Duos / Legendaries, I like the current system.
   DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
   baseFunc(lootData, args)
   Z.DebugLoot = DeepCopyTable(lootData)
+  Z.DebugArgs = DeepCopyTable(args)
   if lootData.ForceCommon then
     -- respect common forces from first run or other sources. hammer  / pom later?
     return
@@ -108,10 +167,23 @@ ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
       -- respect replace system / rarity
       and not upgradeData.OldRarity
     then
-      local chosenRarity = Z.ComputeRarityForGod(god)
+      local chosenRarity = "Common"
+      local chances = lootData.RarityChances
+      local cumulativeChance = 0
+      
+      local rarityArray = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic" }
+      local roll = RandomNumber()
+      for i, rarity in ipairs(rarityArray) do
+        if roll < (chances[rarity] + cumulativeChance) then
+          chosenRarity = rarity
+          break
+        end
+        cumulativeChance = cumulativeChance + chances[rarity]
+      end
+      
       DebugPrint { Text = "Rolled " .. chosenRarity }
       if rarityTable[chosenRarity] ~= nil and rarityTable[chosenRarity][upgradeData.ItemName] then
-        -- DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
+DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
         upgradeData.Rarity = chosenRarity
       end
 		end
@@ -524,7 +596,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       end
 
       local d = {}
-      DebugPrint { Text = "enemyDamageSources:" .. ModUtil.ToString.Deep(enemyDamageSources)}
+      -- DebugPrint { Text = "enemyDamageSources:" .. ModUtil.ToString.Deep(enemyDamageSources)}
       for i, source in pairs(enemyDamageSources) do
         if source ~= nil and source.Name ~= nil then
           d[source.Name] = (d[source.Name] or 1) + source.Multiplier - 1
@@ -547,9 +619,8 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     Z.lta = obj
     Z.Victim = victim
     Z.DamageMap = damageMultiplierMap
-    
-    if RequiredKillEnemies[victim.ObjectId] == nil and victim.Name ~= "TrainingMelee" then
-      -- DebugPrint{ Text = "Non-required Enemy Hit"}
+    -- and victim.Name ~= "TrainingMelee" while testing
+    if RequiredKillEnemies[victim.ObjectId] == nil  then
       return
     end
 
@@ -569,15 +640,10 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     local boonsUsed = {}
   
     if triggerArgs.EffectName ~= nil then
-      -- DebugPrint({ Text = "EffectName found: ".. obj.EffectName })
       local traitUsed = Z.EffectToBoonMap[obj.EffectName]
       if traitUsed ~= nil then
-        -- DebugPrint({ Text = obj.SourceWeapon })
-        -- DebugPrint({ Text = ModUtil.ToString.Deep(traitUsed) })
         if type(traitUsed) == "table" then
-          traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]
-          -- DebugPrint({ Text = ModUtil.ToString.Shallow(traitUsed) })
-          
+          traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]          
           -- if not defined, it's coming from a source that isn't meant to be tracked
           if traitUsed == nil then
             return
@@ -637,7 +703,6 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       local damageProportion = damageResult.BaseDamage * (multiplier - 1)
       local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
       if trait ~= nil then
-        DebugPrint{ Text = tostring(trait) .. ": " .. tostring(damageProportion)}
         boonsUsed[trait] = (boonsUsed[trait] or 0) + damageProportion
       end
     end
@@ -672,7 +737,6 @@ ModUtil.Path.Context.Wrap("Damage", function ()
   
     -- Do this instead of intercepting engine trait changes, last resort :(
     if Z.HailMaryMap[sourceName] ~= nil then
-      -- DebugPrint({ Text = "Searching for ".. sourceName .. " in HailMaryMap"})
       for k, trait in pairs(Z.HailMaryMap[sourceName]) do
         if HeroHasTrait(trait) then
           boonsUsed[trait] = damageResult.BaseDamage
@@ -682,10 +746,10 @@ ModUtil.Path.Context.Wrap("Damage", function ()
   
     -- Apply all boons tracked in this damage source computation
     for k,v in pairs(boonsUsed) do
-      Z.TrackBoonEffect(k, v)
+      Z.TrackBoonEffect(k, v, victim)
     end
   
-    -- DebugPrint({ Text = text })
+DebugPrint({ Text = text })
     return res
   
   end, Z)
@@ -727,13 +791,13 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     end
   
     for k,v in pairs(boonsUsed) do
-      Z.TrackBoonEffect(k, v)
+      Z.TrackBoonEffect(k, v, victim)
     end
   end, Z)
 
 end, Z)
 
-function Z.TrackBoonEffect ( traitName, damageValue )
+function Z.TrackBoonEffect ( traitName, damageValue, victim )
   if Z.Data == nil or traitName == nil then
     return
   end
@@ -781,7 +845,7 @@ function Z.TrackBoonEffect ( traitName, damageValue )
   end
 
   if expGained > 0 then
-    thread( DisplayExperiencePopup, expGained )
+    Z.HandleExperiencePresentationBehavior(traitName, Z.BoonToGod[traitName], expGained, victim)
   end
 
   -- check for level-ups
@@ -803,7 +867,6 @@ function Z.TrackBoonEffect ( traitName, damageValue )
 end
 
 ModUtil.Path.Wrap("PurchaseConsumableItem", function ( baseFunc, currentRun, consumableItem, args) 
-  DebugPrint{ Text = ModUtil.ToString.Deep(consumableItem) }
   -- consumableItem.Name
   baseFunc(currentRun, consumableItem, args)
 end, Z)
@@ -947,7 +1010,7 @@ OnEffectApply{
     if triggerArgs == nil or triggerArgs.EffectType == "GRIP" or triggerArgs.EffectType == "UNKNOWN" then
       return
     end
-    -- DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
+DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
     if triggerArgs.EffectName == "DelayedDamage" and triggerArgs.Reapplied then
       if HeroHasTrait("AresLoadCurseTrait") then
         Z.TrackBoonEffect("AresLoadCurseTrait")
@@ -1054,7 +1117,7 @@ OnPlayerMoveStopped{
     stop = _screenTime
     local duration = stop - start
     if HeroHasTrait("MoveSpeedTrait") then
-      Z.TrackBoonEffect("MoveSpeedTrait")
+      Z.TrackBoonEffect("MoveSpeedTrait", duration)
     end
 	end
 }
@@ -1126,7 +1189,7 @@ end, Z)
 
 -- Side Hustle
 ModUtil.Path.Wrap("AddMoney", function(baseFunc, amount, source)
-  -- DebugPrint{ Text = tostring(amount) .. tostring(source)}
+DebugPrint{ Text = tostring(amount) .. tostring(source)}
   if source == "Hermes Money Trait" and HeroHasTrait("ChamberGoldTrait") then
     Z.TrackBoonEffect("ChamberGoldTrait")
   elseif source == "RoomRewardMoneyDrop" then

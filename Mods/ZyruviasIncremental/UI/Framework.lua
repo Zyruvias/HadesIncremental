@@ -138,7 +138,6 @@ Z.BaseComponents = {
 
 function GetScreenIdsToDestroy(screen) 
     local idsToKeep = screen.PermanentComponents or {}
-    -- DebugPrint { Text = ModUtil.ToString.Deep(idsToKeep)}
     local allIds = GetAllIds(screen.Components)
     local idsToDestroy = {}
     for _, id in ipairs(allIds) do
@@ -193,9 +192,14 @@ function GetComponentDefinition(screen, component)
         DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
     end
     local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-    if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen) ~= nil then
-        DebugPrint { Text = "Reusing component definition for " .. fieldName }
-        baseDefinition = screen[fieldName].Args
+    Z.Screen = screen
+    -- DebugPrint { Text = ModUtil.ToString.Shallow(screen)}
+    if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
+        -- DebugPrint { Text = "Reusing component definition for " .. fieldName }
+        baseDefinition = ModUtil.Table.Merge(
+            baseDefinition,
+            screen.Components[fieldName].Args or {}
+        )
     end
 
     local componentDefinition = ModUtil.Table.Merge(
@@ -207,7 +211,7 @@ end
 
 function Z.CreateOrUpdateComponent(screen, component)
     local componentDefinition = GetComponentDefinition(screen, component)
-    if screen[componentDefinition.FieldName] ~= nil then
+    if screen.Components[componentDefinition.FieldName] ~= nil then
         Z.UpdateComponent(screen, component)
     else
         Z.RenderComponent(screen, component)
@@ -217,7 +221,7 @@ end
 -- Create Menu
 function Z.CreateMenu(name, args)
     -- Screen / Hades Framework Setup
-    -- DebugPrint { Text = ModUtil.ToString.Deep(args)}
+-- DebugPrint { Text = ModUtil.ToString.Deep(args)}
     args = args or {}
     local screen = { Components = {}, Name = name }
     ScreenAnchors[name] = screen
@@ -299,7 +303,7 @@ function Z.RenderComponent(screen, component)
         -- establish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
         if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
-            DebugPrint { Text = "Setting component definition for " .. fieldName }
+            -- DebugPrint { Text = "Setting component definition for " .. fieldName }
             screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
         end
     end
@@ -307,7 +311,7 @@ end
 
 function Z.UpdateComponent(screen, component, args)
     if not component or component.Type == nil then
-        DebugPrint { Text = "No component or no component Type property provided"}
+        -- DebugPrint { Text = "No component or no component Type property provided"}
         return
     end 
     if type(Z["Update" .. tostring(component.Type)]) == "function" then
@@ -315,7 +319,7 @@ function Z.UpdateComponent(screen, component, args)
 
         -- reestablish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-        DebugPrint { Text = "Updating component definition for " .. fieldName }
+        -- DebugPrint { Text = "Updating component definition for " .. fieldName }
         screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
     end
 end
@@ -385,7 +389,7 @@ function Z.RenderProgressBar(screen, component)
     SetScaleX{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.Proportion }
     SetScaleY{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.ScaleY }
 
-    -- -- DebugPrint { Text = ModUtil.ToString.Deep(components)}
+    --DebugPrint { Text = ModUtil.ToString.Deep(components)}
     
     -- TODO: left text / right text
     local barText = {
@@ -499,7 +503,7 @@ function Z.RenderButton(screen, component)
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
     local buttonComponentName = buttonDefinition.Name or "BaseInteractableButton"
     components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0 })
-    DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
+    -- DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
 
     if buttonDefinition.Animation ~= nil then
         SetAnimation({ DestinationId = components[buttonName].Id, Name = buttonDefinition.Animation })

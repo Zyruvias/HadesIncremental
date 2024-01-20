@@ -181,7 +181,6 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
     for i, traitName in ipairs(boonsToDisplay) do
         local x = startX + xGap * math.floor((i - 1) / 5)
         local y = startY + yGap * ((i - 1) % 5)
-        DebugPrint { Text = tostring(i) .. " " .. traitName .. " " .. tostring(x) .. " " .. tostring(y)}
         CreateBoonPresentation(screen, traitName, x, y)
     end
     
@@ -190,7 +189,44 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
     return value
 end, Z)
 
-function DisplayExperiencePopup (amount)
+function Z.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
+    local behavior = Z.Data.FileOptions.ExperiencePopupBehavior
+    if behavior == Z.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
+        color = Z.BoonToGod[traitName] and Color[Z.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
+        thread( DisplayExperiencePopup, expGained, { Color = color })
+    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_BOON  then
+        victim.ZyruExperienceMap = victim.ZyruExperienceMap or {}
+        victim.ZyruExperienceMap[traitName] = victim.ZyruExperienceMap[traitName] or 0
+        victim.ZyruExperienceMap[traitName] = victim.ZyruExperienceMap[traitName] + expGained
+    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_GOD then
+        victim.ZyruExperienceMap = victim.ZyruExperienceMap or {}
+        victim.ZyruExperienceMap[godName] = victim.ZyruExperienceMap[godName] or 0
+        victim.ZyruExperienceMap[godName] = victim.ZyruExperienceMap[godName] + expGained
+    end
+end
+
+function Z.HandleKillEnemyExperiencePresentation(victim)
+    local behavior = Z.Data.FileOptions.ExperiencePopupBehavior
+    Z.Victim = victim
+    if  behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_BOON then
+        for traitName, expGained in pairs(victim.ZyruExperienceMap or {}) do
+            thread( DisplayExperiencePopup, expGained, { Color = Color[Z.BoonToGod[traitName] .. "DamageLight"], DestinationId = victim.ObjectId })
+            wait(0.1)
+        end
+    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_GOD then
+        for godName, expGained in pairs(victim.ZyruExperienceMap) do
+            thread( DisplayExperiencePopup, expGained, { Color = Color[godName .. "DamageLight"], DestinationId = victim.ObjectId })
+            wait(0.25)
+        end
+    end
+end
+
+ModUtil.Path.Wrap("KillEnemy", function (base, victim, triggerArgs)
+    thread(Z.HandleKillEnemyExperiencePresentation, victim)
+    base(victim, triggerArgs)
+end, Z)
+
+function DisplayExperiencePopup (amount, args)
     local displayAmount = round(amount)
     if displayAmount <= 0 then
         return
@@ -201,18 +237,18 @@ function DisplayExperiencePopup (amount)
 
     local damageTextAnchor = SpawnObstacle({
         Name = "BlankObstacleNoTimeModifier",
-        DestinationId = CurrentRun.Hero.ObjectId,
+        DestinationId = args.DestinationId or CurrentRun.Hero.ObjectId,
         Group = "Combat_UI_World", 
         OffsetX = randomOffsetX,
         OffsetY = randomOffsetY,
     })
     
-    local color = { 192, 192, 192, 255 }
+    local color = args.Color or { 192, 192, 192, 255 }
     local fontScaling = math.min(18, math.pow(displayAmount, 0.333))
     CreateTextBox({
         Id = damageTextAnchor,
         RawText = "+ " .. tostring(displayAmount) .. "xp",
-        FontSize = 12 + fontScaling,
+        FontSize = 18 + fontScaling,
         Justification = "CENTER",
         ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset = {2, 2},
         OutlineThickness = 1, OutlineColor = {0,0,0},
@@ -283,7 +319,6 @@ end
 -- Courtyard Interface
 
 function LolLmao()
-    DebugPrint { Text = "LMAO" }
     local voiceline = GetRandomValue(Z.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )
@@ -311,7 +346,7 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         DestinationId = CurrentRun.Hero.ObjectId,
         AttachedTable = selector,
         OffsetX = 2000,
-        OffsetY = -700,
+        OffsetY = -750,
     })
     if not Z.Data.Flags.SeenUpgradeMenu then
         Z.UpgradeMenuObjectId = selector.ObjectId
@@ -333,8 +368,8 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
         AttachedTable = selector,
-        OffsetX = 2200,
-        OffsetY = -600,
+        OffsetX = 2300,
+        OffsetY = -650,
     })
     
     if not Z.Data.Flags.SeenProgressMenu then
@@ -366,10 +401,117 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- SetScale{ Id = shrinePointDoor.ObjectId, Fraction = 0.17 }
     SetColor{ Id = shrinePointDoor.ObjectId, Color = { 120, 255, 170, 255 } }
     AddToGroup({Id = shrinePointDoor.ObjectId, Name = "ChallengeSelector"})
+
+    --------------------------
+    -- SETTINGS TABLE ---
+    --------------------------
+    local settingsSelector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699]  )
+    settingsSelector.ObjectId = SpawnObstacle({
+        Name = "HouseFiles01",
+        Group = "Standing",
+        DestinationId = CurrentRun.Hero.ObjectId,
+        OffsetX = 2150, OffsetY = -700,
+        AttachedTable = settingsSelector,
+        ForceToValidLocation = true,
+    })
+    SetupObstacle( settingsSelector )
+    settingsSelector.ShrinePointReq = 0
+    settingsSelector.UseText = "{I} Mod Settings"
+    settingsSelector.OnUsedFunctionName = "ShowZyruSettingsMenu"
+    settingsSelector.Activate = true
+    if not Z.Data.Flags.SeenSettingsMenu then
+        Z.SettingsMenuObjectId = settingsSelector.ObjectId
+        settingsSelector.BlockExitUntilUsed = true
+        settingsSelector.BlockExitText = "New shiny things over here!" -- TODO: ???
+    end
+    SetScale{ Id = settingsSelector.ObjectId, Fraction = 0.666 } -- :croven:
+    SetColor{ Id = settingsSelector.ObjectId, Color = { 120, 255, 170, 255 } }
+    AddToGroup({Id = settingsSelector.ObjectId, Name = "ChallengeSelector"})
 end}
 
 -- START SCREEN UPDATE
 
+function ShowZyruSettingsMenu()
+    Z.Data.Flags.SeenSettingsMenu = true
+    local screen = Z.CreateMenu("SettingsMenu", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "MenuTitle",
+                    Text = "Mod Settings",
+                },
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                Args = {
+                    Text = "Change mod configurations according to your heart's desires.",
+                    FieldName = "WelcomeTitle",
+                }
+            },{
+                Type = "Dropdown",
+                SubType = "Standard",
+                Args = {
+                    FieldName = "DifficultyDropdown",
+                    Group = "DifficultyGroup",
+                    -- X, Y, Items, Name
+                    X = ScreenWidth / 6,
+                    Y = ScreenHeight / 3,
+                    Scale = {
+                        X = 0.5
+                    },
+                    Items = {
+                        Default = {
+                            Text = Z.Data.FileOptions.ExperiencePopupBehavior or Z.Constants.Settings.EXP_ON_DEATH_BY_BOON,
+                            event = function() end
+                        },
+                        {
+                            Text = Z.Constants.Settings.EXP_ON_HIT,
+                            event = function ()
+                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_HIT
+                            end
+                        },
+                        {
+                            Text = Z.Constants.Settings.EXP_ON_DEATH_BY_BOON,
+                            event = function ()
+                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_DEATH_BY_BOON
+                            end
+                        },
+                        {
+                            Text = Z.Constants.Settings.EXP_ON_DEATH_BY_GOD,
+                            event = function ()
+                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_DEATH_BY_GOD
+                            end
+                        },
+                    }
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                Args = {
+                    FieldName = "ExpDropText",
+                    Text = "On hit - every instance of damage or benefits from a boon will show an experience popup."
+                    .. " Please note that this is very visually noisy compared to the other options.\\n\\n"
+                    .." On kill, aggregated by Boon - each boon that contributes to an enemy kill will show an experience popup."
+                    .. " Mild visual noise with many boons. (Default Setting)\\n\\n"
+                    .." On kill, aggregated by God - each God that contributes to an enemy kill will show an experience popup."
+                    .. " Least visual noise."
+                    ,
+                    OffsetX = - ScreenWidth / 4 + 100,
+                    OffsetY = - ScreenHeight / 6 - 25,
+                    Width = ScreenWidth * 0.60
+                }
+            },
+            {
+                Type = "Button",
+                SubType = "Close",
+            }
+            }
+        })
+end
 
 local cabinetId = nil
 
@@ -384,6 +526,7 @@ function ModInitializationScreen2()
                         FieldName = "MenuTitle",
                         Text = "Incremental Mod Setup",
                     },
+                },
                     {
                         Type = "Text",
                         SubType = "Subtitle",
@@ -399,13 +542,13 @@ function ModInitializationScreen2()
                             FieldName = "WelcomeText",
                             Text = "Hello there,\\n\\n In order to use this mod, you must start a new save file. Your current"
                             .." savefile progress does not translate well in the new mod systems, so it does not make sense to"
-                            .." allow you to continue. Please create a new file to access the mod setup page and begin your "
+                            .." allow you to continue. Please select \"Give Up\" or \"Quit\" and create a new file to access the mod setup page and begin your "
                             .." Incremental Mod Experience.",
                         }
                     }
                 }
-            }
-        })
+            })
+        return
     end
     local screen = Z.CreateMenu("ModInitialization", {
         Pages = {
@@ -576,7 +719,7 @@ function ModInitializationScreen2()
                         Scale = { X = 1.0, Y = 1.0 },
                         Items = {
                             Default = {
-                                Text = Z.Data.FileOptions.StartingPoint or "Epilogue",
+                                Text = Z.Data.FileOptions.StartingPoint or Z.Constants.SaveFile.EPILOGUE,
                                 event = function() end
                             },
                             { 
@@ -588,7 +731,7 @@ function ModInitializationScreen2()
                             { 
                                 Text = "Epilogue",
                                 event = function ()
-                                    Z.Data.FileOptions.StartingPoint = "Epilogue"
+                                    Z.Data.FileOptions.StartingPoint = Z.Constants.SaveFile.EPILOGUE
                                 end
                             },
                         }
@@ -700,7 +843,20 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-			Proportion = 1, UpdateDuration = 5, Text = "Settling familial disputes ..."
+			Proportion = 1, UpdateDuration = 8, Text = "Settling familial disputes ...",
+            Voicelines = {
+                AllowTalkOverTextLines = true,
+                -- "That oaf Poseidon spoke to you already, didn't he? All bluster, muscles, and bravado, that one. I'm glad you're not the type."
+				{ 
+                    Cue = "/VO/Aphrodite_0045",
+                },
+                -- "You've come to know your Uncle Zeus, by now, correct? Just want to let you know, good Zeus gets very busy on the regular, so you just stick with me, I've always time for you, Nephew!"
+                {
+                    Cue = "/VO/Poseidon_0049",
+                },
+                -- "I suppose even down in the Underworld, you would have heard such tales of me, young man. They're all untrue, hahaha! Except the tales of my bravery. Those are completely accurate, though all too modest, in most cases, I must say."
+                { Cue = "/VO/Zeus_0218", },
+            }
         },
         { Proportion = 0, UpdateDuration = 0},
         {
@@ -710,7 +866,7 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            Proportion = 0.6, UpdateDuration = 7, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
+            Proportion = 0.6, UpdateDuration = 6, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
             
             -- A crimson color for the drapery is sure to be a better fit for the decor.
             Voicelines = {{ Cue = "/VO/ZagreusHome_1085" } },
@@ -721,17 +877,17 @@ function CloseInitializationScreen(screen, button)
             Voicelines = {{ Cue = "/VO/Hades_0518" }},
         },
         {
-            Proportion = 0.3, UpdateDuration = 4, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
+            Proportion = 0.3, UpdateDuration = 3, Text = "Working the House Contractor Overtime (2x pay, of course) ...",
             -- You know what, I changed my mind about the drapery.
             Voicelines = {{ Cue = "/VO/ZagreusHome_1086" }},
         },
         {
-            Proportion = 0.8, UpdateDuration = 11, Text = "Working the House Contractor Overtime (2x pay, of course) ...", 
+            Proportion = 0.8, UpdateDuration = 9, Text = "Working the House Contractor Overtime (2x pay, of course) ...", 
             Voicelines = {
                 -- A fine hallway requires a fine rug, I always say! I say it sometimes...
                 { Cue = "/VO/ZagreusHome_1710" },
                 -- So wasteful of my realm's resources, boy.
-                { Cue = "/VO/Hades_0643", PreLineWait = 4.80},
+                { Cue = "/VO/Hades_0643", PreLineWait = 3.90},
             }
         },
         {
@@ -776,7 +932,6 @@ function CloseInitializationScreen(screen, button)
     Z.RenderComponent(screen, progressText)
 
     for _, stage in ipairs(stages) do
-        DebugPrint { Text = ModUtil.ToString.Deep(stage)}
         if stage.Voicelines then
             thread( PlayVoiceLines, stage.Voicelines )
         end
@@ -804,25 +959,28 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     if Z.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
-
-    base(currentRun, currentRoom)
+    
     LoadPackages({Name = "DeathArea"})
+    base(currentRun, currentRoom)
+
     local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
     selector.BlockExitUntilUsed = true
     selector.BlockExitText = "Mod Setup Not Completed..."
     selector.UseText = "{I} Begin Incremental Journey"
     selector.OnUsedFunctionName = "ModInitializationScreen2"
     selector.Activate = true
-    selector.ShrinePointReq = 0
+
+    
+	local targetId = SpawnObstacle({ Name = "BlankObstacle", Group = "Standing", DestinationId = CurrentRun.Hero.ObjectId, OffsetX = 0, OffsetY = 0 })
 
     selector.ObjectId = SpawnObstacle({
         Name = "HouseFileCabinet03",
         Group = "Standing",
-        DestinationId = CurrentRun.Hero.ObjectId,
+        DestinationId = targetId,
         ForceToValidLocation = true,
         AttachedTable = selector,
-        OffsetX = 2550,
-        OffsetY = -950,
+        OffsetX = 500,
+        OffsetY = -0,
     })
     cabinetId = selector.ObjectId
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
@@ -934,7 +1092,6 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
 end
 
 function ShowGodProgressScreen(screen, button)
-    DebugPrint { Text = ModUtil.ToString.Deep(button)}
 
     local traitIndexName = button.PageIndex .. "Upgrade"
     if button.PageIndex == "Chaos" then
@@ -945,13 +1102,9 @@ function ShowGodProgressScreen(screen, button)
     -- create scrolling list
     local boonItemsToDisplay = {}
     for i, boonName in ipairs(boonsToDisplay) do
-        if not TraitData[boonName] then
-            DebugPrint { Text = boonName .. " not found in TraitData" }
-        end
         if not Contains(TraitData[boonName] and TraitData[boonName].InheritFrom or {}, "SynergyTrait") then
             table.insert(boonItemsToDisplay, {
                 event = function () 
-                    DebugPrint { Text = "clicked " .. boonName}
                     UpdateBoonInfoProgressScreen(screen, boonName)
                 end,
                 Text = boonName,
@@ -1150,7 +1303,6 @@ end
 function GetUpgradeGostText(upgrade)
     local costText = "Cost: "
     local costs = GetUpgradeCost(upgrade)
-    DebugPrint { Text = ModUtil.ToString.Deep(costs)}
     local sourceCostTexts = {}
     for source, cost in pairs(costs) do 
         table.insert(sourceCostTexts, tostring(cost or 0) .. " " .. source .. " Points")
@@ -1215,7 +1367,6 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
 end
 
 function GetUpgradeListItem(screen, upgrade)
-    DebugPrint { Text = ModUtil.ToString.Shallow(upgrade)}
     local description = "Unlock a new Boon from " .. 
         (upgrade.Source or upgrade.Sources[1] .. " and " .. upgrade.Sources[2])
     return {

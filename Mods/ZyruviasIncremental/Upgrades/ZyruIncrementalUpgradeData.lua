@@ -1033,7 +1033,7 @@ end)
 function ResetBloodlust()
     for k, traitData in pairs(CurrentRun.Hero.Traits) do
         if traitData.BloodlustDamageBonus ~= nil then
-            DebugPrint { Text = "Resetting Bloodlust" }
+            -- DebugPrint { Text = "Resetting Bloodlust" }
             traitData.BloodlustDamageBonus = 1
         end
     end
@@ -1075,7 +1075,7 @@ OnDodge{ "_PlayerUnit",
 -- END APHRODITE HERMES DUO
 
 ModUtil.Path.Wrap("DamageOverTimeApply", function (baseFunc, args)
-    DebugPrint { Text = ModUtil.ToString.Shallow(args.Stacks) }
+    -- DebugPrint { Text = ModUtil.ToString.Shallow(args.Stacks) }
     Z.Args = args
     return baseFunc(args)
 end, Z)
@@ -1106,8 +1106,8 @@ OnEffectApply {
     function ( args )
         if args.EffectName == "DamageOverTime" then
             -- DebugPrint { Text = "Attempting to modify DamageOverTime" }
-            DebugPrint { Text = tostring(HasEffect({ Id = args.triggeredById, EffectName = "DamageOverTime",}))}
-            DebugPrint { Text = ModUtil.ToString.Shallow()}
+            -- DebugPrint { Text = tostring(HasEffect({ Id = args.triggeredById, EffectName = "DamageOverTime",}))}
+            -- DebugPrint { Text = ModUtil.ToString.Shallow()}
             ModifyEffect({
                 Id = args.triggeredById,
                 EffectName = "DamageOverTime",
@@ -1214,7 +1214,7 @@ function Z.EnablePoseidonVacuumFunction( args )
         isActive = true
         local leadLocation = SpawnObstacle({ Name = "InvisibleTarget", DestinationId = CurrentRun.Hero.ObjectId })
         
-        DebugPrint { Text = "calculating applyVacuumEffect"}
+        -- DebugPrint { Text = "calculating applyVacuumEffect"}
         local targetIds = GetClosestIds({
             Id = CurrentRun.Hero.ObjectId,
             DestinationName = "EnemyTeam",
@@ -1222,14 +1222,14 @@ function Z.EnablePoseidonVacuumFunction( args )
             IgnoreHomingIneligible = true,
             Distance = 10000 
         })
-        DebugPrint { Text = tostring(targetIds)}
+        -- DebugPrint { Text = tostring(targetIds)}
         for i, targetId in pairs(targetIds) do
             
-            DebugPrint { Text = tostring(targetId)}
+            -- DebugPrint { Text = tostring(targetId)}
             if ActiveEnemies[targetId] ~= nil and not ActiveEnemies[targetId].IsDead then
                 local speed = isPush and -2500 or 0.666 * GetRequiredForceToEnemy( targetId, leadLocation)
                 local angle = GetAngleBetween({ Id = targetId, DestinationId = leadLocation })
-                DebugPrint { Text = "Applying force " .. tostring(speed) .."to " .. tostring(targetId) .. " at angle " .. tostring(angle)}
+                -- DebugPrint { Text = "Applying force " .. tostring(speed) .."to " .. tostring(targetId) .. " at angle " .. tostring(angle)}
                 ApplyForce({
                     Id = targetId,
                     Speed = speed,
@@ -1244,7 +1244,7 @@ function Z.EnablePoseidonVacuumFunction( args )
     end
     ModUtil.Path.Wrap("StartEncounterEffects", function ( baseFunc, currentRun )
         local retVal = baseFunc(currentRun)
-        DebugPrint { Text = "Starting Encounter Effects"}
+        -- DebugPrint { Text = "Starting Encounter Effects"}
         isPush = not isPush
         isActive = false
         for i, traitData in pairs(CurrentRun.Hero.Traits ) do
@@ -1262,7 +1262,7 @@ function Z.EnablePoseidonVacuumFunction( args )
     
     ModUtil.Path.Wrap("EndEncounterEffects", function ( baseFunc, currentRun, currentRoom, currentEncounter )
         isActive = false
-        DebugPrint { Text = "Ending Encounter Effects"}
+        -- DebugPrint { Text = "Ending Encounter Effects"}
         return baseFunc(currentRun, currentRoom, currentEncounter)
     end, Z)
 end
@@ -1352,19 +1352,19 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
     local damageBonus = 1
     local damageIncrement = 0.05
     for i, traitData in pairs(CurrentRun.Hero.Traits) do
-        DebugPrint { Text = ModUtil.ToString.Shallow(traitData)}
+        -- DebugPrint { Text = ModUtil.ToString.Shallow(traitData)}
         if traitData.InheritFrom
             and (Contains(traitData.InheritFrom, "SynergyTrait")
             or Contains(traitData.InheritFrom, "ShopTier3Trait"))    
         then
-            DebugPrint { Text = "Found" .. tostring(traitData.Name) .. " for bonus damage" }
+            -- DebugPrint { Text = "Found" .. tostring(traitData.Name) .. " for bonus damage" }
             damageBonus = damageBonus + damageIncrement
         end
     end
 
     for k, traitData in pairs(CurrentRun.Hero.Traits) do
         if traitData.StrategicCooperationBlessingDamageBonus then
-            DebugPrint { Text = "Setting athena legendary bonus damage" }
+            -- DebugPrint { Text = "Setting athena legendary bonus damage" }
             traitData.StrategicCooperationBlessingDamageBonus = damageBonus
             -- ExtractValues( CurrentRun.Hero, traitData, traitData )
         end
@@ -1373,7 +1373,7 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
 
     ModUtil.Path.Wrap("AddTraitToHero", function (baseFunc, args)
         baseFunc(args)
-        DebugPrint { Text = ModUtil.ToString.Shallow(args)}
+        -- DebugPrint { Text = ModUtil.ToString.Shallow(args)}
 
         -- GameState.LastPickedTraitName
         local traitData = TraitData[GameState.LastPickedTraitName]
@@ -1385,7 +1385,7 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
                 if traitData.StrategicCooperationBlessingDamageBonus then
                     traitData.StrategicCooperationBlessingDamageBonus =
                         traitData.StrategicCooperationBlessingDamageBonus + damageIncrement
-                        DebugPrint { Text = "New Athena Legendary Damage Bonus = " .. tostring(traitData.StrategicCooperationBlessingDamageBonus)}
+                        -- DebugPrint { Text = "New Athena Legendary Damage Bonus = " .. tostring(traitData.StrategicCooperationBlessingDamageBonus)}
                     -- ExtractValues( CurrentRun.Hero, traitData, traitData )
                 end
             end
@@ -1464,7 +1464,7 @@ ModUtil.Path.Wrap("CheckOnDamagedPowers", function (baseFunc, victim, attacker, 
     if attacker == CurrentRun.Hero and victim ~= nil and victim.TriggersOnDamageEffects then
         for i, functionData in pairs(GetHeroTraitValues("OnHitEnemyFunction")) do
             if _G[functionData.Name] ~= nil then
-                DebugPrint { Text = "CheckOnDamagedPowers: OnHitEnemyFunction: "..functionData.Name}
+                -- DebugPrint { Text = "CheckOnDamagedPowers: OnHitEnemyFunction: "..functionData.Name}
                 _G[functionData.Name](victim, functionData.Args, args)
             end
         end
@@ -1486,7 +1486,7 @@ end
 -- Add PropertyChanges to allow status effects per weapon
 function Z.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
 
-    DebugPrint { Text = tostring(triggerArgs.SourceWeapon) }
+    -- DebugPrint { Text = tostring(triggerArgs.SourceWeapon) }
     Z.Args = triggerArgs
 
     if victim.AfterImageWeapon == nil then
@@ -1523,13 +1523,13 @@ function Z.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
     -- end
 
     -- AfterImage
-    DebugPrint { Text = string.sub(weaponToFire, -10, -1) }
+    -- DebugPrint { Text = string.sub(weaponToFire, -10, -1) }
     if string.sub(weaponToFire, -10, -1) == "AfterImage" then return end
 
     if weaponToFire ~= nil then
         thread(
             function ()
-                DebugPrint { Text = "attemptiung to fire " .. weaponToFire .. "AfterImage"}
+                -- DebugPrint { Text = "attemptiung to fire " .. weaponToFire .. "AfterImage"}
                 wait (0.5)
                 FireWeaponFromUnit({
                     Weapon = weaponToFire .. "AfterImage",

@@ -85,67 +85,38 @@ ModUtil.LoadOnce(function ( )
   ModUtil.LoadOnce(function ( )
     ModUtil.Table.Merge(TraitData, {
       -- General %Scaling Boons
-      --[[
-        Boons that inherit from ShopTier1Trait and DO NOT need overrides:
-        Zeus: RetaliateWeaponTrait, ZeusLightningDebuff, 
-      ]]--
-      ShopTier1Trait = {
-        RarityLevels = T1RarityTable
-      },
-      ShopTier2Trait = {
-        RarityLevels = T2RarityTable
-      },
-      -- Zeus Boons
-      SuperGenerationTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      ZeusBoltAoETrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      ZeusBonusBoltTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
+      ShopTier1Trait = { RarityLevels = T1RarityTable },
+      ShopTier2Trait = { RarityLevels = T2RarityTable },
+      ----------------
+      -- Zeus Boons --
+      ----------------
+      SuperGenerationTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ZeusBoltAoETrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ZeusBonusBoltTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
       -- I fucking hate this
-      ZeusBonusBounce = {
-        RarityLevels = scalingTable(5, 1)
-      },
-      ZeusWeaponTrait = {
-        RarityLevels = scalingTable(2.5, 0.5, 0.5)
-      },
-      ZeusSecondaryTrait = {
-        RarityLevels = scalingTable(2.5, 0.5, 0.5)
-      },
-      ZeusRangedTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      PerfectDashBoltTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      ZeusRushTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      ZeusShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      OnWrathDamageBuffTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
+      ZeusBonusBounceTrait = { RarityLevels = scalingTable(5, 1) },
+      ZeusWeaponTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      ZeusSecondaryTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      ZeusRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ShieldLoadAmmo_ZeusRangedTrait = { RarityLevels = scalingTable(2.0, 0.25, 0.5) },
+      PerfectDashBoltTrait = { RarityLevels = scalingTable(3, 0.5) },
+      ZeusRushTrait = { RarityLevels = scalingTable(3, 0.5) },
+      ZeusShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      OnWrathDamageBuffTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      ZeusLightningDebuff = { RarityLevels = scalingTable(3.0, 0.5, 1) },
       -- Athena Boons
-      AthenaRangedTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      AthenaRushTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
+      AthenaWeaponTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      AthenaSecondaryTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      AthenaRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ShieldLoadAmmo_AthenaRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      AthenaRushTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
       AthenaBackstabDebuffTrait = { 
         RarityLevels = scalingTable(2, 0.25)
       },
-      AthenaShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      EnemyDamageTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
+      AthenaShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      AthenaShieldTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      AthenaRetaliateTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      EnemyDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
       TrapDamageTrait = {
         RarityLevels = {
           Common = { Multiplier = 1.0 },
@@ -159,28 +130,20 @@ ModUtil.LoadOnce(function ( )
           Olympic = { Multiplier = 1.66667 },
         },
       },
-      LastStandHealTrait = {
-        RarityLevels = StaticMultiplierTable
-      },
-      LastStandDurationTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      PreloadSuperGenerationTrait = {
-        RarityLevels = scalingTable(2.5, 0.5, 0.5)
-      },
+      LastStandHealTrait = { RarityLevels = StaticMultiplierTable },
+      LastStandDurationTrait = { RarityLevels = scalingTable(2, 0.25) },
+      PreloadSuperGenerationTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
       -- Aphrodite Boons
-      HealthRewardBonusTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      AphroditeDurationTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      AphroditePotencyTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      AphroditeRangedTrait = {
-        RarityLevels = scalingTable(1.444, 0.111, 0.333)
-      },
+    
+    -- AphroditeDeathTrait = Z.Constants.Gods.APHRODITE,
+      AphroditeWeaponTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      AphroditeSecondaryTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      AphroditeDeathTrait = { RarityLevels = scalingTable(2.5, 0.5, 0.5) },
+      HealthRewardBonusTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      AphroditeDurationTrait = { RarityLevels = scalingTable(3, 0.5) },
+      AphroditePotencyTrait = { RarityLevels = scalingTable(2, 0.25) },
+      AphroditeRangedTrait = { RarityLevels = scalingTable(1.444, 0.111, 0.333) },
+      ShieldLoadAmmo_AphroditeRangedTrait = { RarityLevels = scalingTable(1.444, 0.111, 0.333) },
       AphroditeRangedBonusTrait = {
         RarityLevels = scalingTable(3, 0.5),
         -- increasing DamageRadius
@@ -189,223 +152,127 @@ ModUtil.LoadOnce(function ( )
           { ChangeValue = 1.5},
         },
       },
-      AphroditeRushTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      AphroditeShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      AphroditeWeakenTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      AphroditeRetaliateTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      ProximityArmorTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
+      AphroditeRushTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      AphroditeShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      AphroditeWeakenTrait = { RarityLevels = scalingTable(3, 0.5) },
+      AphroditeRetaliateTrait = { RarityLevels = scalingTable(2, 0.25) },
+      ProximityArmorTrait = { RarityLevels = scalingTable(2, 0.25) },
 
       -- Ares Boons
-      AresWeaponTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      AresSecondaryTrait = {
-        RarityLevels = scalingTable(2.333, 0.333, 0.333)
-      },
-      -- OnSpawnSwordTrait
-      AresRangedTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.3)
-      },
-      AresRushTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      AresShoutTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      AresAoETrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.3)
-      },
-      AresLoadCurseTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
       
-      AresLongCurseTrait = {
-        RarityLevels = scalingTable(1.5, 0.25, 0.5)
-      },
-      AresRetaliateTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      IncreasedDamageTrait = {
-        RarityLevels = scalingTable(2.4, 0.4)
-      },
-      LastStandDamageBonusTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      OnEnemyDeathDamageInstanceBuffTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
+    
+      AresWeaponTrait = { RarityLevels = scalingTable(3, 0.5) },
+      AresSecondaryTrait = { RarityLevels = scalingTable(2.333, 0.333, 0.333) },
+      AresRangedTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.3) },
+      ShieldLoadAmmo_AresRangedTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.3) },
+      AresRushTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      AresShoutTrait = { RarityLevels = scalingTable(2, 0.25) },
+      AresAoETrait = { RarityLevels = scalingTable(1.4, 0.1, 0.3) },
+      AresDragTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.3) },
+      AresLoadCurseTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      
+      AresLongCurseTrait = { RarityLevels = scalingTable(1.5, 0.25, 0.5) },
+      AresRetaliateTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      IncreasedDamageTrait = { RarityLevels = scalingTable(2.4, 0.4) },
+      LastStandDamageBonusTrait = { RarityLevels = scalingTable(3, 0.5) },
+      OnEnemyDeathDamageInstanceBuffTrait = { RarityLevels = scalingTable(3, 0.5) },
 
 
       -- Artemis Boons
-      ArtemisRangedTrait = {
-        RarityLevels = scalingTable(1.58, 0.145, 0.435)
-      },
-      ArtemisRushTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      ArtemisCriticalTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
+      ArtemisWeaponTrait = { RarityLevels = scalingTable(3, 0.5) },
+      ArtemisSecondaryTrait = { RarityLevels = scalingTable(3, 0.5) },
+      ArtemisRangedTrait = { RarityLevels = scalingTable(1.58, 0.145, 0.435) },
+      ShieldLoadAmmo_ArtemisRangedTrait = { RarityLevels = scalingTable(1.58, 0.145, 0.435) },
+      ArtemisRushTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ArtemisCriticalTrait = { RarityLevels = scalingTable(3, 0.5) },
+      CriticalBufferMultiplierTrait = { RarityLevels = scalingTable(3, 0.5) },
       -- CriticalBufferMultiplierTrait rework?
       CriticalSuperGenerationTrait = {
         RarityLevels = scalingTable(1.8, 0.2, 0.4),
-        CriticalSuperGainAmount = {
-          BaseValue = 1
-        },
+        CriticalSuperGainAmount = { BaseValue = 1 },
       },
-      ArtemisShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      CritBonusTrait = {
-        RarityLevels = scalingTable(3, 0.5, 1)
-      },
-      ArtemisAmmoExitTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
+      ArtemisShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      CritBonusTrait = { RarityLevels = scalingTable(3, 0.5, 1) },
+      ArtemisAmmoExitTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      CritVulnerabilityTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
       --TODO: CritVulnerabilityTrait = {}
-      ArtemisSupportingFireTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
+      ArtemisSupportingFireTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
 
       -- Dionysus Boons
-      DionysusSlowTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      GiftHealthTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      FountainDamageBonusTrait = {
-        RarityLevels = scalingTable(2.333, 0.333, 0.333)
-      },
-      DionysusWeaponTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      DionysusSecondaryTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      DionysusRangedTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      DionysusRushTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      DionysusShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      DoorHealTrait = {
-        RarityLevels = scalingTable(2.2666, 0.2666)
-      },
+      DionysusSlowTrait = { RarityLevels = scalingTable(3, 0.5) },
+      GiftHealthTrait = { RarityLevels = scalingTable(2, 0.25) },
+      FountainDamageBonusTrait = { RarityLevels = scalingTable(2.333, 0.333, 0.333) },
+      DionysusWeaponTrait = { RarityLevels = scalingTable(2, 0.25) },
+      DionysusSecondaryTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      DionysusRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ShieldLoadAmmo_DionysusRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      DionysusRushTrait = { RarityLevels = scalingTable(3, 0.5) },
+      DionysusShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      DoorHealTrait = { RarityLevels = scalingTable(2.2666, 0.2666) },
+      LowHealthDefenseTrait = { RarityLevels = scalingTable(2.5, 0.5) },
+      DionysusSpreadTrait = { RarityLevels = scalingTable(2, 0.25) },
+      DionysusGiftDrop = { RarityLevels = scalingTable(2.5, 0.5) },
+      DionysusDefenseTrait = { RarityLevels = scalingTable(2.5, 0.5) },
+      DionysusPoisonPowerTrait = { RarityLevels = scalingTable(2.5, 0.5) },
+      
       -- Demeter Boons
-      DemeterRangedTrait = {
-        RarityLevels = scalingTable(1.6, 0.15, 0.3)
-      },
-      DemeterRangedBonusTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      DemeterRushTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      DemeterShoutTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      HealingPotencyTrait = {
-        RarityLevels = scalingTable(1.3, 0.1, 0.3)
-      },
-      CastNovaTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      ZeroAmmoBonusTrait = {
-        RarityLevels = scalingTable(5, 1, 1)
-      },
-      MaximumChillBlast = {
-        RarityLevels = scalingTable(1.5, 0.125)
-      },
+      DemeterWeaponTrait = { RarityLevels = scalingTable(3, 0.5) },
+      DemeterSecondaryTrait = { RarityLevels = scalingTable(3, 0.5) },
+      -- InstantChillKill = Z.Constants.Gods.DEMETER,
+      DemeterRangedTrait = { RarityLevels = scalingTable(1.6, 0.15, 0.3) },
+      ShieldLoadAmmo_DemeterRangedTrait = { RarityLevels = scalingTable(1.6, 0.15, 0.3) },
+      DemeterRangedBonusTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      DemeterRushTrait = { RarityLevels = scalingTable(3, 0.5) },
+      DemeterShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      HealingPotencyTrait = { RarityLevels = scalingTable(1.3, 0.1, 0.3) },
+      CastNovaTrait = { RarityLevels = scalingTable(2, 0.25) },
+      ZeroAmmoBonusTrait = { RarityLevels = scalingTable(5, 1, 1) },
+      MaximumChillBlast = { RarityLevels = scalingTable(1.5, 0.125) },
+      MaximumChillBonusSlow = { RarityLevels = scalingTable(3, 0.5) },
       -- TODO: HarvestBoonTrait rework?
       DemeterRetaliateTrait = {
         RarityLevels = scalingTable(3, 0.5),
-        PropertyChanges = {
-          { BaseMin = 40, BaseMax = 40},
-        },
+        PropertyChanges = { { BaseMin = 40, BaseMax = 40}, },
       },
       -- Poseidon Boons
-      PoseidonRangedTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      PoseidonRushTrait = {
-        RarityLevels = scalingTable(1.8, 0.2, 0.4)
-      },
-      DefensiveSuperGenerationTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      PoseidonShoutDurationTrait = {
-        RarityLevels = scalingTable(2, 0.25)
-      },
-      BonusCollisionTrait = {
-        RarityLevels = {
-          RarityLevels = scalingTable(2, 0.25)
-        },
-      },
-      SlamExplosionTrait = {
-        RarityLevels = {
-          RarityLevels = scalingTable(3, 0.5)
-        },
-      },
-      SlipperyTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      BossDamageTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      RoomRewardBonusTrait = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
+      PoseidonWeaponTrait = { RarityLevels = scalingTable(3, 0.5) },
+      PoseidonSecondaryTrait = { RarityLevels = scalingTable(3, 0.5) },
+      PoseidonRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      ShieldLoadAmmo_PoseidonRangedTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      PoseidonRushTrait = { RarityLevels = scalingTable(1.8, 0.2, 0.4) },
+      PoseidonShoutDurationTrait = { RarityLevels = scalingTable(2, 0.25) },
+      BonusCollisionTrait = { RarityLevels = { RarityLevels = scalingTable(2, 0.25) }, },
+      SlamExplosionTrait = { RarityLevels = { RarityLevels = scalingTable(3, 0.5) }, },
+      SlipperyTrait = { RarityLevels = scalingTable(3, 0.5) },
+      BossDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
+      RoomRewardBonusTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      PoseidonShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      DefensiveSuperGenerationTrait = { RarityLevels = scalingTable(2, 0.25) },
+      EncounterStartOffenseBuffTrait = { RarityLevels = scalingTable(2, 0.25) },
+      RandomMinorLootDrop = { RarityLevels = scalingTable(2, 0.25) },
 
       -- Hermes Boons
-      HermesShoutDodge = {
-        RarityLevels = scalingTable(1.4, 0.1, 0.2)
-      },
-      BonusDashTrait = {
-        RarityLevels = scalingTable(5, 1)
-      },
-      DodgeChanceTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
+    -- RapidCastTrait = Z.Constants.Gods.HERMES,
+    -- AmmoReloadTrait = Z.Constants.Gods.HERMES,
+    -- RegeneratingSuperTrait = Z.Constants.Gods.HERMES,
+    
+    -- SpeedDamageTrait = Z.Constants.Gods.HERMES,
+      HermesShoutDodge = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
+      BonusDashTrait = { RarityLevels = scalingTable(5, 1) },
+      AmmoReclaimTrait = { RarityLevels = scalingTable(6, 1) },
+      DodgeChanceTrait = { RarityLevels = scalingTable(3, 0.5) },
       -- TODO: RapidCastTrait
       -- TODO: Hypersprint already good enough???
-      RushSpeedBoostTrait = {
-        RarityLevels = scalingTable(2, 0.2, 0.2)
-      },
-      MoveSpeedTrait = {
-        RarityLevels = scalingTable(1.33333, 0.08333)
-      },
-      RushRallyTrait = {
-        RarityLevels = scalingTable(0.7, 0.05)
-      },
-      HermesWeaponTrait = {
-        RarityLevels = scalingTable(0.7, -0.14, -0.14)
-      },
-      HermesSecondaryTrait = {
-        RarityLevels = scalingTable(5, 1, 1)
-      },
+      RushSpeedBoostTrait = { RarityLevels = scalingTable(2, 0.2, 0.2) },
+      MoveSpeedTrait = { RarityLevels = scalingTable(1.33333, 0.08333) },
+      RushRallyTrait = { RarityLevels = scalingTable(0.7, 0.05) },
+      HermesWeaponTrait = { RarityLevels = scalingTable(0.7, -0.14, -0.14) },
+      HermesSecondaryTrait = { RarityLevels = scalingTable(5, 1, 1) },
+      AmmoReloadTrait = { RarityLevels = scalingTable(1.5, 0.25, 0.25)},
       -- TODO: RegeneratingSuperTrait should not be better than smoldering air
       
-      ChamberGoldTrait = {
-        RarityLevels = scalingTable(2.2, 0.4, 1.2)
-      },
-      SpeedDamageTrait = {
-        RarityLevels = scalingTable(3, 0.5)
-      },
-      -- TODO: Beowulf casts
+      ChamberGoldTrait = { RarityLevels = scalingTable(2.2, 0.4, 1.2) },
+      SpeedDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
     })
   end, Z)
 

@@ -1,7 +1,7 @@
 function Z.AddUpgrade(upgradeName, args)
     args = args or {}
     if Z.Data == nil or Z.Data.UpgradeData == nil then
-        DebugPrint { Text = "GameState not properly defined"}
+        -- DebugPrint { Text = "GameState not properly defined"}
         return false
     end
     table.insert(Z.Data.UpgradeData, upgradeName)
@@ -10,7 +10,7 @@ function Z.AddUpgrade(upgradeName, args)
     end
 
     local upgrade = Z.UpgradeData[upgradeName]
-    DebugPrint { Text = ModUtil.ToString.Deep(upgrade) }
+    -- DebugPrint { Text = ModUtil.ToString.Deep(upgrade) }
     if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
     end
@@ -18,7 +18,7 @@ function Z.AddUpgrade(upgradeName, args)
     if upgrade.OnApplyFunctions ~= nil then
         for k, functionName in ipairs(upgrade.OnApplyFunctions) do
             local functionArgs = upgrade.OnApplyFunctionArgs[k]
-            DebugPrint { Text = "AddUpgrade: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
+            -- DebugPrint { Text = "AddUpgrade: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
             _G[functionName](functionArgs)
         end
     end
@@ -29,15 +29,15 @@ end
 function Z.RemoveUpgrade(upgradeName, args)
     args = args or {}
     if Z.Data == nil or Z.Data.UpgradeData == nil then
-        DebugPrint { Text = "GameState not properly defined"}
+        -- DebugPrint { Text = "GameState not properly defined"}
         return false
     end
 
     for i,v in ipairs(Z.Data.UpgradeData) do
         if v == upgradeName then
             table.remove(Z.Data.UpgradeData, i)
-            DebugPrint { Text = "Removing " .. upgradeName .. " from GameState. Current upgrade values:"}
-            DebugPrint { Text = ModUtil.ToString.Shallow(Z.Data.UpgradeData)}
+            -- DebugPrint { Text = "Removing " .. upgradeName .. " from GameState. Current upgrade values:"}
+            -- DebugPrint { Text = ModUtil.ToString.Shallow(Z.Data.UpgradeData)}
             return
         end
     end
@@ -51,7 +51,7 @@ function Z.AddTraitToTraitData(args)
     end
     -- args.LinkedUpgrades for duos / boon prereqs
     if args.AddLinkedUpgrades ~= nil then
-        DebugPrint { Text = "Found LinkedUpgrades" }
+        -- DebugPrint { Text = "Found LinkedUpgrades" }
         ModUtil.Table.Merge(
             LootData[args.LinkedUpgradeName].LinkedUpgrades,
             {
@@ -138,7 +138,7 @@ function Z.AttemptPurchaseUpgrade(screen, button)
     local upgrade = button.Upgrade
     if Z.HasUpgrade(upgrade.Name) then
         -- TODO: CannotPurchaseVoiceLines all but last?
-        DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
+        -- DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
 		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
         return
     end
@@ -149,10 +149,10 @@ function Z.AttemptPurchaseUpgrade(screen, button)
         SubtractUpgradeCosts(upgrade)
         -- exhibit signs of self awareness
 		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
-        DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
+        -- DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
     else
 		thread( PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true )
-        DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
+        -- DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
     end
     -- reupdate the info screen in case of changing costs or whatever
     UpdateUpgradeInfoScreen(screen, upgrade)

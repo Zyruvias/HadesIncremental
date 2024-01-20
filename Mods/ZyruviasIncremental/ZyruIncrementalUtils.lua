@@ -1,9 +1,9 @@
 function Z.GetTotalHeroTraitValueWrapperGenerator (traitNameToTrack, comparator, debug)
     ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, traitName, args)
         local res = baseFunc(traitName, args)
-        if debug then
-            DebugPrint({ text = "GetTotalHeroTraitValue" })
-        end
+        -- if debug then
+        --     DebugPrint({ text = "GetTotalHeroTraitValue" })
+        -- end
         if traitName == traitNameToTrack and comparator(res) then
             Z.TrackBoonEffect(Z.GetHeroTraitValuesMap[traitNameToTrack])
         end
@@ -85,7 +85,7 @@ function AddGodExperience ( god, amount )
   end
 
   if type(amount) ~= "number" then
-    DebugPrint { Text = "GodExperience gain was not a number: " .. ModUtil.ToString.Deep(amount)}
+    -- DebugPrint { Text = "GodExperience gain was not a number: " .. ModUtil.ToString.Deep(amount)}
     return
   end
 
@@ -114,48 +114,13 @@ end
 local shiftFactor = 0.01
 local defaultStddev = 1
 local rarityArray = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic" }
-function Z.ComputeRarityForGod( god )
-  
-  local godData = Z.Data.GodData[god] or {}
-  local rarityBonus = godData.RarityBonus or 0
-
-  -- God's Pride
-  rarityBonus = rarityBonus + GetNumMetaUpgrades( "EpicBoonDropMetaUpgrade" )
-  
-  local rarityTraits = GetHeroTraitValues("RarityBonus")
-  for i, rarityTraitData in ipairs(rarityTraits) do
-    local name = rarityTraitData.RequiredGod or ""
-    name = string.sub(name, 1, string.len(rarityTraitData.RequiredGod) - 7)
-    if rarityTraitData.RequiredGod == nil or rarityTraitData.RequiredGod == name then
-      if rarityTraitData.RareBonus then
-        rarityBonus = rarityBonus + 100 * rarityTraitData.RareBonus
-      end
-    end
-  end
-
-  local chances = Z.ComputeRarityArrayForGod(god)
-  local cumulativeChance = 0
-  local roll = RandomNumber()
-  for i, rarity in ipairs(rarityArray) do
-    if roll < (chances[rarity] + cumulativeChance) then
-      return rarity
-    end
-    cumulativeChance = cumulativeChance + chances[rarity]
-  end
-  return "Common"
-
-end
 
 
 Z.RarityArrayMap = {}
-function Z.ComputeRarityArrayForGod( god )
-  local chosenGod = god or "Zeus"
-  local godData = Z.Data.GodData[chosenGod]
-  local rarityBonus = godData.RarityBonus + (ModUtil.Path.Get("TransientState[" ..chosenGod .. "RarityBonus]", Z) or 0)
+function Z.ComputeRarityDistribution( rarityBonus )
   if Z.RarityArrayMap[tostring(rarityBonus)] ~= nil then
     return Z.RarityArrayMap[tostring(rarityBonus)]
   end
-
 
   local actualRarityBonus = rarityBonus / 100
   local chances = {}
@@ -183,13 +148,20 @@ function Z.ComputeRarityArrayForGod( god )
     chances[rarity] = boonRarityChance
   end
 
-  -- DebugPrint {Text = "Last rarity: " .. lastRarity .. ", Last Result: " .. previousValue}
+-- DebugPrint {Text = "Last rarity: " .. lastRarity .. ", Last Result: " .. previousValue}
   chances[lastRarity] = chances[lastRarity] + 1 - previousValue
 
-  -- DebugPrint { Text = "Rarity: " .. tostring((1 + actualRarityBonus) * 100) .. "%%: ".. ModUtil.ToString.Deep(chances)}
+-- DebugPrint { Text = "Rarity: " .. tostring((1 + actualRarityBonus) * 100) .. "%%: ".. ModUtil.ToString.Deep(chances)}
 
   Z.RarityArrayMap[tostring(rarityBonus)] = chances
   return chances
+
+end
+function Z.ComputeRarityArrayForGod( god )
+  local chosenGod = god or "Zeus"
+  local godData = Z.Data.GodData[chosenGod]
+  local rarityBonus = godData.RarityBonus + (ModUtil.Path.Get("TransientState[" ..chosenGod .. "RarityBonus]", Z) or 0)
+  return Z.ComputeRarityDistribution(rarityBonus)
 end
 
 
@@ -258,5 +230,4 @@ SetupRunData()
 -- Dev scripts
 ModUtil.LoadOnce( function ( ) 
   _G["k"] = ModUtil.ToString.TableKeys
-  
 end)
