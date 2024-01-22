@@ -1,0 +1,40 @@
+{
+    Animations = [
+        "_append"
+        {
+            
+            Name = "BoonIcon_Frame_Supreme"
+            InheritFrom = "BoonIcon_Frame_Duo"
+            AddColor = true
+            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+        }
+        {
+            
+            Name = "BoonIcon_Frame_Ultimate"
+            InheritFrom = "BoonIcon_Frame_Duo"
+            AddColor = true
+            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+        }
+        {
+            
+            Name = "BoonIcon_Frame_Transcendental"
+            InheritFrom = "BoonIcon_Frame_Duo"
+            AddColor = true
+            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+        }
+        {
+            
+            Name = "BoonIcon_Frame_Mythic"
+            InheritFrom = "BoonIcon_Frame_Duo"
+            AddColor = true
+            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+        }
+        {
+            
+            Name = "BoonIcon_Frame_Olympic"
+            InheritFrom = "BoonIcon_Frame_Duo"
+            AddColor = true
+            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+        }
+    ]
+}

@@ -1,15 +1,12 @@
 Import "ZyruIncremental.lua"
-Import "Upgrades/ZyruIncrementalUpgradeData.lua"
-Import "Upgrades/ZyruIncrementalUpgrades.lua"
-Import "Upgrades/ZyruIncrementalMirrorUpgrades.lua"
-Import "ZyruIncrementalBoonData.lua"
-Import "ZyruIncrementalMaps.lua"
+Import "Mappings/"
+Import "Upgrades/"
 Import "ZyruIncrementalUtils.lua"
-Import "ZyruIncrementalBoonTracking.lua"
-Import "ZyruIncrementalUI.lua"
+Import "Tracking/"
+Import "UI/"
 Import "stats.lua"
 
-
+:: Localization
 To "Game/Text/en/HelpText.en.sjson"
 SJSON "Localization/helptext.en.sjson"
 
@@ -22,3 +19,7 @@ SJSON "Weapons/HermesWeapons.sjson"
 :: Projectiles
 To "Game/Projectiles/PlayerProjectiles.sjson"
 SJSON "Projectiles/PlayerProjectiles.sjson"
+
+:: GUIAnimations
+To "Game/Animations/GUIAnimations.sjson"
+SJSON "Animations/GUIAnimations.sjson"

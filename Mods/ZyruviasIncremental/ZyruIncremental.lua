@@ -1,4 +1,4 @@
-ModUtil.RegisterMod("Z")
+ModUtil.RegisterMod("ZyruIncremental")
 
 local config = {}
-Z.config = config
+ZyruIncremental.config = config

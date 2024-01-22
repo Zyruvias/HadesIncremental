@@ -1,4 +1,4 @@
-Z.TraitData = {
+ZyruIncremental.TraitData = {
     -- Hermes Duo Boons
     -- TODO: duo color on boon presentation
     ZeusHermesSynergyTrait = {
@@ -63,8 +63,8 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_02",
         OnDamageEnemyFunction = {
             FunctionName = "PoseidonHermesDamageLoot",
-            FunctionArgs = {}
-        }
+            FunctionArgs = {},
+        },
     },
 
     ArtemisHermesSynergyTrait = {
@@ -74,7 +74,7 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_02",
         OnEnemyCrittedFunction = {
             Name = "AddCritSpeedBoost",
-            Args = { }
+            Args = { },
         },
     },
 
@@ -91,8 +91,8 @@ Z.TraitData = {
                 EffectProperty = "StackAmount",
                 DeriveValueFrom = "MaxStacks",
                 ChangeValue = true,
-            }
-        }
+            },
+        },
     },
 
     AresHermesSynergyTrait = {
@@ -102,11 +102,11 @@ Z.TraitData = {
         Icon = "Demeter_Artemis_01",
         OnEnemyKillFunction = {
             Name = "IncreaseBloodlust",
-            Args = {}
+            Args = {},
         },
         OnHeroDamageTakenFunction = {
             Name = "ResetBloodlust",
-            Args = {}
+            Args = {},
         },
         BloodlustDamageMultiplier =  1.01,
         AddOutgoingDamageModifiers =
@@ -139,7 +139,7 @@ Z.TraitData = {
             --     ExtractValue =
             --     {
             --         ExtractAs = "TooltipDamage",
-            --     }
+            --     },
             -- },
             -- {
             --     WeaponName = "DeathAreaWeakenAphrodite",
@@ -184,7 +184,7 @@ Z.TraitData = {
                 ChangeValue = 10,
                 ChangeType = "Multiply"
             },
-        }
+        },
     },
     ChangingTidesLegendary = {
         Name = "ChangingTidesLegendary",
@@ -200,9 +200,9 @@ Z.TraitData = {
         RequiredFalseTraits = { "SeductiveVictoryLegendary" },
         Icon = "Demeter_Artemis_01",
         SetupFunction = {
-            Name = "Z.SetupSeductiveVictory",
+            Name = "ZyruIncremental.SetupSeductiveVictory",
             RunOnce = true,
-        }
+        },
     },
 
     PermanentVulnerabilityLegendary = {
@@ -211,7 +211,7 @@ Z.TraitData = {
         RequiredFalseTraits = { "PermanentVulnerabilityLegendary" },
         Icon = "Demeter_Zeus_01",
         SetupFunction = {
-            Name = "Z.SetupPermanentVulnerability",
+            Name = "ZyruIncremental.SetupPermanentVulnerability",
             RunOnce = true,
         },
         PropertyChanges = {
@@ -221,8 +221,8 @@ Z.TraitData = {
                 EffectProperty = "Duration",
                 ChangeValue = 100000,
                 ChangeType = "Absolute",
-            }
-        }
+            },
+        },
     },
 
     UnendingHangoverLegendary = {
@@ -246,7 +246,7 @@ Z.TraitData = {
                 --     WeaponName = "SwordWeapon",
                 --     BaseName = "DamageOverTime",
                 --     BaseProperty = "Duration",
-                -- }
+                -- },
             },
             {
                 WeaponNames = WeaponSets.HeroSecondaryWeapons,
@@ -262,7 +262,7 @@ Z.TraitData = {
                 ChangeType = "Absolute",
                 ChangeValue = 100000,
             },
-        }
+        },
     },
 
     StrategicCooperationBlessingLegendary = {
@@ -271,7 +271,7 @@ Z.TraitData = {
         RequiredFalseTraits = { "StrategicCooperationBlessingLegendary" },
         Icon = "Demeter_Zeus_01",
         SetupFunction = {
-            Name = "Z.SetupStrategicCooperationBlessingLegendary",
+            Name = "ZyruIncremental.SetupStrategicCooperationBlessingLegendary",
             RunOnce = true,
         },
         StrategicCooperationBlessingDamageBonus = 1,
@@ -299,7 +299,7 @@ Z.TraitData = {
         CustomName = "lol lmfao", -- TODO: fix this shiiiiit
         Icon = "Boon_Chaos_Blessing_08",
         OnHitEnemyFunction = {
-            Name = "Z.ApplyChaosStatuses"
+            Name = "ZyruIncremental.ApplyChaosStatuses"
         },
         RarityLevels =
         {
@@ -371,7 +371,7 @@ Z.TraitData = {
                 ExtractValue =
                 {
                     ExtractAs = "TooltipDamage",
-                }
+                },
             },
             -- Dionysus
             {
@@ -430,7 +430,7 @@ Z.TraitData = {
         RequiredFalseTraits = { "DemeterFamineLegendary" },
         Icon = "Demeter_Zeus_01",
         SetupFunction = {
-            Name = "Z.SetupDemeterFamineLegendary",
+            Name = "ZyruIncremental.SetupDemeterFamineLegendary",
             RunOnce = true,
         },
         FamineHealthMultiplier = 1,
@@ -445,8 +445,8 @@ Z.TraitData = {
         },
         Icon = "Demeter_Zeus_01",
         OnHitEnemyFunction = {
-            Name = "Z.ApplyAfterImageLegendary"
-        }
+            Name = "ZyruIncremental.ApplyAfterImageLegendary"
+        },
     },
 
     AresMurderousEfficacyLegendary = {
@@ -468,7 +468,7 @@ Z.TraitData = {
 					ExtractAs = "TooltipDamage",
 					Format = "PercentDelta",
 				},
-			}
+			},
 		},
     },
 
@@ -502,51 +502,35 @@ Z.TraitData = {
                 ChangeValue = 100000,
                 ChangeType = "Absolute"
             },
-        }
+        },
 
-    }
+    },
 
 }
 
-
--- TODO : constants over magic strings
-Z.UpgradeSourceEnums = {
-    ZEUS = "Zeus",
-    NYX = "NYX",
-    POSEIDON = "POSEIDON",
-    APHRODITE = "APHRODITE"
-    -- "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter",
-    --     -- Other portraits Nyx, Chaos, Hammer, Pom(?), Heart (?), Coin (?), Zagrues (?)
-    --     "Nyx", "Chaos", "Pom", "Heart", "Coin", "Zagreus"
-}
-
-Z.UpgradeTypeEnums = {
-    PURCHASE_BOON = "PURCHASE_BOON",
-    MIRROR_UPGRADE = "MIRROR_UPGRADE",
-    UPGRADE_BOON = "UPGRADE_BOON",
-    STANDARD = "STANDARD"
-}
 --[[
     Upgrade shape: {
-        Name -- TODO: is this necessary
-        CostType
+        Name
         Cost
         OnApplyFunction
         OnApplyFunctionArgs
-        Purchased
-        Source
+        Source?
+        Sources?
     }
     ]]--
-Z.UpgradeData = {
+ZyruIncremental.UpgradeData = {
 
     -----------------
     -- HERMES DUOS --
     -----------------
     ZeusHermesSynergyTrait = {
         Name = "ZeusHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Sources = { ZyruIncremental.Constants.Gods.ZEUS, ZyruIncremental.Constants.Gods.HERMES },
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ZEUS] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "ZeusHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -555,18 +539,18 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesWeaponTrait", "HermesSecondaryTrait" },
                     { "ZeusWeaponTrait", "ZeusSecondaryTrait" },
-                }
-            }
+                },
+            },
         },
-        Purchased = false,
-        Source =Z.UpgradeSourceEnums.ZEUS
     },
 
     PoseidonHermesSynergyTrait = {
         Name = "PoseidonHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "PoseidonHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -575,16 +559,19 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "ChamberGoldTrait" },
                     { "PoseidonPickedUpMinorLootTrait", "RoomRewardBonusTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.POSEIDON, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     ArtemisHermesSynergyTrait = {
         Name = "ArtemisHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ARTEMIS] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "ArtemisHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -593,15 +580,18 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait" },
                     { "ArtemisWeaponTrait", "ArtemisSecondaryTrait", "ArtemisRangedTrait", "ArtemisShoutTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.ARTEMIS, ZyruIncremental.Constants.Gods.HERMES },
     },
     DionysusHermesSynergyTrait = {
         Name = "DionysusHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.DIONYSUS] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DionysusHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -610,16 +600,19 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait" },
                     { "DionysusWeaponTrait", "DionysusSecondaryTrait", "DionysusRangedTrait", "DionysusShoutTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.DIONYSUS, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     AresHermesSynergyTrait = {
         Name = "AresHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ARES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AresHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -628,16 +621,19 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "HermesMoveSpeedTrait", "RushSpeedBoostTrait", "FastClearDodgeBonusTrait", "SpeedDamageTrait" },
                     { "IncreasedDamageTrait", "LastStandDamageBonusTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.ARES, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     AphroditeHermesSynergyTrait = {
         Name = "AphroditeHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.APHRODITE] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AphroditeHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -646,16 +642,19 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "DodgeChanceTrait", "HermesShoutDodge" },
                     { "AphroditeWeaponTrait", "AphroditeSecondaryTrait", "AphroditeRangedTrait", "AphroditeRushTrait", "AphroditeRetaliateTrait", "AphroditeDeathTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.APHRODITE, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     DemeterHermesSynergyTrait = {
         Name = "DemeterHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.DEMETER] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DemeterHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -664,17 +663,20 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "RapidCastTrait", "AmmoReloadTrait" },
                     { "DemeterRangedTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.DEMETER, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     -- TODO: make this
     AthenaHermesSynergyTrait = {
         Name = "AthenaHermesSynergyTrait",
-        CostType = "",
-        Cost = 0,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ATHENA] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AthenaHermesSynergyTrait",
             AddLinkedUpgrades = true,
@@ -683,9 +685,10 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     { "RapidCastTrait", "AmmoReloadTrait" },
                     { "DemeterRangedTrait" },
-                }
-            }
-        }
+                },
+            },
+        },
+        Sources = { ZyruIncremental.Constants.Gods.ATHENA, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     -----------------
@@ -712,134 +715,25 @@ Z.UpgradeData = {
     -----------------
     -- NYX / MIRROR--
     -----------------
-    ShadowPresenceFieryPresenceDualSidedUpgrade = {
-        Name = "ShadowPresenceFieryPresenceDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "BackstabMetaUpgrade", "FirstStrikeMetaUpgrade" }
-    },
-
-    ChthonicVitalityDarkRegenerationDualSidedUpgrade = {
-        Name = "ChthonicVitalityDarkRegenerationDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "DoorHealMetaUpgrade", "DarknessHealMetaUpgrade" }
-    },
-
-    -- TODO: Fix applying all DD settings correctly on upgrade purchase
-    -- TODO: Fix rendering order on pips
-    DeathDefianceStubbornDefianceDualSidedUpgrade = {
-        Name = "DeathDefianceStubbornDefianceDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "ExtraChanceMetaUpgrade", "ExtraChanceReplenishMetaUpgrade" }
-    },
-
-    GreaterReflexRuthlessReflexDualSidedUpgrade = {
-        Name = "GreaterReflexRuthlessReflexDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "StaminaMetaUpgrade", "PerfectDashMetaUpgrade" }
-    },
-
-    BoilingBloodAbyssalBloodDualSidedUpgrade = {
-        Name = "BoilingBloodAbyssalBloodDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "StoredAmmoVulnerabilityMetaUpgrade", "StoredAmmoSlowMetaUpgrade" }
-    },
-
-    InfernalSoulStygianSoulDualSidedUpgrade = {
-        Name = "InfernalSoulStygianSoulDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "AmmoMetaUpgrade", "ReloadAmmoMetaUpgrade" }
-    },
-
-    DeepPocketsGoldenTouchDualSidedUpgrade = {
-        Name = "DeepPocketsGoldenTouchDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "MoneyMetaUpgrade", "InterestMetaUpgrade" }
-    },
-
-    ThickSkinHighConfidenceDualSidedUpgrade = {
-        Name = "ThickSkinHighConfidenceDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "HealthMetaUpgrade", "HighHealthDamageMetaUpgrade" }
-    },
-
-    PrivilegedStatusFamilyFavoriteDualSidedUpgrade = {
-        Name = "PrivilegedStatusFamilyFavoriteDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "VulnerabilityEffectBonusMetaUpgrade", "GodEnhancementMetaUpgrade" }
-    },
-
-    OlympianFavorDarkForesightDualSidedUpgrade = {
-        Name = "OlympianFavorDarkForesightDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "RareBoonDropMetaUpgrade", "RunProgressRewardMetaUpgrade" }
-    },
-
-    GodsPrideGodsLegacyDualSidedUpgrade = {
-        Name = "GodsPrideGodsLegacyDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "EpicBoonDropMetaUpgrade", "DuoRarityBoonDropMetaUpgrade" }
-    },
-
-    FatedAuthorityFatedPersuasionDualSidedUpgrade = {
-        Name = "FatedAuthorityFatedPersuasionDualSidedUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source =Z.UpgradeSourceEnums.NYX,
-        OnApplyFunction = "Z.ApplyBothMirrorSidesForUpgrade",
-        OnApplyFunctionArgs = { "RerollMetaUpgrade", "RerollPanelMetaUpgrade" }
-    },
-
-    -- Mirror Expansion Upgrades
 
     -- POSEIDON
     PoseidonAlternatingTidesUpgrade = {
         Name = "PoseidonAlternatingTidesUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.POSEIDON,
-        OnApplyFunction = "Z.EnablePoseidonVacuumFunction",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
+        },
+        OnApplyFunction = "ZyruIncremental.EnablePoseidonVacuumFunction",
+        Source = ZyruIncremental.Constants.Gods.POSEIDON,
     },
 
     -- APHRODITE
     SeductiveVictoryUpgrade = {
         Name = "SeductiveVictoryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.APHRODITE,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.APHRODITE] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.APHRODITE,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "SeductiveVictoryLegendary",
             AddLinkedUpgrades = true,
@@ -847,36 +741,38 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "AphroditeWeaponTrait", "AphroditeSecondaryTrait", "AphroditeRangedTrait", "AphroditeRushTrait"},
-                    { "AphroditeDurationTrait" }
-                }
-            }
-        }
+                    { "AphroditeDurationTrait" },
+                },
+            },
+        },
     },
 
     -- ARTEMIS LEGENDARY
     PermanentVulnerabilityLegendaryUpgrade = {
         Name = "PermanentVulnerabilityLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.ARTEMIS,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ARTEMIS] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.ARTEMIS,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "PermanentVulnerabilityLegendary",
             AddLinkedUpgrades = true,
             LinkedUpgradeName = "ArtemisUpgrade",
             LinkedUpgrades = {
-                OneOf = { "CritVulnerabilityTrait" }
-            }
-        }
+                OneOf = { "CritVulnerabilityTrait" },
+            },
+        },
     },
 
     -- DIONYSUS LEFENGDARY
     UnendingHangoverLegendaryUpgrade = {
         Name = "UnendingHangoverLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.DIONYSUS,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.DIONYSUS] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.DIONYSUS,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "UnendingHangoverLegendary",
             AddLinkedUpgrades = true,
@@ -884,19 +780,20 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "DionysusWeaponTrait", "DionysusSecondaryTrait", "DionysusRushTrait", "DionysusShoutTrait", },
-                    { "FountainDamageBonusTrait", "GiftHealthTrait" }
-                }
-            }
-        }
+                    { "FountainDamageBonusTrait", "GiftHealthTrait" },
+                },
+            },
+        },
     },
 
     -- ATHENA LEFENGDARY
     StrategicCooperationBlessingLegendaryUpgrade = {
         Name = "StrategicCooperationBlessingLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.ATHENA,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ATHENA] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.ATHENA,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "StrategicCooperationBlessingLegendary",
             AddLinkedUpgrades = true,
@@ -923,38 +820,40 @@ Z.UpgradeData = {
                         "ShieldHitTrait", "CharmTrait", "AresCursedRiftTrait", "MagnetismTrait", "UnstoredAmmoDamageTrait",
                         -- Incremental Legendaries
                         -- TODO: Add these after initial implementation round
-                    }
-                }
-            }
-        }
+                    },
+                },
+            },
+        },
     },
 
     -- CHAOS LEGENDARY
     ChaosRandomStatusLegendaryUpgrade = {
         Name = "ChaosRandomStatusLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.CHAOS,
-        OnApplyFunctions =  { "Z.AddTraitToTraitData", "Z.MergeDataArrays"},
+        Costs = {
+            [ZyruIncremental.Constants.Gods.CHAOS] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.CHAOS,
+        OnApplyFunctions =  { "ZyruIncremental.AddTraitToTraitData", "ZyruIncremental.MergeDataArrays"},
         OnApplyFunctionArgs = { 
             { Name = "ChaosRandomStatusLegendary" },
             { 
                 {
                     Array = "LootData.TrialUpgrade.PermanentTraits",
-                    Value = { "ChaosRandomStatusLegendary" }
-                }
-            }
-        }
+                    Value = { "ChaosRandomStatusLegendary" },
+                },
+            },
+        },
 
     },
 
     -- DEMETER LEGENDARY
     DemeterFamineLegendaryUpgrade = {
         Name = "DemeterFamineLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.DEMETER,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.DEMETER] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.DEMETER,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "DemeterFamineLegendary",
             AddLinkedUpgrades = true,
@@ -962,82 +861,83 @@ Z.UpgradeData = {
             LinkedUpgrades = {
                 OneFromEachSet = {
                     { "DemeterWeaponTrait", "DemeterSecondaryTrait", "DemeterRushTrait", "DemeterShoutTrait", },
-                    { "HealingPotencyTrait", "MaximumChillBonusSlow" }
-                }
-            }
-        }
+                    { "HealingPotencyTrait", "MaximumChillBonusSlow" },
+                },
+            },
+        },
     },
 
-    HermesAfterImageLegendaryUpgrade = {
-        Name = "HermesAfterImageLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.HERMES,
-        OnApplyFunction = "Z.AddTraitToTraitData",
-        OnApplyFunctionArgs = { 
-            Name = "HermesAfterImageLegendary",
-            AddLinkedUpgrades = true,
-            LinkedUpgradeName = "HermesUpgrade",
-            LinkedUpgrades = {
-                OneFromEachSet = {
-                    {
-                        "HermesWeaponTrait",
-                        "HermesSecondaryTrait",
-                        "RapidCastTrait",
-                        "AmmoReloadTrait",
-                        "AmmoReclaimTrait",
-                        "BonusDashTrait",
-                    },
-                    {
-                        -- ATTACK
-                        "AresWeaponTrait",
-                        "AphroditeWeaponTrait",
-                        "AthenaWeaponTrait",
-                        "ArtemisWeaponTrait",
-                        "PoseidonWeaponTrait",
-                        "DionysusWeaponTrait",
-                        "DemeterWeaponTrait",
-                        "ZeusWeaponTrait",
-                        -- SPECIAL
-                        "AresSecondaryTrait",
-                        "AphroditeSecondaryTrait",
-                        "AthenaSecondaryTrait",
-                        "ArtemisSecondaryTrait",
-                        "PoseidonSecondaryTrait",
-                        "DionysusSecondaryTrait",
-                        "DemeterSecondaryTrait",
-                        "ZeusSecondaryTrait",
-                        -- RANGED -- TODO: Beowulf casts
-                        "AresRangedTrait",
-                        "AphroditeRangedTrait",
-                        "AthenaRangedTrait",
-                        "ArtemisRangedTrait",
-                        "PoseidonRangedTrait",
-                        "DionysusRangedTrait",
-                        "DemeterRangedTrait",
-                        "ZeusRangedTrait",
-                        -- DASH
-                        "AresRushTrait",
-                        "AphroditeRushTrait",
-                        "AthenaRushTrait",
-                        "ArtemisRushTrait",
-                        "PoseidonRushTrait",
-                        "DionysusRushTrait",
-                        "DemeterRushTrait",
-                        "ZeusRushTrait",
-                    }
-                },
-            }
-        }
-    },
+    -- HermesAfterImageLegendaryUpgrade = {
+    --     Name = "HermesAfterImageLegendaryUpgrade",
+    --     Cost = 0,
+    --     CostType = "",
+    --     Source = ZyruIncremental.Constants.Gods.HERMES,
+    --     OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
+    --     OnApplyFunctionArgs = { 
+    --         Name = "HermesAfterImageLegendary",
+    --         AddLinkedUpgrades = true,
+    --         LinkedUpgradeName = "HermesUpgrade",
+    --         LinkedUpgrades = {
+    --             OneFromEachSet = {
+    --                 {
+    --                     "HermesWeaponTrait",
+    --                     "HermesSecondaryTrait",
+    --                     "RapidCastTrait",
+    --                     "AmmoReloadTrait",
+    --                     "AmmoReclaimTrait",
+    --                     "BonusDashTrait",
+    --                 },
+    --                 {
+    --                     -- ATTACK
+    --                     "AresWeaponTrait",
+    --                     "AphroditeWeaponTrait",
+    --                     "AthenaWeaponTrait",
+    --                     "ArtemisWeaponTrait",
+    --                     "PoseidonWeaponTrait",
+    --                     "DionysusWeaponTrait",
+    --                     "DemeterWeaponTrait",
+    --                     "ZeusWeaponTrait",
+    --                     -- SPECIAL
+    --                     "AresSecondaryTrait",
+    --                     "AphroditeSecondaryTrait",
+    --                     "AthenaSecondaryTrait",
+    --                     "ArtemisSecondaryTrait",
+    --                     "PoseidonSecondaryTrait",
+    --                     "DionysusSecondaryTrait",
+    --                     "DemeterSecondaryTrait",
+    --                     "ZeusSecondaryTrait",
+    --                     -- RANGED -- TODO: Beowulf casts
+    --                     "AresRangedTrait",
+    --                     "AphroditeRangedTrait",
+    --                     "AthenaRangedTrait",
+    --                     "ArtemisRangedTrait",
+    --                     "PoseidonRangedTrait",
+    --                     "DionysusRangedTrait",
+    --                     "DemeterRangedTrait",
+    --                     "ZeusRangedTrait",
+    --                     -- DASH
+    --                     "AresRushTrait",
+    --                     "AphroditeRushTrait",
+    --                     "AthenaRushTrait",
+    --                     "ArtemisRushTrait",
+    --                     "PoseidonRushTrait",
+    --                     "DionysusRushTrait",
+    --                     "DemeterRushTrait",
+    --                     "ZeusRushTrait",
+    --                 },
+    --             },
+    --         },
+    --     },
+    -- },
 
      -- ARES LEGENDARY
      AresMurderousEfficacyLegendaryUpgrade = {
         Name = "AresMurderousEfficacyLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.ARES,
-        OnApplyFunction = "Z.AddTraitToTraitData",
+        Costs = {
+            [ZyruIncremental.Constants.Gods.ARES] = 100,
+        },
+        Source = ZyruIncremental.Constants.Gods.ARES,
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
             Name = "AresMurderousEfficacyLegendary",
             AddLinkedUpgrades = true,
@@ -1046,33 +946,59 @@ Z.UpgradeData = {
                 OneFromEachSet = {
                     {  "AresRushTrait", "AresShoutTrait","AresRangedTrait" },
                     { "AresLoadCurseTrait", "AresLongCurseTrait", "AresDragTrait", "AresAoETrait" },
-                    { "AresWeaponTrait", "AresSecondaryTrait", "AresRetaliateTrait"}
-                }
-            }
-        }
+                    { "AresWeaponTrait", "AresSecondaryTrait", "AresRetaliateTrait"},
+                },
+            },
+        },
     },
 
     -- ZEUS LEGENDARY
-    ZeusChainRangeLegendaryUpgrade = {
-        Name = "ZeusChainRangeLegendaryUpgrade",
-        Cost = 0,
-        CostType = "",
-        Source = Z.UpgradeSourceEnums.ZEUS,
-        OnApplyFunction = "Z.AddTraitToTraitData",
-        OnApplyFunctionArgs = { 
-            Name = "ZeusChainRangeLegendary",
-            AddLinkedUpgrades = true,
-            LinkedUpgradeName = "ZeusUpgrade",
-            LinkedUpgrades = {
-                OneFromEachSet = {
-                    {  "ZeusRangedTrait", "ZeusWeaponTrait", },
-                    { "ZeusBonusBounceTrait" },
-                }
-            }
-        }
+    -- ZeusChainRangeLegendaryUpgrade = {
+    --     Name = "ZeusChainRangeLegendaryUpgrade",
+        -- Costs = {
+        --     [ZyruIncremental.Constants.Gods.ZEUS] = 100,
+        -- },
+    --     Source = ZyruIncremental.Constants.Gods.ZEUS,
+    --     OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
+    --     OnApplyFunctionArgs = { 
+    --         Name = "ZeusChainRangeLegendary",
+    --         AddLinkedUpgrades = true,
+    --         LinkedUpgradeName = "ZeusUpgrade",
+    --         LinkedUpgrades = {
+    --             OneFromEachSet = {
+    --                 {  "ZeusRangedTrait", "ZeusWeaponTrait", },
+    --                 { "ZeusBonusBounceTrait" },
+    --             },
+    --         },
+    --     },
+    -- },
+
+
+    ---------------------
+    -- RARITY UPGRADES --
+    ---------------------
+    ZeusRarityUpgrade = {
+        Name = "ZeusRarityUpgrade",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.ZEUS,
+        OnApplyFunction = "AugmentTransientState",
+        OnApplyFunctionArgs = {
+            ZeusRarityBonus = 10,
+        },
     },
 
+    -------------------
+    -- MISC UPGRADES --
+    -------------------
+    AthenaExperienceUpgrade = {
+        Name = "AthenaExperienceUpgrade",
+        CostsFunctionName = "GetRarityUpgradeCost", -- TODO: actually fix this shit,
+        OnApplyFunction = "AugmentTransientState",
+        OnApplyFunctionArgs = {
+            AthenaExperienceBonus = 5,
+        },
 
+    },
 }
 
 -- Ares Hermes Duo
@@ -1107,7 +1033,7 @@ end)
 function ResetBloodlust()
     for k, traitData in pairs(CurrentRun.Hero.Traits) do
         if traitData.BloodlustDamageBonus ~= nil then
-            DebugPrint { Text = "Resetting Bloodlust" }
+            -- DebugPrint { Text = "Resetting Bloodlust" }
             traitData.BloodlustDamageBonus = 1
         end
     end
@@ -1140,19 +1066,7 @@ OnDodge{ "_PlayerUnit",
                     nearestEnemyId = CurrentRun.Hero.ObjectId
                     createdObstacle = true
                 end
-                -- DebugPrint { Text = tostring(nearestEnemyId)}
                 FireWeaponFromUnit({ Weapon = "AphroditeSuperCharm", Id = CurrentRun.Hero.ObjectId, DestinationId = CurrentRun.Hero.ObjectId, AutoEquip = true, ClearAllFireRequests = true })
-                -- FireWeaponFromUnit({ 
-                --     Weapon = weapon.Weapon,
-                --     AutoEquip = true,
-                --     Id = nearestEnemyId,
-                --     DestinationId = CurrentRun.Hero.ObjectId,
-                --     FireFromTarget = true
-                -- })
-                -- if createdObstacle then
-                --     Destroy({ Id = nearestEnemyId })
-                -- end
-                -- DebugPrint { Text = ModUtil.ToString.Deep(weapon) }
             end
         -- end
 	end
@@ -1161,10 +1075,10 @@ OnDodge{ "_PlayerUnit",
 -- END APHRODITE HERMES DUO
 
 ModUtil.Path.Wrap("DamageOverTimeApply", function (baseFunc, args)
-    DebugPrint { Text = ModUtil.ToString.Shallow(args.Stacks) }
-    Z.Args = args
+    -- DebugPrint { Text = ModUtil.ToString.Shallow(args.Stacks) }
+    ZyruIncremental.Args = args
     return baseFunc(args)
-end, Z)
+end, ZyruIncremental)
 
 function PoseidonHermesDamageLoot ( args, attacker, victim )
     GiveRandomConsumables({
@@ -1192,8 +1106,8 @@ OnEffectApply {
     function ( args )
         if args.EffectName == "DamageOverTime" then
             -- DebugPrint { Text = "Attempting to modify DamageOverTime" }
-            DebugPrint { Text = tostring(HasEffect({ Id = args.triggeredById, EffectName = "DamageOverTime",}))}
-            DebugPrint { Text = ModUtil.ToString.Shallow()}
+            -- DebugPrint { Text = tostring(HasEffect({ Id = args.triggeredById, EffectName = "DamageOverTime",}))}
+            -- DebugPrint { Text = ModUtil.ToString.Shallow()}
             ModifyEffect({
                 Id = args.triggeredById,
                 EffectName = "DamageOverTime",
@@ -1218,7 +1132,7 @@ function AddCritSpeedBoost(args)
             {
                 ExtractAs = "TooltipSpeed",
                 Format = "PercentDelta",
-            }
+            },
         },
     }
     
@@ -1275,8 +1189,8 @@ end)
 --     end
 -- }
 
-function Z.EnablePoseidonVacuumFunction( args )
-    Z.AddTraitToTraitData({ 
+function ZyruIncremental.EnablePoseidonVacuumFunction( args )
+    ZyruIncremental.AddTraitToTraitData({ 
         Name = "ChangingTidesLegendary",
         AddLinkedUpgrades = true,
         LinkedUpgradeName = "PoseidonUpgrade",
@@ -1287,9 +1201,9 @@ function Z.EnablePoseidonVacuumFunction( args )
                 -- { "DemeterRangedTrait" },
                 --TODO: beowulf flare
                 { "PoseidonWeaponTrait", "PoseidonSecondaryTrait", "PoseidonRangedTrait", "PoseidonRushTrait"},
-                { "SlipperyTrait" }
-            }
-        }
+                { "SlipperyTrait" },
+            },
+        },
     })
     -- initial push / pull behavior
     local isActive = true
@@ -1300,7 +1214,7 @@ function Z.EnablePoseidonVacuumFunction( args )
         isActive = true
         local leadLocation = SpawnObstacle({ Name = "InvisibleTarget", DestinationId = CurrentRun.Hero.ObjectId })
         
-        DebugPrint { Text = "calculating applyVacuumEffect"}
+        -- DebugPrint { Text = "calculating applyVacuumEffect"}
         local targetIds = GetClosestIds({
             Id = CurrentRun.Hero.ObjectId,
             DestinationName = "EnemyTeam",
@@ -1308,14 +1222,14 @@ function Z.EnablePoseidonVacuumFunction( args )
             IgnoreHomingIneligible = true,
             Distance = 10000 
         })
-        DebugPrint { Text = tostring(targetIds)}
+        -- DebugPrint { Text = tostring(targetIds)}
         for i, targetId in pairs(targetIds) do
             
-            DebugPrint { Text = tostring(targetId)}
+            -- DebugPrint { Text = tostring(targetId)}
             if ActiveEnemies[targetId] ~= nil and not ActiveEnemies[targetId].IsDead then
                 local speed = isPush and -2500 or 0.666 * GetRequiredForceToEnemy( targetId, leadLocation)
                 local angle = GetAngleBetween({ Id = targetId, DestinationId = leadLocation })
-                DebugPrint { Text = "Applying force " .. tostring(speed) .."to " .. tostring(targetId) .. " at angle " .. tostring(angle)}
+                -- DebugPrint { Text = "Applying force " .. tostring(speed) .."to " .. tostring(targetId) .. " at angle " .. tostring(angle)}
                 ApplyForce({
                     Id = targetId,
                     Speed = speed,
@@ -1330,7 +1244,7 @@ function Z.EnablePoseidonVacuumFunction( args )
     end
     ModUtil.Path.Wrap("StartEncounterEffects", function ( baseFunc, currentRun )
         local retVal = baseFunc(currentRun)
-        DebugPrint { Text = "Starting Encounter Effects"}
+        -- DebugPrint { Text = "Starting Encounter Effects"}
         isPush = not isPush
         isActive = false
         for i, traitData in pairs(CurrentRun.Hero.Traits ) do
@@ -1342,15 +1256,15 @@ function Z.EnablePoseidonVacuumFunction( args )
             thread(applyVacuumEffect)
         end
         return retVal
-    end, Z)
+    end, ZyruIncremental)
 
     -- EndEncounterEffects( currentRun, currentRoom, currentEncounter )
     
     ModUtil.Path.Wrap("EndEncounterEffects", function ( baseFunc, currentRun, currentRoom, currentEncounter )
         isActive = false
-        DebugPrint { Text = "Ending Encounter Effects"}
+        -- DebugPrint { Text = "Ending Encounter Effects"}
         return baseFunc(currentRun, currentRoom, currentEncounter)
-    end, Z)
+    end, ZyruIncremental)
 end
 
 -- Aphrodite legendary, seductive victory
@@ -1370,7 +1284,7 @@ end
     end
 ]]
 
-function Z.SetupSeductiveVictory( hero, args )
+function ZyruIncremental.SetupSeductiveVictory( hero, args )
     thread( SeductiveVictoryThread, args )
 end
 
@@ -1397,20 +1311,20 @@ function SeductiveVictoryThread( args )
 end
 
 -- ARTEMIS ALTERNATE LEGENDARY
-function Z.SetupPermanentVulnerability()
+function ZyruIncremental.SetupPermanentVulnerability()
     ModUtil.Path.Wrap("ClearEffect", function(baseFunc, args)
         if args and args.Name == "CritVulnerability" then
             return
         end
         return baseFunc(args)
-    end, Z)
+    end, ZyruIncremental)
 
     ModUtil.Path.Wrap("BlockEffect", function(baseFunc, args)
         if args and args.Name == "CritVulnerability" then
             return
         end
         return baseFunc(args)
-    end, Z)
+    end, ZyruIncremental)
 end
 
 
@@ -1424,10 +1338,10 @@ end
 --         DebugPrint { Text = "reapplying crit vuln to " .. tostring(id)}
 --     end)
     
--- end, Z)
+-- end, ZyruIncremental)
 
 -- ATHENA LEGENDARY
-function Z.SetupStrategicCooperationBlessingLegendary ( )
+function ZyruIncremental.SetupStrategicCooperationBlessingLegendary ( )
 --[[
     1. Compute the initial damage multiplier
     2. Add wrapper to AddTraitToHero
@@ -1438,19 +1352,19 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
     local damageBonus = 1
     local damageIncrement = 0.05
     for i, traitData in pairs(CurrentRun.Hero.Traits) do
-        DebugPrint { Text = ModUtil.ToString.Shallow(traitData)}
+        -- DebugPrint { Text = ModUtil.ToString.Shallow(traitData)}
         if traitData.InheritFrom
             and (Contains(traitData.InheritFrom, "SynergyTrait")
             or Contains(traitData.InheritFrom, "ShopTier3Trait"))    
         then
-            DebugPrint { Text = "Found" .. tostring(traitData.Name) .. " for bonus damage" }
+            -- DebugPrint { Text = "Found" .. tostring(traitData.Name) .. " for bonus damage" }
             damageBonus = damageBonus + damageIncrement
         end
     end
 
     for k, traitData in pairs(CurrentRun.Hero.Traits) do
         if traitData.StrategicCooperationBlessingDamageBonus then
-            DebugPrint { Text = "Setting athena legendary bonus damage" }
+            -- DebugPrint { Text = "Setting athena legendary bonus damage" }
             traitData.StrategicCooperationBlessingDamageBonus = damageBonus
             -- ExtractValues( CurrentRun.Hero, traitData, traitData )
         end
@@ -1459,7 +1373,7 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
 
     ModUtil.Path.Wrap("AddTraitToHero", function (baseFunc, args)
         baseFunc(args)
-        DebugPrint { Text = ModUtil.ToString.Shallow(args)}
+        -- DebugPrint { Text = ModUtil.ToString.Shallow(args)}
 
         -- GameState.LastPickedTraitName
         local traitData = TraitData[GameState.LastPickedTraitName]
@@ -1471,13 +1385,13 @@ function Z.SetupStrategicCooperationBlessingLegendary ( )
                 if traitData.StrategicCooperationBlessingDamageBonus then
                     traitData.StrategicCooperationBlessingDamageBonus =
                         traitData.StrategicCooperationBlessingDamageBonus + damageIncrement
-                        DebugPrint { Text = "New Athena Legendary Damage Bonus = " .. tostring(traitData.StrategicCooperationBlessingDamageBonus)}
+                        -- DebugPrint { Text = "New Athena Legendary Damage Bonus = " .. tostring(traitData.StrategicCooperationBlessingDamageBonus)}
                     -- ExtractValues( CurrentRun.Hero, traitData, traitData )
                 end
             end
 
         end
-    end, Z)
+    end, ZyruIncremental)
 
 end
 
@@ -1513,7 +1427,7 @@ local excludedRecursiveWeapons = {
     "ChaosBackstabVulnerabilityApplicator",
 }
 
-function Z.ApplyChaosStatuses( victim, functionDataArgs, triggerArgs )
+function ZyruIncremental.ApplyChaosStatuses( victim, functionDataArgs, triggerArgs )
     if Contains(excludedRecursiveWeapons, tostring(triggerArgs.SourceWeapon)) then
         return
     end
@@ -1550,15 +1464,15 @@ ModUtil.Path.Wrap("CheckOnDamagedPowers", function (baseFunc, victim, attacker, 
     if attacker == CurrentRun.Hero and victim ~= nil and victim.TriggersOnDamageEffects then
         for i, functionData in pairs(GetHeroTraitValues("OnHitEnemyFunction")) do
             if _G[functionData.Name] ~= nil then
-                DebugPrint { Text = "CheckOnDamagedPowers: OnHitEnemyFunction: "..functionData.Name}
+                -- DebugPrint { Text = "CheckOnDamagedPowers: OnHitEnemyFunction: "..functionData.Name}
                 _G[functionData.Name](victim, functionData.Args, args)
             end
         end
     end
     
-end, Z)
+end, ZyruIncremental)
 
-function Z.SetupDemeterFamineLegendary ()
+function ZyruIncremental.SetupDemeterFamineLegendary ()
 
     ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, args)
         local enemy = baseFunc(newEnemy, currentRun, args)
@@ -1566,14 +1480,14 @@ function Z.SetupDemeterFamineLegendary ()
             enemy.Health = enemy.MaxHealth * 0.7
         end 
         return enemy
-    end, Z)
+    end, ZyruIncremental)
 end
 
 -- Add PropertyChanges to allow status effects per weapon
-function Z.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
+function ZyruIncremental.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
 
-    DebugPrint { Text = tostring(triggerArgs.SourceWeapon) }
-    Z.Args = triggerArgs
+    -- DebugPrint { Text = tostring(triggerArgs.SourceWeapon) }
+    ZyruIncremental.Args = triggerArgs
 
     if victim.AfterImageWeapon == nil then
         victim.AfterImageWeapon = {}
@@ -1609,13 +1523,13 @@ function Z.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
     -- end
 
     -- AfterImage
-    DebugPrint { Text = string.sub(weaponToFire, -10, -1) }
+    -- DebugPrint { Text = string.sub(weaponToFire, -10, -1) }
     if string.sub(weaponToFire, -10, -1) == "AfterImage" then return end
 
     if weaponToFire ~= nil then
         thread(
             function ()
-                DebugPrint { Text = "attemptiung to fire " .. weaponToFire .. "AfterImage"}
+                -- DebugPrint { Text = "attemptiung to fire " .. weaponToFire .. "AfterImage"}
                 wait (0.5)
                 FireWeaponFromUnit({
                     Weapon = weaponToFire .. "AfterImage",
@@ -1629,9 +1543,3 @@ function Z.ApplyAfterImageLegendary ( victim, functionDataArgs, triggerArgs )
     end
 
 end
-
--- MIRROR EXTENSION UPGRADES
-function Z.ExtendMirrorUpgrade(args)
-    
-end
-
