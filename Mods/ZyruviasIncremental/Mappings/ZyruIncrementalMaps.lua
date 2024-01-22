@@ -1,4 +1,4 @@
-Z.Constants = {
+ZyruIncremental.Constants = {
   SaveFile = {
     -- starting point
     EPILOGUE = "Epilogue",
@@ -67,12 +67,12 @@ Z.Constants = {
 }
 
 -- SAVE DATA SETUP
-Z.InitializeSaveData = function ()
-  if not Z.Data.Flags or Z.Data.Flags.Initialized == nil then
-    Z.Data.BoonData = { } -- Set Dynamically
+ZyruIncremental.InitializeSaveData = function ()
+  if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
+    ZyruIncremental.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
       -- TODO: Poms or hammer rarity?
-    Z.Data.GodData = { 
+    ZyruIncremental.Data.GodData = { 
       Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
       Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
       Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
@@ -86,7 +86,7 @@ Z.InitializeSaveData = function ()
     }
     -- track acquisition of runources: health / gold
     -- meta currencies???
-    Z.Data.DropData = {
+    ZyruIncremental.Data.DropData = {
       RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
       RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
       StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
@@ -102,36 +102,36 @@ Z.InitializeSaveData = function ()
         Purchased
       }
     ]]--
-    Z.Data.UpgradeData = {
+    ZyruIncremental.Data.UpgradeData = {
       
     }
-    Z.Data.Currencies = {
+    ZyruIncremental.Data.Currencies = {
       
     }
-    Z.Data.FileOptions = {
-      StartingPoint = Z.Constants.SaveFile.EPILOGUE,
-      Difficulty = Z.Constants.SaveFile.STANDARD,
-      ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_HIT,
+    ZyruIncremental.Data.FileOptions = {
+      StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
+      Difficulty = ZyruIncremental.Constants.SaveFile.STANDARD,
+      ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_HIT,
     }
-    Z.Data.Flags = {
+    ZyruIncremental.Data.Flags = {
       Initialized = true,
     }
   end
 end
 
-ModUtil.LoadOnce(Z.InitializeSaveData)
+ModUtil.LoadOnce(ZyruIncremental.InitializeSaveData)
   function ZyruTestUpgrade(args) 
     DebugPrint { Text = "Upgrade applied with args: " .. ModUtil.ToString.Deep(args)}
   end
 
   -- SAVE DATA UPGRADE PROCESSING
 ModUtil.LoadOnce( function ( )
-  if Z.Data.UpgradeData == nil then 
+  if ZyruIncremental.Data.UpgradeData == nil then 
     return
   end
 
   -- debug upgrade proof of concept
-  -- Z.AddUpgrade({
+  -- ZyruIncremental.AddUpgrade({
   --   Name = "ZyruTestUpgrade",
   --   OnApplyFunction = "ZyruTestUpgrade",
   --   OnApplyFunctionArgs = {
@@ -143,11 +143,11 @@ ModUtil.LoadOnce( function ( )
   -- })
 
   -- process existing upgrades
-  for i, upgradeName in ipairs(Z.Data.UpgradeData) do
-    local upgrade = Z.UpgradeData[upgradeName]
+  for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
+    local upgrade = ZyruIncremental.UpgradeData[upgradeName]
     if upgrade == nil then
       DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
-      Z.RemoveUpgrade(upgradeName)
+      ZyruIncremental.RemoveUpgrade(upgradeName)
     else
       if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
@@ -166,11 +166,11 @@ end)
 
 ModUtil.LoadOnce(function ( )
     DebugPrint({ Text = "LOADING ZYRUMAP SETUP" })
-    Z.WhatTheFuckIsThisToBoonMap = {
+    ZyruIncremental.WhatTheFuckIsThisToBoonMap = {
       DemeterMaxChill = "MaximumChillBlast",
     }
     -- Second-to-Last runort WeaponData table -> Boon conversion
-    Z.WeaponToBoonMap = {
+    ZyruIncremental.WeaponToBoonMap = {
       -- Ares
       AresSurgeWeapon = "AresShoutTrait",
       -- Poseidon
@@ -186,7 +186,7 @@ ModUtil.LoadOnce(function ( )
       DemeterChillKill = "InstantChillKill",
     }
     -- EffectData -> Boon Conversion, uses dynamic mapping below
-    Z.EffectToBoonMap = {
+    ZyruIncremental.EffectToBoonMap = {
       -- Poseidon
       DamageOverDistance = "SlipperyTrait",
       PoseidonCollisionBlast = "SlamExplosionTrait",
@@ -216,17 +216,17 @@ ModUtil.LoadOnce(function ( )
       end
         
       if Contains({ "SwordWeapon", "SpearWeapon", "ShieldWeapon", "BowWeapon", "GunWeapon", "FistWeapon" }, weaponName) then
-        ModUtil.Table.Merge(Z.EffectToBoonMap.DamageOverTime, ToLookupValue(weaponTable, "DionysusWeaponTrait"))
-        ModUtil.Table.Merge(Z.EffectToBoonMap.DelayedDamage, ToLookupValue(weaponTable, "AresWeaponTrait"))
+        ModUtil.Table.Merge(ZyruIncremental.EffectToBoonMap.DamageOverTime, ToLookupValue(weaponTable, "DionysusWeaponTrait"))
+        ModUtil.Table.Merge(ZyruIncremental.EffectToBoonMap.DelayedDamage, ToLookupValue(weaponTable, "AresWeaponTrait"))
       elseif Contains({ "SwordParry","BowSplitShot","SpearWeaponThrow", "ShieldThrow", "FistWeaponSpecial", "GunGrenadeToss" }, weaponName) then
-        ModUtil.Table.Merge(Z.EffectToBoonMap.DamageOverTime, ToLookupValue(weaponTable, "DionysusSecondaryTrait"))
-        ModUtil.Table.Merge(Z.EffectToBoonMap.DelayedDamage, ToLookupValue(weaponTable, "AresSecondaryTrait"))
+        ModUtil.Table.Merge(ZyruIncremental.EffectToBoonMap.DamageOverTime, ToLookupValue(weaponTable, "DionysusSecondaryTrait"))
+        ModUtil.Table.Merge(ZyruIncremental.EffectToBoonMap.DelayedDamage, ToLookupValue(weaponTable, "AresSecondaryTrait"))
       end
   
     end
   
     -- Projectile -> Boon Mapping
-    Z.ProjectileToBoonMap = {
+    ZyruIncremental.ProjectileToBoonMap = {
       -- Zeus
       ChainLightning = "ZeusWeaponTrait",
       LightningStrikeSecondary = "ZeusSecondaryTrait",
@@ -247,14 +247,14 @@ ModUtil.LoadOnce(function ( )
       MagicShieldRetaliate = "AthenaRetaliateTrait"
     }
   
-    Z.SuperTraitMap = {
+    ZyruIncremental.SuperTraitMap = {
       SuperGainMultiplier = "SuperGenerationTrait", -- zeus
       DefensiveSuperGainMultiplier = "DefensiveSuperGenerationTrait", -- Poseidon
       AresShoutBuff = "OnWrathDamageBuffTrait", -- zeus billowing
       HermesWrathBuff = "HermesShoutDodge" -- Second Wind
     }
     
-    Z.DamageModifiersToBoonMap = {
+    ZyruIncremental.DamageModifiersToBoonMap = {
       ---------------
       -- OFFENSIVE --
       ---------------
@@ -273,7 +273,7 @@ ModUtil.LoadOnce(function ( )
     
     -- TODO: Generic GetHeroTraitValues Map for single use effects
     -- TODO: Convert other things to this map if they exist elsewhere
-    Z.GetHeroTraitValuesMap = {
+    ZyruIncremental.GetHeroTraitValuesMap = {
       StartingSuperAmount = "PreloadSuperGenerationTrait",
       HealthRewardBonus = "HealthRewardBonusTrait",
       TraitHealingBonus = "HealingPotencyTrait",
@@ -283,7 +283,7 @@ ModUtil.LoadOnce(function ( )
 
     -- Used to track boons whose effects universally apply to a given source that
     -- otherwise only appear in engine property changes
-    Z.HailMaryMap = {
+    ZyruIncremental.HailMaryMap = {
       -- Aphrodite
       AphroditeRangedTrait = { "AphroditeRangedBonusTrait" },
       -- Zeus
@@ -306,7 +306,7 @@ ModUtil.LoadOnce(function ( )
       DamageOverTime = { "DionysusSlowTrait" }
     }
 
-    Z.BoonExperienceFactor = {
+    ZyruIncremental.BoonExperienceFactor = {
       RetaliateWeaponTrait = 1,
       SuperGenerationTrait = 1,
       DefensiveSuperGenerationTrait = 1,
@@ -487,7 +487,7 @@ ModUtil.LoadOnce(function ( )
       FountainDamageBonusTrait = 1,
     }
 
-    Z.BoonExperiencePerUse = {
+    ZyruIncremental.BoonExperiencePerUse = {
       RetaliateWeaponTrait = 1,
       SuperGenerationTrait = 1,
       DefensiveSuperGenerationTrait = 1,
@@ -668,7 +668,7 @@ ModUtil.LoadOnce(function ( )
       FountainDamageBonusTrait = 1,
     }
 
-    Z.BoonsToIgnore = {
+    ZyruIncremental.BoonsToIgnore = {
       AresHermesSynergyTrait = true
     }
 
@@ -679,7 +679,7 @@ end)
 
 -- audio mappings
 ModUtil.LoadOnce(function ( ) 
-  Z.BoonLevelUpVoiceLines = {
+  ZyruIncremental.BoonLevelUpVoiceLines = {
     Zeus = {
       -- Why, I am honored!
       { Cue = "/VO/Zeus_0088" },
@@ -794,13 +794,13 @@ ModUtil.LoadOnce(function ( )
     }
   }
 
-  Z.DropExperienceFactor = {
+  ZyruIncremental.DropExperienceFactor = {
     RoomRewardMoneyDrop = 1,
     RoomRewardMaxHealthDrop = 4,
     StackUpgrade = 1,
   }
 
-  Z.DropLevelUpVoiceLines = {
+  ZyruIncremental.DropLevelUpVoiceLines = {
     RoomRewardMoneyDrop = {
         -- Haaahhhhh....
         { Cue = "/VO/Charon_0010" },
@@ -866,11 +866,11 @@ ModUtil.Path.Wrap("AddResource", function ( baseFunc, name, amount, source, args
   local finalAmount = round(multiplier * amount)
   DebugPrint { Text = "Olympian Favor Metareward Multiplier: " .. multiplier .. " * " .. amount .. " = " .. (finalAmount)}
   return baseFunc(name, finalAmount, source, args)
-end, Z)
+end, ZyruIncremental)
 
 -- enemy data: newEnemy.HealthMultiplier
 ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, args)
-  local difficultyModifier = Z.DifficultyModifier or 1
+  local difficultyModifier = ZyruIncremental.DifficultyModifier or 1
   newEnemy.HealthMultiplier = (newEnemy.HealthMultiplier or 1) * difficultyModifier
   -- armor
   if newEnemy.HealthBuffer ~= nil and newEnemy.HealthBuffer > 0 then
@@ -880,10 +880,10 @@ ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, 
   -- TODO: damage
 
   return baseFunc(newEnemy, currentRun, args)
-end, Z)
+end, ZyruIncremental)
 
 local function ComputeDifficultyModifier (fileDifficulty, property) 
-  local fileDifficultyMap = Z.Constants.Difficulty[property]
+  local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
   -- if property == "Cost" then
   --   difficultyScalar = 1 + (difficultyScalar - 1) / 2
@@ -894,22 +894,22 @@ end
 ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   local run = baseFunc(...)
 
-  if not Z.Data.Flags or not Z.Data.Flags.Initialized then
+  if not ZyruIncremental.Data.Flags or not ZyruIncremental.Data.Flags.Initialized then
     return run
   end 
-  Z.DifficultyModifier = ComputeDifficultyModifier(
-    Z.Data.FileOptions.DifficultySetting,
-    Z.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
+  ZyruIncremental.DifficultyModifier = ComputeDifficultyModifier(
+    ZyruIncremental.Data.FileOptions.DifficultySetting,
+    ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
   )
   AddIncomingDamageModifier(CurrentRun.Hero, {
     Name = "ZyruIncremental",
-    GlobalMultiplier = Z.DifficultyModifier
+    GlobalMultiplier = ZyruIncremental.DifficultyModifier
   })
 
   return run
-end, Z)
+end, ZyruIncremental)
 
-function Z.InitializeEpilogueStartSaveData()
+function ZyruIncremental.InitializeEpilogueStartSaveData()
   -- Max All NPC Hearts
   GameState.Gift = {
     NPC_Dusa_01 = {Value = 10, NewTraits = {}},

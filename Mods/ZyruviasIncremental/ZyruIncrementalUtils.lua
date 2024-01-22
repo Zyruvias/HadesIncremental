@@ -1,14 +1,14 @@
-function Z.GetTotalHeroTraitValueWrapperGenerator (traitNameToTrack, comparator, debug)
+function ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator (traitNameToTrack, comparator, debug)
     ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, traitName, args)
         local res = baseFunc(traitName, args)
         -- if debug then
         --     DebugPrint({ text = "GetTotalHeroTraitValue" })
         -- end
         if traitName == traitNameToTrack and comparator(res) then
-            Z.TrackBoonEffect(Z.GetHeroTraitValuesMap[traitNameToTrack])
+            ZyruIncremental.TrackBoonEffect(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack])
         end
         return res
-    end, Z)
+    end, ZyruIncremental)
 end
 
 function ToLookupValue( table, setValue )
@@ -21,7 +21,7 @@ function ToLookupValue( table, setValue )
 end
 
 
-function Z.GetSourceDamageName(triggerArgs)
+function ZyruIncremental.GetSourceDamageName(triggerArgs)
     local sourceWeaponData = triggerArgs.AttackerWeaponData
   
     if triggerArgs.EffectName ~= nil then
@@ -40,15 +40,15 @@ function Z.GetSourceDamageName(triggerArgs)
             return trait.Name
           end
         end
-      elseif Z.WeaponToBoonMap[sourceWeaponData.Name] ~= nil then
+      elseif ZyruIncremental.WeaponToBoonMap[sourceWeaponData.Name] ~= nil then
         return sourceWeaponData.Name
       end
       return sourceWeaponData.Name
       -- end sourceWeaponData variance check
     elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
       return ProjectileData[triggerArgs.SourceWeapon].Name
-    elseif Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
-      return Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
+    elseif ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
+      return ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
     end
     return triggerArgs.SourceWeapon
   
@@ -59,13 +59,13 @@ end
 -------------------
 
 -- assumes start at 1
-function Z.GetExperienceForNextBoonLevel ( level )
+function ZyruIncremental.GetExperienceForNextBoonLevel ( level )
   -- tribute to AI:TG
   return 1000 * (level * (level - 1) * (2 * level - 1) / 6 + level)
 end
 
 -- assumes start at one
-function Z.GetExperienceForNextGodLevel ( level )
+function ZyruIncremental.GetExperienceForNextGodLevel ( level )
   return math.floor(4 * math.pow(1.25, level - 1) + level * level)
 end
 
@@ -77,7 +77,7 @@ function AddGodExperience ( god, amount )
     return
   end
 
-  local godData = Z.Data.GodData[god]
+  local godData = ZyruIncremental.Data.GodData[god]
 
   if godData == nil then
     DebugPrint { Text = "godData was somehow undefined... god: " .. god }
@@ -101,7 +101,7 @@ function AddGodExperience ( god, amount )
   godData.Experience = godData.Experience + amount
 
   -- check for level-ups 
-  if Z.GetExperienceForNextGodLevel(godData.Level) <= godData.Experience then
+  if ZyruIncremental.GetExperienceForNextGodLevel(godData.Level) <= godData.Experience then
     -- TODO: queue level-up dialogue and voice lines
     godData.Level = godData.Level + 1
 
@@ -116,10 +116,10 @@ local defaultStddev = 1
 local rarityArray = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic" }
 
 
-Z.RarityArrayMap = {}
-function Z.ComputeRarityDistribution( rarityBonus )
-  if Z.RarityArrayMap[tostring(rarityBonus)] ~= nil then
-    return Z.RarityArrayMap[tostring(rarityBonus)]
+ZyruIncremental.RarityArrayMap = {}
+function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
+  if ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] ~= nil then
+    return ZyruIncremental.RarityArrayMap[tostring(rarityBonus)]
   end
 
   local actualRarityBonus = rarityBonus / 100
@@ -153,15 +153,15 @@ function Z.ComputeRarityDistribution( rarityBonus )
 
 -- DebugPrint { Text = "Rarity: " .. tostring((1 + actualRarityBonus) * 100) .. "%%: ".. ModUtil.ToString.Deep(chances)}
 
-  Z.RarityArrayMap[tostring(rarityBonus)] = chances
+  ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] = chances
   return chances
 
 end
-function Z.ComputeRarityArrayForGod( god )
+function ZyruIncremental.ComputeRarityArrayForGod( god )
   local chosenGod = god or "Zeus"
-  local godData = Z.Data.GodData[chosenGod]
-  local rarityBonus = godData.RarityBonus + (ModUtil.Path.Get("TransientState[" ..chosenGod .. "RarityBonus]", Z) or 0)
-  return Z.ComputeRarityDistribution(rarityBonus)
+  local godData = ZyruIncremental.Data.GodData[chosenGod]
+  local rarityBonus = godData.RarityBonus + (ModUtil.Path.Get("TransientState[" ..chosenGod .. "RarityBonus]", ZyruIncremental) or 0)
+  return ZyruIncremental.ComputeRarityDistribution(rarityBonus)
 end
 
 
@@ -176,7 +176,7 @@ ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)
     end
   end
   return baseVal
-end, Z)
+end, ZyruIncremental)
 
 ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
 --[[
@@ -185,7 +185,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
   ------------------
   -- TraitData -----
   ------------------
-  ModUtil.Table.Merge(TraitData, Z.TraitData)
+  ModUtil.Table.Merge(TraitData, ZyruIncremental.TraitData)
   ------------------
   -- WeaponSets ----
   ------------------
@@ -198,7 +198,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
       end
     end
   end
-  Z.MergeDataArrays({
+  ZyruIncremental.MergeDataArrays({
     {
       Array = "WeaponSets.HeroPhysicalWeapons",
       Value = hermesAfterImageWeapons
@@ -214,7 +214,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
       end
     end
   end
-  Z.MergeDataArrays({
+  ZyruIncremental.MergeDataArrays({
     {
       Array = "WeaponSets.HeroSecondaryWeapons",
       Value = hermesAfterImageWeapons
@@ -222,7 +222,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
   })
   --- baseFunc
   baseFunc()
-end, Z)
+end, ZyruIncremental)
 -- TODO: wrapping setupRunData versus just redoing it manually
 SetupRunData()
 

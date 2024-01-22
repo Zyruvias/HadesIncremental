@@ -1,7 +1,7 @@
 local CreateBoonPresentation = function (screen, traitName, x, y)
 
     -- fetchInfo
-    local zyruBoonData = Z.Data.BoonData[traitName]
+    local zyruBoonData = ZyruIncremental.Data.BoonData[traitName]
     local trait = TraitData[traitName]
 
     --setup UI info
@@ -169,7 +169,7 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
     local boonsToDisplay = {}
 
     for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if Z.Data.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
+        if ZyruIncremental.Data.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
             table.insert(boonsToDisplay, trait.Name)
         end
     end
@@ -187,33 +187,36 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
 	HandleScreenInput( screen )
 
     return value
-end, Z)
+end, ZyruIncremental)
 
-function Z.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
-    local behavior = Z.Data.FileOptions.ExperiencePopupBehavior
-    if behavior == Z.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
-        color = Z.BoonToGod[traitName] and Color[Z.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
+function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
+    local behavior = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior
+    if behavior == ZyruIncremental.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
+        color = ZyruIncremental.BoonToGod[traitName] and Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
         thread( DisplayExperiencePopup, expGained, { Color = color })
-    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_BOON  then
+    elseif behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON  then
         victim.ZyruExperienceMap = victim.ZyruExperienceMap or {}
         victim.ZyruExperienceMap[traitName] = victim.ZyruExperienceMap[traitName] or 0
         victim.ZyruExperienceMap[traitName] = victim.ZyruExperienceMap[traitName] + expGained
-    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_GOD then
+    elseif behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD then
         victim.ZyruExperienceMap = victim.ZyruExperienceMap or {}
         victim.ZyruExperienceMap[godName] = victim.ZyruExperienceMap[godName] or 0
         victim.ZyruExperienceMap[godName] = victim.ZyruExperienceMap[godName] + expGained
     end
 end
 
-function Z.HandleKillEnemyExperiencePresentation(victim)
-    local behavior = Z.Data.FileOptions.ExperiencePopupBehavior
-    Z.Victim = victim
-    if  behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_BOON then
+function ZyruIncremental.HandleKillEnemyExperiencePresentation(victim)
+    local behavior = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior
+    ZyruIncremental.Victim = victim
+    if not victim or not victim.ZyruExperienceMap then
+        return
+    end
+    if  behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON then
         for traitName, expGained in pairs(victim.ZyruExperienceMap or {}) do
-            thread( DisplayExperiencePopup, expGained, { Color = Color[Z.BoonToGod[traitName] .. "DamageLight"], DestinationId = victim.ObjectId })
+            thread( DisplayExperiencePopup, expGained, { Color = Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"], DestinationId = victim.ObjectId })
             wait(0.1)
         end
-    elseif behavior == Z.Constants.Settings.EXP_ON_DEATH_BY_GOD then
+    elseif behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD then
         for godName, expGained in pairs(victim.ZyruExperienceMap) do
             thread( DisplayExperiencePopup, expGained, { Color = Color[godName .. "DamageLight"], DestinationId = victim.ObjectId })
             wait(0.25)
@@ -222,9 +225,9 @@ function Z.HandleKillEnemyExperiencePresentation(victim)
 end
 
 ModUtil.Path.Wrap("KillEnemy", function (base, victim, triggerArgs)
-    thread(Z.HandleKillEnemyExperiencePresentation, victim)
+    thread(ZyruIncremental.HandleKillEnemyExperiencePresentation, victim)
     base(victim, triggerArgs)
-end, Z)
+end, ZyruIncremental)
 
 function DisplayExperiencePopup (amount, args)
     local displayAmount = round(amount)
@@ -319,19 +322,19 @@ end
 -- Courtyard Interface
 
 function LolLmao()
-    local voiceline = GetRandomValue(Z.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
+    local voiceline = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )
 end
 
 ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
     -- TODO: generalize?
-    if not Z.Data.Flags.SeenProgressMenu or not Z.Data.Flags.SeenUpgradeMenu then
+    if not ZyruIncremental.Data.Flags.SeenProgressMenu or not ZyruIncremental.Data.Flags.SeenUpgradeMenu then
         thread( CannotUseDoorPresentation, {} )
     else
         base(usee, args)
     end
-end, Z)
+end, ZyruIncremental)
 
 OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- TODO: selector.BlockExitUntilUsed, selector.BlockExitText
@@ -348,8 +351,8 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         OffsetX = 2000,
         OffsetY = -750,
     })
-    if not Z.Data.Flags.SeenUpgradeMenu then
-        Z.UpgradeMenuObjectId = selector.ObjectId
+    if not ZyruIncremental.Data.Flags.SeenUpgradeMenu then
+        ZyruIncremental.UpgradeMenuObjectId = selector.ObjectId
         selector.BlockExitUntilUsed = true
         selector.BlockExitText = "New shiny things over here!" -- TODO: ???
     end
@@ -372,8 +375,8 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         OffsetY = -650,
     })
     
-    if not Z.Data.Flags.SeenProgressMenu then
-        Z.ProgressMenuObjectId = selector.ObjectId
+    if not ZyruIncremental.Data.Flags.SeenProgressMenu then
+        ZyruIncremental.ProgressMenuObjectId = selector.ObjectId
         selector.BlockExitUntilUsed = true
         selector.BlockExitText = "New shiny things over here!" -- TODO: ???
     end
@@ -419,8 +422,8 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     settingsSelector.UseText = "{I} Mod Settings"
     settingsSelector.OnUsedFunctionName = "ShowZyruSettingsMenu"
     settingsSelector.Activate = true
-    if not Z.Data.Flags.SeenSettingsMenu then
-        Z.SettingsMenuObjectId = settingsSelector.ObjectId
+    if not ZyruIncremental.Data.Flags.SeenSettingsMenu then
+        ZyruIncremental.SettingsMenuObjectId = settingsSelector.ObjectId
         settingsSelector.BlockExitUntilUsed = true
         settingsSelector.BlockExitText = "New shiny things over here!" -- TODO: ???
     end
@@ -432,8 +435,8 @@ end}
 -- START SCREEN UPDATE
 
 function ShowZyruSettingsMenu()
-    Z.Data.Flags.SeenSettingsMenu = true
-    local screen = Z.CreateMenu("SettingsMenu", {
+    ZyruIncremental.Data.Flags.SeenSettingsMenu = true
+    local screen = ZyruIncremental.CreateMenu("SettingsMenu", {
         Components = {
             {
                 Type = "Text",
@@ -464,25 +467,25 @@ function ShowZyruSettingsMenu()
                     },
                     Items = {
                         Default = {
-                            Text = Z.Data.FileOptions.ExperiencePopupBehavior or Z.Constants.Settings.EXP_ON_DEATH_BY_BOON,
+                            Text = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior or ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON,
                             event = function() end
                         },
                         {
-                            Text = Z.Constants.Settings.EXP_ON_HIT,
+                            Text = ZyruIncremental.Constants.Settings.EXP_ON_HIT,
                             event = function ()
-                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_HIT
+                                ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_HIT
                             end
                         },
                         {
-                            Text = Z.Constants.Settings.EXP_ON_DEATH_BY_BOON,
+                            Text = ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON,
                             event = function ()
-                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_DEATH_BY_BOON
+                                ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON
                             end
                         },
                         {
-                            Text = Z.Constants.Settings.EXP_ON_DEATH_BY_GOD,
+                            Text = ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD,
                             event = function ()
-                                Z.Data.FileOptions.ExperiencePopupBehavior = Z.Constants.Settings.EXP_ON_DEATH_BY_GOD
+                                ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD
                             end
                         },
                     }
@@ -517,7 +520,7 @@ local cabinetId = nil
 
 function ModInitializationScreen2()
     if not IsEmpty( GameState.RunHistory ) then
-        local screen = Z.CreateMenu("NotFreshFile", {
+        local screen = ZyruIncremental.CreateMenu("NotFreshFile", {
             Components = {
                 {
                     Type = "Text",
@@ -550,7 +553,7 @@ function ModInitializationScreen2()
             })
         return
     end
-    local screen = Z.CreateMenu("ModInitialization", {
+    local screen = ZyruIncremental.CreateMenu("ModInitialization", {
         Pages = {
             [1] = {
                 {
@@ -654,13 +657,13 @@ function ModInitializationScreen2()
                         Y = ScreenHeight / 3,
                         Items = {
                             Default = {
-                                Text = Z.Data.FileOptions.DifficultySetting or "Standard",
+                                Text = ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard",
                                 event = function() end
                             },
-                            { Text = "Easy", event = function () Z.Data.FileOptions.DifficultySetting = "Easy" end },
-                            { Text = "Standard", event = function() Z.Data.FileOptions.DifficultySetting = "Standard" end },
-                            { Text = "Hard", event = function () Z.Data.FileOptions.DifficultySetting = "Hard" end },
-                            { Text = "Freeplay", event = function () Z.Data.FileOptions.DifficultySetting = "Freeplay" end },
+                            { Text = "Easy", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy" end },
+                            { Text = "Standard", event = function() ZyruIncremental.Data.FileOptions.DifficultySetting = "Standard" end },
+                            { Text = "Hard", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Hard" end },
+                            { Text = "Freeplay", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Freeplay" end },
                         }
                     }
                 },
@@ -719,19 +722,19 @@ function ModInitializationScreen2()
                         Scale = { X = 1.0, Y = 1.0 },
                         Items = {
                             Default = {
-                                Text = Z.Data.FileOptions.StartingPoint or Z.Constants.SaveFile.EPILOGUE,
+                                Text = ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE,
                                 event = function() end
                             },
                             { 
-                                Text = Z.Constants.SaveFile.FRESH_FILE,
+                                Text = ZyruIncremental.Constants.SaveFile.FRESH_FILE,
                                 event = function ()
-                                    Z.Data.FileOptions.StartingPoint = Z.Constants.SaveFile.FRESH_FILE
+                                    ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.FRESH_FILE
                                 end
                             },
                             { 
                                 Text = "Epilogue",
                                 event = function ()
-                                    Z.Data.FileOptions.StartingPoint = Z.Constants.SaveFile.EPILOGUE
+                                    ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE
                                 end
                             },
                         }
@@ -800,15 +803,15 @@ function ModInitializationScreen2()
 end
 
 function CloseInitializationScreen(screen, button)
-    Z.Data.Flags.SeenInitialMenuScreen = true
-    if Z.Data.FileOptions.StartingPoint == Z.Constants.SaveFile.FRESH_FILE then
+    ZyruIncremental.Data.Flags.SeenInitialMenuScreen = true
+    if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
         ActivatedObjects[cabinetId] = nil
         return CloseScreenByName("ModInitialization")
     end
 
 
     -- actually set save data, the dang fools think this is slow :jeb:
-    Z.InitializeEpilogueStartSaveData()
+    ZyruIncremental.InitializeEpilogueStartSaveData()
 
     -- wipe the screen
     Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
@@ -928,8 +931,8 @@ function CloseInitializationScreen(screen, button)
             
         }
     }
-    Z.RenderComponent(screen, progressBar)
-    Z.RenderComponent(screen, progressText)
+    ZyruIncremental.RenderComponent(screen, progressBar)
+    ZyruIncremental.RenderComponent(screen, progressText)
 
     for _, stage in ipairs(stages) do
         if stage.Voicelines then
@@ -938,12 +941,12 @@ function CloseInitializationScreen(screen, button)
 
         if stage.Text then
             progressText.Args.Text = stage.Text
-            Z.UpdateComponent(screen, progressText)
+            ZyruIncremental.UpdateComponent(screen, progressText)
         end
 
         progressBar.Args.Proportion = stage.Proportion
         progressBar.Args.UpdateDuration = stage.UpdateDuration
-        Z.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+        ZyruIncremental.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
     end
 
 
@@ -956,7 +959,7 @@ end
 
 ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 
-    if Z.Data.Flags.SeenInitialMenuScreen then
+    if ZyruIncremental.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
     
@@ -988,10 +991,10 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     SetupObstacle( selector )
     
     
-end, Z)
+end, ZyruIncremental)
 
-function Z.TestFrameworkMenu()
-    local screen = Z.CreateMenu("Test", {
+function ZyruIncremental.TestFrameworkMenu()
+    local screen = ZyruIncremental.CreateMenu("Test", {
         Components = {
             {
                 Type = "Button",
@@ -1017,12 +1020,12 @@ end
 
 
 
-ModUtil.Path.Wrap("ShowRunIntro", function() end, Z)
+ModUtil.Path.Wrap("ShowRunIntro", function() end, ZyruIncremental)
 
 function UpdateBoonInfoProgressScreen(screen, boonName)
 
     -- UPDATE TEXT
-    Z.UpdateComponent(screen, {
+    ZyruIncremental.UpdateComponent(screen, {
         Type = "Text",
         SubType = "Subtitle",
         Args = {
@@ -1032,7 +1035,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
 
     })
     -- UPDATE ICON
-    Z.UpdateComponent(screen, {
+    ZyruIncremental.UpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
         Args = {
@@ -1043,17 +1046,17 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     })
     -- UPDATE PROGRESS BAR
     -- show boon level in top right corner
-    local boonData = Z.Data.BoonData[boonName] or {}
+    local boonData = ZyruIncremental.Data.BoonData[boonName] or {}
 
     local boonLevel = boonData.Level or 1
     -- show exp to next level, bar in bottom
 
     local boonExp = boonData.Experience or 0
-    local expBaseline = boonExp - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
-    local expTNL = Z.GetExperienceForNextBoonLevel ( boonLevel ) - Z.GetExperienceForNextBoonLevel(boonLevel - 1)
+    local expBaseline = boonExp - ZyruIncremental.GetExperienceForNextBoonLevel(boonLevel - 1)
+    local expTNL = ZyruIncremental.GetExperienceForNextBoonLevel ( boonLevel ) - ZyruIncremental.GetExperienceForNextBoonLevel(boonLevel - 1)
     local expProportion = expBaseline / expTNL
     local expProportionLabel = tostring(math.floor((1000 * expBaseline) / expTNL) / 10) .. "%"
-    Z.UpdateProgressBar(screen, {
+    ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
         Args = {
@@ -1072,7 +1075,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             RightText = "Level " .. tostring(boonLevel + 1)
         }
     })
-    Z.UpdateProgressBar(screen, {
+    ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
         Args = {
@@ -1088,7 +1091,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     })
     
 
-    -- Z.RenderComponents(screen, components)
+    -- ZyruIncremental.RenderComponents(screen, components)
 end
 
 function ShowGodProgressScreen(screen, button)
@@ -1181,13 +1184,13 @@ function ShowGodProgressScreen(screen, button)
             }
         },
     }
-    Z.RenderComponents(screen, componentsToRender)
+    ZyruIncremental.RenderComponents(screen, componentsToRender)
 end
 
 function ShowZyruProgressScreen()
-    Z.Data.Flags.SeenProgressMenu = true
-    if Z.ProgressMenuObjectId ~= nil then
-        ActivatedObjects[Z.ProgressMenuObjectId] = nil
+    ZyruIncremental.Data.Flags.SeenProgressMenu = true
+    if ZyruIncremental.ProgressMenuObjectId ~= nil then
+        ActivatedObjects[ZyruIncremental.ProgressMenuObjectId] = nil
     end
     local componentsToRender = {
         {
@@ -1235,7 +1238,7 @@ function ShowZyruProgressScreen()
         pages[name] = "ShowGodProgressScreen"
     end
 
-    local screen = Z.CreateMenu("ProgressScreen", {
+    local screen = ZyruIncremental.CreateMenu("ProgressScreen", {
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
@@ -1243,9 +1246,9 @@ function ShowZyruProgressScreen()
 end
 
 function ShowZyruUpgradeScreen()
-    Z.Data.Flags.SeenUpgradeMenu = true
-    if Z.UpgradeMenuObjectId ~= nil then
-        ActivatedObjects[Z.UpgradeMenuObjectId] = nil
+    ZyruIncremental.Data.Flags.SeenUpgradeMenu = true
+    if ZyruIncremental.UpgradeMenuObjectId ~= nil then
+        ActivatedObjects[ZyruIncremental.UpgradeMenuObjectId] = nil
     end
     local componentsToRender = {
         {
@@ -1293,7 +1296,7 @@ function ShowZyruUpgradeScreen()
         pages[name] = "ShowGodUpgradeScreen"
     end
 
-    local screen = Z.CreateMenu("UpgradeScreen", {
+    local screen = ZyruIncremental.CreateMenu("UpgradeScreen", {
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
@@ -1316,7 +1319,7 @@ end
 
 function UpdateUpgradeInfoScreen(screen, upgrade)
     -- UPDATE ICON
-    Z.CreateOrUpdateComponent(screen, {
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
         Args = {
@@ -1327,7 +1330,7 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
             Scale = 4,
         }
     })
-    Z.CreateOrUpdateComponent(screen, {
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Paragraph",
         Args = {
@@ -1338,7 +1341,7 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
 
         }
     })
-    Z.CreateOrUpdateComponent(screen, {
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Note",
         Args = {
@@ -1350,7 +1353,7 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
         }
     })
     -- Add Purchase Button
-    Z.CreateOrUpdateComponent(screen, {
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Button",
         SubType = "Basic",
         Args = {
@@ -1359,7 +1362,7 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
             OffsetY = 200,
             Label = "Purchase Upgrade",
             ComponentArgs = {
-                OnPressedFunctionName = "Z.AttemptPurchaseUpgrade",
+                OnPressedFunctionName = "ZyruIncremental.AttemptPurchaseUpgrade",
                 Upgrade = upgrade
             },
         },
@@ -1386,7 +1389,7 @@ end
 function ShowGodUpgradeScreen(screen, button)
     -- upgradesTodisplay
     local source = button.PageIndex
-    local upgradesToDisplay = Z.GetAllUpgradesBySource(source)
+    local upgradesToDisplay = ZyruIncremental.GetAllUpgradesBySource(source)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
@@ -1433,7 +1436,7 @@ function ShowGodUpgradeScreen(screen, button)
                 OffsetY = -450,
                 Justification = "Right",
                 FontSize = 20,
-                Text = "Available " .. source .. " Points: " .. tostring(Z.Data.GodData[source].CurrentPoints or 0)
+                Text = "Available " .. source .. " Points: " .. tostring(ZyruIncremental.Data.GodData[source].CurrentPoints or 0)
             }
         },
         {
@@ -1448,5 +1451,5 @@ function ShowGodUpgradeScreen(screen, button)
             -- }
         },
     }
-    Z.RenderComponents(screen, componentsToRender)
+    ZyruIncremental.RenderComponents(screen, componentsToRender)
 end

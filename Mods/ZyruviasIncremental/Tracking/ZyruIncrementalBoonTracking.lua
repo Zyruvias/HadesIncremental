@@ -5,12 +5,12 @@ ModUtil.Path.Wrap("HandleUpgradeChoiceSelection", function (baseFunc, screen, bu
     local levelCount  = GetTraitNameCount(CurrentRun.Hero, traitName)
     for i = levelCount, levelCount + button.LootData.StackNum - 1 do
       DebugPrint { Text = i }
-      Z.TrackDrop(button.LootData.Name, math.floor(150 / math.pow(2, (i - 1) / 2)))
+      ZyruIncremental.TrackDrop(button.LootData.Name, math.floor(150 / math.pow(2, (i - 1) / 2)))
     end
   end
 
   return baseFunc(screen, button)
-end, Z)
+end, ZyruIncremental)
 
 -- this is Eury/pomslice/nectar
 ModUtil.Path.Wrap("AddStackToTraits", function (baseFunc, source, args)
@@ -18,25 +18,25 @@ ModUtil.Path.Wrap("AddStackToTraits", function (baseFunc, source, args)
     -- this calls itself again, wait for those changes to resolve before doing anything 
     return baseFunc(source, args)
   end
-  Z.TrackDrop("StackUpgrade", (source.NumTraits or 1) * (source.NumStacks or 1) * 75 )
+  ZyruIncremental.TrackDrop("StackUpgrade", (source.NumTraits or 1) * (source.NumStacks or 1) * 75 )
   return baseFunc(source, args)
-end, Z)
+end, ZyruIncremental)
 
-function Z.TrackDrop(source, amount)
+function ZyruIncremental.TrackDrop(source, amount)
   if source == nil or amount == nil then
     DebugPrint { Text = "drop source or amount nil"}
     return
   end
   
   DebugPrint { Text = "Drop Tracked: " .. source .. " for " .. tostring(amount) }
-  local dropData = Z.Data.DropData[source]
+  local dropData = ZyruIncremental.Data.DropData[source]
   dropData.Count = dropData.Count + 1
   dropData.Amount = dropData.Amount + amount
-  dropData.Experience = dropData.Experience + Z.DropExperienceFactor[source] * amount
+  dropData.Experience = dropData.Experience + ZyruIncremental.DropExperienceFactor[source] * amount
   -- if level-up: 
-  if Z.GetExperienceForNextBoonLevel(dropData.Level) <= dropData.Experience then
+  if ZyruIncremental.GetExperienceForNextBoonLevel(dropData.Level) <= dropData.Experience then
     dropData.Level = dropData.Level + 1
-    local voiceLine = GetRandomValue(Z.DropLevelUpVoiceLines[source])
+    local voiceLine = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines[source])
     if voiceLine ~= nil then
       PlayVoiceLine(voiceLine)
     end
@@ -61,8 +61,8 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
     if godNameFromUpgrade == "Trial" then
       godNameFromUpgrade = "Chaos"
     end
-    local godData = Z.Data.GodData[godNameFromUpgrade]
-    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState[" ..godNameFromUpgrade .. "RarityBonus]", Z) or 0)
+    local godData = ZyruIncremental.Data.GodData[godNameFromUpgrade]
+    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState[" ..godNameFromUpgrade .. "RarityBonus]", ZyruIncremental) or 0)
 	end
 
 	local legendaryRoll = CurrentRun.Hero[referencedTable].LegendaryChance or 0
@@ -97,19 +97,19 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
 		end
 	end
 
-  local chances = Z.ComputeRarityDistribution( baseRarity )
+  local chances = ZyruIncremental.ComputeRarityDistribution( baseRarity )
 	chances.Legendary = legendaryRoll
   -- DebugPrint { Text = "Chances at " .. tostring(baseRarity) .."%: " .. ModUtil.ToString.Deep(chances)}
   return chances
-end, Z)
+end, ZyruIncremental)
 
 
 ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- Calculate normal rarity for the sake of Duos / Legendaries, I like the current system.
   DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
   baseFunc(lootData, args)
-  Z.DebugLoot = DeepCopyTable(lootData)
-  Z.DebugArgs = DeepCopyTable(args)
+  ZyruIncremental.DebugLoot = DeepCopyTable(lootData)
+  ZyruIncremental.DebugArgs = DeepCopyTable(args)
   if lootData.ForceCommon then
     -- respect common forces from first run or other sources. hammer  / pom later?
     return
@@ -190,7 +190,7 @@ DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
     -- TODO: Pom rarity??? hamer RARITY?????????
   end
 
-end, Z)
+end, ZyruIncremental)
 
 -- TODO: override?
 ModUtil.Path.Wrap("GetUpgradedRarity", function (base, baseRarity)
@@ -206,12 +206,12 @@ ModUtil.Path.Wrap("GetUpgradedRarity", function (base, baseRarity)
       Mythic = "Olympic",
   }
   return rarityTable[baseRarity]
-end, Z)
+end, ZyruIncremental)
 
 ModUtil.Path.Wrap("GetRarityValue", function (base, rarity)
 	local rarityOrdering = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate", "Transcendental", "Mythic", "Olympic", "Legendary" }
 	return GetKey(rarityOrdering, rarity) or 1
-end, Z)
+end, ZyruIncremental)
 
 -- TODO: nyx levels?
 local ignoreDamageSourceTraitMap = {
@@ -269,7 +269,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
           DebugPrint { Text = "Stacked(7): " .. _G["k"](ModUtil.Locals.Stacked(7)) }
           DebugPrint { Text = "Stacked(8): " .. _G["k"](ModUtil.Locals.Stacked(8)) }
           DebugPrint { Text = "s, k, v: " .. tostring(s) .. " " .. tostring(k) .. " " .. tostring(v)}
-          locals.addDamageMultiplier = ModUtil.Wrap( locals.addDamageMultiplier, addDamageMultiplierWrapper, Z )
+          locals.addDamageMultiplier = ModUtil.Wrap( locals.addDamageMultiplier, addDamageMultiplierWrapper, ZyruIncremental )
           setmetatable( s, nil )
           return rawget( s, k, v )
         end
@@ -295,7 +295,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       }
     
       return value
-    end, Z )
+    end, ZyruIncremental )
   ]]--
 
   -- From Scripts/Combat.lua line
@@ -609,16 +609,16 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       }
 
       return damageMultipliers * damageReductionMultipliers
-  end, Z)
+  end, ZyruIncremental)
   
   ModUtil.Path.Wrap("DamageEnemy", function(baseFunc, victim, triggerArgs)
     local armorBeforeAttack = victim.HealthBuffer or 0
     local res = baseFunc( victim, triggerArgs )
     
     local obj = triggerArgs or {}
-    Z.lta = obj
-    Z.Victim = victim
-    Z.DamageMap = damageMultiplierMap
+    ZyruIncremental.lta = obj
+    ZyruIncremental.Victim = victim
+    ZyruIncremental.DamageMap = damageMultiplierMap
     -- and victim.Name ~= "TrainingMelee" while testing
     if RequiredKillEnemies[victim.ObjectId] == nil  then
       return
@@ -627,7 +627,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     local damageResult = damageMultiplierMap
     if damageResult == nil then
       DebugPrint { Text = " NULL DAMAGE RESULT FOUND"}
-      Z.Debug = {
+      ZyruIncremental.Debug = {
         Victim = victim,
         Args = triggerArgs
       }
@@ -640,7 +640,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     local boonsUsed = {}
   
     if triggerArgs.EffectName ~= nil then
-      local traitUsed = Z.EffectToBoonMap[obj.EffectName]
+      local traitUsed = ZyruIncremental.EffectToBoonMap[obj.EffectName]
       if traitUsed ~= nil then
         if type(traitUsed) == "table" then
           traitUsed = traitUsed[triggerArgs[traitUsed.MapSource]]          
@@ -671,23 +671,23 @@ ModUtil.Path.Context.Wrap("Damage", function ()
             sourceName = trait.Name
           end
         end
-      elseif Z.WeaponToBoonMap[weapon.Name] ~= nil then
+      elseif ZyruIncremental.WeaponToBoonMap[weapon.Name] ~= nil then
         sourceName = weapon.Name
-        boonsUsed[Z.WeaponToBoonMap[weapon.Name]] = damageResult.BaseDamage
+        boonsUsed[ZyruIncremental.WeaponToBoonMap[weapon.Name]] = damageResult.BaseDamage
       end
       -- end sourceWeaponData variance check
     elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
       weapon = ProjectileData[triggerArgs.SourceWeapon]
-      local traitUsed = Z.ProjectileToBoonMap[weapon.Name]
+      local traitUsed = ZyruIncremental.ProjectileToBoonMap[weapon.Name]
       if traitUsed ~= nil then
         boonsUsed[traitUsed] = damageResult.BaseDamage
       end
   
       sourceName = weapon.Name
-    elseif Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
-      weapon = Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
+    elseif ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
+      weapon = ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
       sourceName = weapon
-      boonsUsed[Z.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]] = damageResult.BaseDamage
+      boonsUsed[ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]] = damageResult.BaseDamage
     elseif triggerArgs.AttackerIsObstacle then
       if HeroHasTrait("BonusCollisionTrait") then
         boonsUsed["BonusCollisionTrait"] = damageResult.BaseDamage
@@ -701,15 +701,15 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     -- { Base Damage: int, Multipliers: {}, ResultingDamage}
     for name, multiplier in pairs(damageResult.Multipliers) do
       local damageProportion = damageResult.BaseDamage * (multiplier - 1)
-      local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
+      local trait = HeroHasTrait(name) and name or ZyruIncremental.DamageModifiersToBoonMap[name]
       if trait ~= nil then
         boonsUsed[trait] = (boonsUsed[trait] or 0) + damageProportion
       end
     end
   
     -- START DEBUG
-    Z.Weapon = weapon
-    Z.BoonsUsed = boonsUsed
+    ZyruIncremental.Weapon = weapon
+    ZyruIncremental.BoonsUsed = boonsUsed
     -- END DEBUG
   
     if obj.IsCrit then
@@ -736,8 +736,8 @@ ModUtil.Path.Context.Wrap("Damage", function ()
   
   
     -- Do this instead of intercepting engine trait changes, last resort :(
-    if Z.HailMaryMap[sourceName] ~= nil then
-      for k, trait in pairs(Z.HailMaryMap[sourceName]) do
+    if ZyruIncremental.HailMaryMap[sourceName] ~= nil then
+      for k, trait in pairs(ZyruIncremental.HailMaryMap[sourceName]) do
         if HeroHasTrait(trait) then
           boonsUsed[trait] = damageResult.BaseDamage
         end
@@ -746,13 +746,13 @@ ModUtil.Path.Context.Wrap("Damage", function ()
   
     -- Apply all boons tracked in this damage source computation
     for k,v in pairs(boonsUsed) do
-      Z.TrackBoonEffect(k, v, victim)
+      ZyruIncremental.TrackBoonEffect(k, v, victim)
     end
   
 DebugPrint({ Text = text })
     return res
   
-  end, Z)
+  end, ZyruIncremental)
   
   ModUtil.Path.Wrap("DamageHero", function(baseFunc, victim, args) 
     baseFunc(victim, args)
@@ -783,7 +783,7 @@ DebugPrint({ Text = text })
         tostring(math.log(1 - endRatio)) .. " = " .. multiplierContribution
       }
       local boonExpProportion = damageResult.BaseDamage * multiplierContribution
-      local trait = HeroHasTrait(name) and name or Z.DamageModifiersToBoonMap[name]
+      local trait = HeroHasTrait(name) and name or ZyruIncremental.DamageModifiersToBoonMap[name]
       if trait ~= nil then
         DebugPrint{ Text = tostring(trait) .. ": " .. tostring(boonExpProportion) .. " " .. tostring(multiplierContribution)}
         boonsUsed[trait] = (boonsUsed[trait] or 0) + boonExpProportion
@@ -791,14 +791,14 @@ DebugPrint({ Text = text })
     end
   
     for k,v in pairs(boonsUsed) do
-      Z.TrackBoonEffect(k, v, victim)
+      ZyruIncremental.TrackBoonEffect(k, v, victim)
     end
-  end, Z)
+  end, ZyruIncremental)
 
-end, Z)
+end, ZyruIncremental)
 
-function Z.TrackBoonEffect ( traitName, damageValue, victim )
-  if Z.Data == nil or traitName == nil then
+function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
+  if ZyruIncremental.Data == nil or traitName == nil then
     return
   end
 
@@ -807,14 +807,14 @@ function Z.TrackBoonEffect ( traitName, damageValue, victim )
     return
   end
 
-  if Z.BoonsToIgnore[traitName] then
+  if ZyruIncremental.BoonsToIgnore[traitName] then
     DebugPrint { Text = "Found ignored trait " .. traitName }
     return
   end
 
-  if Z.Data.BoonData[traitName] == nil then
+  if ZyruIncremental.Data.BoonData[traitName] == nil then
     DebugPrint({ Text =  traitName .. " initialized" })
-    Z.Data.BoonData[traitName] = {
+    ZyruIncremental.Data.BoonData[traitName] = {
       Count = 0,
       Value = 0,
       Experience = 0,
@@ -822,44 +822,44 @@ function Z.TrackBoonEffect ( traitName, damageValue, victim )
     }
   end
 
-  local saveTraitData = Z.Data.BoonData[traitName]
+  local saveTraitData = ZyruIncremental.Data.BoonData[traitName]
 
   -- assign use count, damage, experience
   local expGained = 0
   saveTraitData.Count = saveTraitData.Count + 1
   if type(damageValue) == "number" then
     saveTraitData.Value = saveTraitData.Value + damageValue
-    if (Z.BoonExperienceFactor[traitName] == nil) then
+    if (ZyruIncremental.BoonExperienceFactor[traitName] == nil) then
       DebugPrint { Text = traitName .. " not found in BoonExperienceFactor map"}
       return
     end
-    saveTraitData.Experience = saveTraitData.Experience + Z.BoonExperienceFactor[traitName] * damageValue
-    expGained = expGained + Z.BoonExperienceFactor[traitName] * damageValue
+    saveTraitData.Experience = saveTraitData.Experience + ZyruIncremental.BoonExperienceFactor[traitName] * damageValue
+    expGained = expGained + ZyruIncremental.BoonExperienceFactor[traitName] * damageValue
   end
 
-  if (Z.BoonExperiencePerUse[traitName] == nil) then
+  if (ZyruIncremental.BoonExperiencePerUse[traitName] == nil) then
     DebugPrint { Text = traitName .. " not found in BoonExperiencePerUse map"}
   else
-    saveTraitData.Experience = saveTraitData.Experience + Z.BoonExperiencePerUse[traitName]
-    expGained = expGained + Z.BoonExperiencePerUse[traitName]
+    saveTraitData.Experience = saveTraitData.Experience + ZyruIncremental.BoonExperiencePerUse[traitName]
+    expGained = expGained + ZyruIncremental.BoonExperiencePerUse[traitName]
   end
 
   if expGained > 0 then
-    Z.HandleExperiencePresentationBehavior(traitName, Z.BoonToGod[traitName], expGained, victim)
+    ZyruIncremental.HandleExperiencePresentationBehavior(traitName, ZyruIncremental.BoonToGod[traitName], expGained, victim)
   end
 
   -- check for level-ups
-  if Z.GetExperienceForNextBoonLevel(saveTraitData.Level) < saveTraitData.Experience then
+  if ZyruIncremental.GetExperienceForNextBoonLevel(saveTraitData.Level) < saveTraitData.Experience then
     saveTraitData.Level = saveTraitData.Level + 1
     DebugPrint { Text = traitName .. " has reached level " .. tostring(saveTraitData.Level)}
     -- Add God Levels
-    AddGodExperience(Z.BoonToGod[traitName], saveTraitData.Level - 1)
+    AddGodExperience(ZyruIncremental.BoonToGod[traitName], saveTraitData.Level - 1)
     -- TODO: Add queuing for boon levels/god levels
     -- Add UI level up message
     DisplayBoonLevelupPopup( { traitName }, saveTraitData.Level)
     -- voice lines??
     if TraitData[traitName].God ~= nil then
-      local voiceLine = GetRandomValue(Z.BoonLevelUpVoiceLines[TraitData[traitName].God])
+      local voiceLine = GetRandomValue(ZyruIncremental.BoonLevelUpVoiceLines[TraitData[traitName].God])
       DebugPrint { Text = ModUtil.ToString.Deep(voiceLine) }
       PlayVoiceLine(voiceLine)
     end
@@ -869,7 +869,7 @@ end
 ModUtil.Path.Wrap("PurchaseConsumableItem", function ( baseFunc, currentRun, consumableItem, args) 
   -- consumableItem.Name
   baseFunc(currentRun, consumableItem, args)
-end, Z)
+end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- ZEUS ------------------------------------------
@@ -880,14 +880,14 @@ end, Z)
 ModUtil.Path.Context.Wrap("CalculateSuperGain", function()
   ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, traitName, args)
     local res = baseFunc(traitName, args)
-    if Z.SuperTraitMap[traitName] ~= nil then
+    if ZyruIncremental.SuperTraitMap[traitName] ~= nil then
       if res > 1 then
-        Z.TrackBoonEffect(Z.SuperTraitMap[traitName])
+        ZyruIncremental.TrackBoonEffect(ZyruIncremental.SuperTraitMap[traitName])
       end
     end
     return res
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 -- END CLOUDED JUDGEMENT, BOILING POINT DETECTION
 
 -- START BILLOWING STRENGTH, SECOND WIND DETECTION
@@ -896,13 +896,13 @@ ModUtil.Path.Context.Wrap("CommenceSuperMove", function()
     local res = baseFunc(...)
     for key, trait in pairs(res) do
       DebugPrint({ Text = ModUtil.ToString.Deep(trait) })
-      if Z.SuperTraitMap[trait[1]] ~= nil then
-        Z.TrackBoonEffect(Z.SuperTraitMap[trait[1]])
+      if ZyruIncremental.SuperTraitMap[trait[1]] ~= nil then
+        ZyruIncremental.TrackBoonEffect(ZyruIncremental.SuperTraitMap[trait[1]])
       end
     end
     return res
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 -- END BILLOWING STRENGTH, BOILING POINT DETECTION
 
 -- DOUBLE STRIKE
@@ -911,11 +911,11 @@ ModUtil.Path.Context.Wrap("FireWeaponWithinRange", function()
     local randomRes = false
     randomRes = baseFunc(...)
     if randomRes then
-      Z.TrackBoonEffect("ZeusBonusBoltTrait")
+      ZyruIncremental.TrackBoonEffect("ZeusBonusBoltTrait")
     end
     return randomRes
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 -- END DOUBLE STRIKE
 
 
@@ -929,11 +929,11 @@ ModUtil.Path.Context.Wrap("EndEncounterEffects", function ()
   ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, traitName, args)
     local res = baseFunc(traitName, args)
     if traitName == "CombatEncounterHealthPercentFloor" and res > 0 then
-      Z.TrackBoonEffect("DoorHealTrait")
+      ZyruIncremental.TrackBoonEffect("DoorHealTrait")
     end
     return res
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 
 -- LowHealthDefenseTrait (Positive Outlook)
 
@@ -941,9 +941,9 @@ end, Z)
 ModUtil.Path.Wrap("AddMaxHealth", function (baseFunc, amount, source)
   baseFunc(amount, source)
   if source == "DionysusMaxHealthTrait" then
-    Z.TrackBoonEffect(source)
+    ZyruIncremental.TrackBoonEffect(source)
   end
-end, Z)
+end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- APHRODITE -------------------------------------
@@ -951,40 +951,40 @@ end, Z)
 
 -- Life Affirmation
 ModUtil.Path.Context.Wrap("ApplyConsumableItemResourceMultiplier", function ()
-  Z.GetTotalHeroTraitValueWrapperGenerator(
+  ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
     "HealthRewardBonus",
     function (value) return value > 1 end,
     true
   )
-end, Z)
+end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- ATHENA ----------------------------------------
 -------------------------------------------------------------------------------
 -- Proud Bearing (annd well items???)
 ModUtil.Path.Context.Wrap("StartEncounterEffects", function ()
-  Z.GetTotalHeroTraitValueWrapperGenerator(
+  ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
     "StartingSuperAmount",
     function (value) return value > 0 end
   )
-end, Z)
+end, ZyruIncremental)
 
 -- Athena Aid
 ModUtil.Path.Wrap("AthenaShout", function (baseFunc)
-  Z.TrackBoonEffect("AthenaShoutTrait")
+  ZyruIncremental.TrackBoonEffect("AthenaShoutTrait")
   return baseFunc()
-end, Z)
+end, ZyruIncremental)
 
 ModUtil.Path.Wrap("CheckLastStand", function (baseFunc, ...)
-  Z.GetTotalHeroTraitValueWrapperGenerator(
+  ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
     "LastStandHealFraction",
     function (value) return value > 0 end
   )
   if HeroHasTrait("LastStandDurationTrait") then
-    Z.TrackBoonEffect("LastStandDurationTrait")
+    ZyruIncremental.TrackBoonEffect("LastStandDurationTrait")
   end
   return baseFunc(...)
-end, Z)
+end, ZyruIncremental)
 
 
 
@@ -994,11 +994,11 @@ end, Z)
 
 -- TODO: This shouldn't get tracked 2 times on selecting Nourished Soul
 ModUtil.Path.Context.Wrap("CalculateHealingMultiplier", function ()
-  Z.GetTotalHeroTraitValueWrapperGenerator(
+  ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
     "TraitHealingBonus",
     function (value) return value > 1 end
   )
-end, Z)
+end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- ARES ------------------------------------------
@@ -1013,12 +1013,12 @@ OnEffectApply{
 DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
     if triggerArgs.EffectName == "DelayedDamage" and triggerArgs.Reapplied then
       if HeroHasTrait("AresLoadCurseTrait") then
-        Z.TrackBoonEffect("AresLoadCurseTrait")
+        ZyruIncremental.TrackBoonEffect("AresLoadCurseTrait")
       end
 
     elseif triggerArgs.EffectName == "ReduceDamageOutput" and not triggerArgs.Reapplied then
       if HeroHasTrait("AphroditeDurationTrait") then
-        Z.TrackBoonEffect("AphroditeDurationTrait")
+        ZyruIncremental.TrackBoonEffect("AphroditeDurationTrait")
       end
     end
     -- TODO: Numbing Sensation should go here.
@@ -1029,11 +1029,11 @@ DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
 -------vc------------------------ ARTEMIS ---------------------------------------
 -------------------------------------------------------------------------------
 -- ModUtil.Path.Context.Wrap("DamageEnemy", function ()
---   Z.GetTotalHeroTraitValueWrapperGenerator(
+--   ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
 --     "CriticalSuperGainAmount",
 --     function (value) return value > 0 end
 --   )
--- end, Z)
+-- end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- HERMES ----------------------------------------
@@ -1043,15 +1043,15 @@ DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
 ModUtil.Path.Wrap("ReloadAmmoPresentation", function (baseFunc)
   baseFunc()
   if HeroHasTrait("AmmoReloadTrait") then
-    Z.TrackBoonEffect("AmmoReloadTrait")
+    ZyruIncremental.TrackBoonEffect("AmmoReloadTrait")
   end
-end, Z)
+end, ZyruIncremental)
 
 -- FlurryCast
 OnWeaponFired{ "RangedWeapon", 
   function ()
     if HeroHasTrait("RapidCastTrait") then
-      Z.TrackBoonEffect("RapidCastTrait")
+      ZyruIncremental.TrackBoonEffect("RapidCastTrait")
     end
   end
 }
@@ -1059,26 +1059,26 @@ OnWeaponFired{ "RangedWeapon",
 ModUtil.Path.Context.Wrap("DropStoredAmmo", function ()
   ModUtil.Path.Wrap("GetHeroTraitValues", function(baseFunc, source, args)
     if source == ("AmmoDropWeapons") and HeroHasTrait("AmmoReclaimTrait") then
-      Z.TrackBoonEffect("AmmoReclaimTrait")
+      ZyruIncremental.TrackBoonEffect("AmmoReclaimTrait")
     end
     return baseFunc(source, args)
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 
 -- Quick Recovery
 ModUtil.Path.Wrap("Heal", function (baseFunc, victim, args)
   if args.SourceName == "RallyHeal" and HeroHasTrait("RushRallyTrait") then
-    Z.TrackBoonEffect("RushRallyTrait")
+    ZyruIncremental.TrackBoonEffect("RushRallyTrait")
   end
   return baseFunc(victim, args)
-end, Z)
+end, ZyruIncremental)
 
 -- Greater Reflex
 OnWeaponFired{ "RushWeapon",
   function ( triggerArgs )
     for k, v in pairs({"BonusDashTrait", "RushSpeedBoostTrait" }) do
       if HeroHasTrait(v) then
-        Z.TrackBoonEffect(v)
+        ZyruIncremental.TrackBoonEffect(v)
       end
     end
   end
@@ -1088,7 +1088,7 @@ OnWeaponFired{ "RushWeapon",
 OnDodge{ "_PlayerUnit",
 	function( triggerArgs )
     if HeroHasTrait("DodgeChanceTrait") then
-      Z.TrackBoonEffect("DodgeChanceTrait")
+      ZyruIncremental.TrackBoonEffect("DodgeChanceTrait")
     end
 	end
 }
@@ -1097,11 +1097,11 @@ OnDodge{ "_PlayerUnit",
 ModUtil.Path.Context.Wrap("SuperRegeneration", function()
   ModUtil.Path.Wrap("BuildSuperMeter", function(baseFunc, ...)
     if HeroHasTrait("RegeneratingSuperTrait") then
-      Z.TrackBoonEffect("RegeneratingSuperTrait")
+      ZyruIncremental.TrackBoonEffect("RegeneratingSuperTrait")
     end
     return baseFunc(...)
-  end, Z)
-end, Z)
+  end, ZyruIncremental)
+end, ZyruIncremental)
 
 -- Greater Haste
 local start = nil
@@ -1117,7 +1117,7 @@ OnPlayerMoveStopped{
     stop = _screenTime
     local duration = stop - start
     if HeroHasTrait("MoveSpeedTrait") then
-      Z.TrackBoonEffect("MoveSpeedTrait", duration)
+      ZyruIncremental.TrackBoonEffect("MoveSpeedTrait", duration)
     end
 	end
 }
@@ -1148,7 +1148,7 @@ ModUtil.LoadOnce( function (  )
   OnWeaponFired{ attackWeapons,
     function ( triggerArgs )
       if HeroHasTrait("HermesWeaponTrait") then
-        Z.TrackBoonEffect("HermesWeaponTrait")
+        ZyruIncremental.TrackBoonEffect("HermesWeaponTrait")
       end
     end
   }
@@ -1156,7 +1156,7 @@ ModUtil.LoadOnce( function (  )
   OnWeaponFired{ specialWeapons,
     function ( triggerArgs )
       if HeroHasTrait("HermesSecondaryTrait") then
-        Z.TrackBoonEffect("HermesSecondaryTrait")
+        ZyruIncremental.TrackBoonEffect("HermesSecondaryTrait")
       end
     end
   }
@@ -1166,13 +1166,13 @@ end)
 -- TODO - ApplyConsumableItemResourceMultiplier wrap
 local getMaxHealthScalar = function ()
   if GameState.ZyruviIncremental == nil then return 1 end
-  local level = Z.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
+  local level = ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
   return (1 + (level - 1) * 0.1)
 end
 
 local getCoinScalar = function ()
   if GameState.ZyruviIncremental == nil then return 1 end
-  local level = Z.Data.DropData.RoomRewardMoneyDrop.Level or 0
+  local level = ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level or 0
   return (1 + (level - 1) * 0.1)
 end
 
@@ -1184,20 +1184,20 @@ ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, source, args)
     return baseFunc(source, args) * getCoinScalar()
   end
   return baseFunc(source, args)
-end, Z)
+end, ZyruIncremental)
 
 
 -- Side Hustle
 ModUtil.Path.Wrap("AddMoney", function(baseFunc, amount, source)
 DebugPrint{ Text = tostring(amount) .. tostring(source)}
   if source == "Hermes Money Trait" and HeroHasTrait("ChamberGoldTrait") then
-    Z.TrackBoonEffect("ChamberGoldTrait")
+    ZyruIncremental.TrackBoonEffect("ChamberGoldTrait")
   elseif source == "RoomRewardMoneyDrop" then
     amount = amount  * getCoinScalar()
-    Z.TrackDrop(source, amount)
+    ZyruIncremental.TrackDrop(source, amount)
   end
   return baseFunc(amount, source)
-end, Z)
+end, ZyruIncremental)
 
 
 -- ModUtil.Path.Context.Wrap("ApplyConsumableItemResourceMultiplier", function ()
@@ -1209,21 +1209,21 @@ end, Z)
 --       return baseFunc(source, args)
 --     end
 --     return baseFunc(source, args)
---   end, Z)
--- end, Z)
+--   end, ZyruIncremental)
+-- end, ZyruIncremental)
 
 ModUtil.Path.Wrap("AddMaxHealth", function (baseFunc, healthGained, source, args )
   args = args or {}
   source = source or {}
   if source.AddMaxHealth ~= nil then
-    Z.TrackDrop("RoomRewardMaxHealthDrop", healthGained)
+    ZyruIncremental.TrackDrop("RoomRewardMaxHealthDrop", healthGained)
   end
   return baseFunc(healthGained, source, args)
-end, Z)
+end, ZyruIncremental)
 
 
 -- takes the EXP level of a boon and applies 
-function Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
+function ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
   if not propertyChange or type(propertyChange) ~= "table" then
     return propertyChange
   end
@@ -1235,19 +1235,19 @@ function Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
 			local key = kvp.Key
 			local value = kvp.Value
 			if key ~= "ExtractValue" and key ~= "ExtractValues" then
-				propertyChange[key] = Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange[key])
+				propertyChange[key] = ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, propertyChange[key])
 			end
 		end
 		return propertyChange
   end
 
-  local saveTraitData = Z.Data.BoonData[traitName]
+  local saveTraitData = ZyruIncremental.Data.BoonData[traitName]
   if saveTraitData == nil then
     return propertyChange
   end
 
   -- scale pom value according to pom reward level
-  local pomLevel = Z.Data.DropData.StackUpgrade.Level
+  local pomLevel = ZyruIncremental.Data.DropData.StackUpgrade.Level
   propertyChange.IdenticalMultiplier.DiminishingReturnsMultiplier = TraitMultiplierData.DefaultDiminishingReturnsMultiplier * (1 + 0.02 * (pomLevel - 1))
   -- scale identical multiplier (pom base proportion) according to level
   local level = (saveTraitData.Level - 1) or 0
@@ -1318,7 +1318,7 @@ ModUtil.Path.Override("ProcessTraitData", function( args )
 			end
       -- CHANGES
       if key == "AddOutgoingDamageModifiers" and value ~= nil then
-        value = Z.CalculatePropertyChangeWithGodLevels(traitName, value)
+        value = ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, value)
       end
       -- END CHANGES
 			traitData[key] = GetProcessedValue(value, { NumExisting = numExisting, RarityMultiplier = propertyRarityMultiplier, FakeStackNum = fakeStackNum })
@@ -1364,7 +1364,7 @@ ModUtil.Path.Override("ProcessTraitData", function( args )
 				end
         -- CHANGES
         if propertyChange ~= nil then
-          propertyChange = Z.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
+          propertyChange = ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, propertyChange)
         end
         -- END CHANGES
 				local newValue = GetProcessedValue(propertyChange, { Unit = unit, NumExisting = numExisting, RarityMultiplier = propertyRarityMultiplier, FakeStackNum = fakeStackNum  })

@@ -1,4 +1,4 @@
-Z.BaseComponents = {
+ZyruIncremental.BaseComponents = {
 
     Text = {
         Title = {
@@ -162,7 +162,7 @@ function RenderScreenPage(screen, button, index)
     Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
 
     -- then render it
-    Z.RenderComponents(screen, screen.Pages[index], { Source = button })
+    ZyruIncremental.RenderComponents(screen, screen.Pages[index], { Source = button })
 
 end
 
@@ -187,12 +187,12 @@ end
 -- Generates a component definition from either an existing screen component or the base definition
 function GetComponentDefinition(screen, component)
     -- TODO: do I need to require a type and subtype all the time?
-    local baseDefinition = DeepCopyTable(Z.BaseComponents[component.Type][component.SubType])
+    local baseDefinition = DeepCopyTable(ZyruIncremental.BaseComponents[component.Type][component.SubType])
     if baseDefinition == nil then
         DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
     end
     local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-    Z.Screen = screen
+    ZyruIncremental.Screen = screen
     -- DebugPrint { Text = ModUtil.ToString.Shallow(screen)}
     if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
         -- DebugPrint { Text = "Reusing component definition for " .. fieldName }
@@ -209,17 +209,17 @@ function GetComponentDefinition(screen, component)
     return componentDefinition
 end
 
-function Z.CreateOrUpdateComponent(screen, component)
+function ZyruIncremental.CreateOrUpdateComponent(screen, component)
     local componentDefinition = GetComponentDefinition(screen, component)
     if screen.Components[componentDefinition.FieldName] ~= nil then
-        Z.UpdateComponent(screen, component)
+        ZyruIncremental.UpdateComponent(screen, component)
     else
-        Z.RenderComponent(screen, component)
+        ZyruIncremental.RenderComponent(screen, component)
     end
 end
 
 -- Create Menu
-function Z.CreateMenu(name, args)
+function ZyruIncremental.CreateMenu(name, args)
     -- Screen / Hades Framework Setup
 -- DebugPrint { Text = ModUtil.ToString.Deep(args)}
     args = args or {}
@@ -238,23 +238,23 @@ function Z.CreateMenu(name, args)
 
     -- Initialize Background + Sounds
 	PlaySound({ Name = args.OpenSound or "/SFX/Menu Sounds/DialoguePanelIn" })
-    local background = args.Background or Z.BaseComponents.Background
+    local background = args.Background or ZyruIncremental.BaseComponents.Background
     -- Generalize rendering components on the screen.
-    Z.RenderBackground(screen, background)
-    Z.RenderComponents(screen, args.Components)
+    ZyruIncremental.RenderBackground(screen, background)
+    ZyruIncremental.RenderComponents(screen, args.Components)
     if args.Pages ~= nil then
         screen.Pages = args.Pages
         screen.PageIndex = args.InitialPageIndex or 1
         screen.PageCount = TableLength(args.Pages)
         -- Page Left button
         if (args.PaginationStyle or "Linear") == "Linear" then
-            Z.RenderButton(screen, {
+            ZyruIncremental.RenderButton(screen, {
                 Type = "Button",
                 SubType = "MenuLeft",
                 Args = { FieldName = "MenuLeft" }
             })
             -- Page Right button
-            Z.RenderButton(screen, {
+            ZyruIncremental.RenderButton(screen, {
                 Type = "Button", 
                 SubType = "MenuRight",
                 Args = { FieldName = "MenuRight" }
@@ -264,7 +264,7 @@ function Z.CreateMenu(name, args)
         screen.PermanentComponents = GetAllIds(screen.Components)
 
         -- Render first Page
-        Z.RenderComponents(screen, args.Pages[screen.PageIndex])
+        ZyruIncremental.RenderComponents(screen, args.Pages[screen.PageIndex])
     end
 
 
@@ -272,7 +272,7 @@ function Z.CreateMenu(name, args)
     return screen
 end
 
-function Z.RenderComponents(screen, componentsToRender, args)    
+function ZyruIncremental.RenderComponents(screen, componentsToRender, args)    
     -- Handle rendering overrides
     if type(componentsToRender) == "string" then
         if type(_G[componentsToRender]) == "function" then
@@ -288,17 +288,17 @@ function Z.RenderComponents(screen, componentsToRender, args)
 
     -- default framework rendering
     for _, component in pairs(componentsToRender) do
-        Z.RenderComponent(screen, component)
+        ZyruIncremental.RenderComponent(screen, component)
     end
 end
 
-function Z.RenderComponent(screen, component)
+function ZyruIncremental.RenderComponent(screen, component)
     if not component or component.Type == nil then
         DebugPrint { Text = "No component or no component Type property provided"}
         return
     end 
-    if type(Z["Render" .. tostring(component.Type)]) == "function" then
-        Z["Render" .. tostring(component.Type)](screen, component)
+    if type(ZyruIncremental["Render" .. tostring(component.Type)]) == "function" then
+        ZyruIncremental["Render" .. tostring(component.Type)](screen, component)
 
         -- establish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
@@ -309,13 +309,13 @@ function Z.RenderComponent(screen, component)
     end
 end
 
-function Z.UpdateComponent(screen, component, args)
+function ZyruIncremental.UpdateComponent(screen, component, args)
     if not component or component.Type == nil then
         -- DebugPrint { Text = "No component or no component Type property provided"}
         return
     end 
-    if type(Z["Update" .. tostring(component.Type)]) == "function" then
-        Z["Update" .. tostring(component.Type)](screen, component, args)
+    if type(ZyruIncremental["Update" .. tostring(component.Type)]) == "function" then
+        ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
 
         -- reestablish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
@@ -324,7 +324,7 @@ function Z.UpdateComponent(screen, component, args)
     end
 end
 
-function Z.RenderIcon(screen, component)
+function ZyruIncremental.RenderIcon(screen, component)
     local iconDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
     
@@ -338,10 +338,10 @@ function Z.RenderIcon(screen, component)
         OffsetX = iconDefinition.OffsetX,
         OffsetY = iconDefinition.OffsetY,
     })
-    Z.UpdateComponent(screen, component)
+    ZyruIncremental.UpdateComponent(screen, component)
 end
 
-function Z.UpdateIcon(screen, component)
+function ZyruIncremental.UpdateIcon(screen, component)
     local iconDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
     if iconDefinition.Animation ~= nil then
@@ -356,23 +356,23 @@ function Z.UpdateIcon(screen, component)
 end
 
 -- Create Progress Bar
-function Z.RenderProgressBar(screen, component)
+function ZyruIncremental.RenderProgressBar(screen, component)
     local barDefinition = GetComponentDefinition(screen, component)
-    barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
-    barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
+    barDefinition.ScaleY = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local components = screen.Components
     local barName = barDefinition.FieldName or ""
 
     local barBackgroundDefinition = {
         Name = barDefinition.Name,
-        X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH / 2,
+        X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
         Y = barDefinition.Y,
     }
 
     components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
     if barDefinition.Label ~= nil then
         barDefinition.Label.Parent = barName
-        Z.RenderText(screen, barDefinition.Label)
+        ZyruIncremental.RenderText(screen, barDefinition.Label)
     end
     SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
     SetScaleX{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleX }
@@ -400,12 +400,12 @@ function Z.RenderProgressBar(screen, component)
             Text = barDefinition.BarText or "",
             Parent = barName .. "BarBackground",
             
-            X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH / 2,
+            X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
             Y = barDefinition.Y,
             Justification = "Center"
         }
     }
-    Z.RenderText(screen, barText)
+    ZyruIncremental.RenderText(screen, barText)
     local leftText = {
         Type = "Text",
         SubType = "Note",
@@ -418,7 +418,7 @@ function Z.RenderProgressBar(screen, component)
             Justification = "Right"
         }
     }
-    Z.RenderText(screen, leftText)
+    ZyruIncremental.RenderText(screen, leftText)
     local rightText = {
         Type = "Text",
         SubType = "Note",
@@ -426,19 +426,19 @@ function Z.RenderProgressBar(screen, component)
             FieldName = barName .. "RightText",
             Text = barDefinition.RightText or "",
             Parent = barName .. "BarBackground",
-            X = barDefinition.X +  barDefinition.ScaleX * Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * Z.Constants.Components.RECTANGLE_01_WIDTH + 25,
+            X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH + 25,
             Y = barDefinition.Y,
             Justification = "Left"
         }
     }
-    Z.RenderText(screen, rightText)
+    ZyruIncremental.RenderText(screen, rightText)
 end
 
-function Z.UpdateProgressBar(screen, component, args)
+function ZyruIncremental.UpdateProgressBar(screen, component, args)
     args = args or {}
     local barDefinition = GetComponentDefinition(screen, component)
-    barDefinition.ScaleY = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
-    barDefinition.ScaleX = Z.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
+    barDefinition.ScaleY = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
     local barName = barDefinition.FieldName or ""
     local components = screen.Components
 
@@ -446,7 +446,7 @@ function Z.UpdateProgressBar(screen, component, args)
     local proportionDelta = barDefinition.Proportion - oldProportion
     Move({
         Id = components[barName .. "BarForeground"].Id,
-        OffsetX = barDefinition.X + barDefinition.ScaleX * proportionDelta / 2 * Z.Constants.Components.RECTANGLE_01_WIDTH,
+        OffsetX = barDefinition.X + barDefinition.ScaleX * proportionDelta / 2 * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH,
         OffsetY = barDefinition.Y,
         Duration = barDefinition.UpdateDuration
     })
@@ -465,7 +465,7 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground",
         }
     }
-    Z.UpdateComponent(screen, barText)
+    ZyruIncremental.UpdateComponent(screen, barText)
     local leftText = {
         Type = "Text",
         SubType = "Note",
@@ -475,7 +475,7 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground"
         }
     }
-    Z.UpdateComponent(screen, leftText)
+    ZyruIncremental.UpdateComponent(screen, leftText)
     local rightText = {
         Type = "Text",
         SubType = "Note",
@@ -485,18 +485,18 @@ function Z.UpdateProgressBar(screen, component, args)
             Parent = barName .. "BarBackground"
         }
     }
-    Z.UpdateComponent(screen, rightText)
+    ZyruIncremental.UpdateComponent(screen, rightText)
     
 end
 
-function Z.RenderDropdown(screen, component)
+function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
     
     ErumiUILib.Dropdown.CreateDropdown(screen, dropdownDefinition)
 end
 
-function Z.RenderButton(screen, component)
+function ZyruIncremental.RenderButton(screen, component)
     local buttonDefinition = GetComponentDefinition(screen, component)
 
     local components = screen.Components
@@ -543,7 +543,7 @@ function Z.RenderButton(screen, component)
     if buttonDefinition.Label then
         if type(buttonDefinition.Label) == "table" then
             buttonDefinition.Label.Parent = buttonName
-            Z.RenderText(screen, buttonDefinition.Label)
+            ZyruIncremental.RenderText(screen, buttonDefinition.Label)
         else
             local buttonLabel = {
                 Type = "Text",
@@ -557,7 +557,7 @@ function Z.RenderButton(screen, component)
                 },
                 Parent = buttonName
             }
-            Z.RenderText(screen, buttonLabel)
+            ZyruIncremental.RenderText(screen, buttonLabel)
         end
     end
 
@@ -565,7 +565,7 @@ function Z.RenderButton(screen, component)
 end
 
 -- Create Text Box
-function Z.RenderText(screen, component)
+function ZyruIncremental.RenderText(screen, component)
     local textDefinition = GetComponentDefinition(screen, component)
     -- Create Text
     textDefinition.Name = "BlankObstacle"
@@ -578,7 +578,7 @@ function Z.RenderText(screen, component)
 
 end
 
-function Z.UpdateText(screen, component)
+function ZyruIncremental.UpdateText(screen, component)
     -- TODO: evaluate if this can even be simplified
     local textDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
@@ -588,7 +588,7 @@ function Z.UpdateText(screen, component)
 
 end
 
-function Z.RenderBackground(screen, component)
+function ZyruIncremental.RenderBackground(screen, component)
     screen.Components.Background = CreateScreenComponent({ Name = component.Name, X = component.X, Y = component.Y })
     if component.Scale ~= nil then
         SetScale({ Id = screen.Components.Background.Id, Fraction = component.Scale })
@@ -607,7 +607,7 @@ function Z.RenderBackground(screen, component)
     return screen.Components.Background
 end
 
-function Z.RenderList(screen, component)
+function ZyruIncremental.RenderList(screen, component)
     local listDefinition = GetComponentDefinition(screen, component)
 
     local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(
