@@ -124,25 +124,9 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
 
 end
 
-ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
-    -- TODO: use new framework
-    local value = baseFunc( ... )
-
-    ScreenAnchors.ZyruBoonProgress = { Components = {} }
-	local screen = ScreenAnchors.ZyruBoonProgress
-	screen.Name = "ZyruBoonProgress"
+function CreateAnalyticsScreen (screen)
 
     local components = screen.Components
-
-    if IsScreenOpen( screen.Name ) then
-		return
-	end
-	OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-	HideCombatUI("BoonProgressMenu")
-	FreezePlayerUnit()
-	EnableShopGamepadCursor()
-
-	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
 
     components.Blackout = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
 	SetScale({ Id = components.Blackout.Id, Fraction = 10 })
@@ -183,8 +167,38 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
         local y = startY + yGap * ((i - 1) % 5)
         CreateBoonPresentation(screen, traitName, x, y)
     end
-    
-	HandleScreenInput( screen )
+end
+
+ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
+    local value = baseFunc( ... )
+
+    local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+        Pages = {
+            [1] = "CreateAnalyticsScreen"
+        },
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Close"
+            },
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "BoonProgressionTitle",
+                    Text = "Boon Progression"
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                Args = {
+                    FieldName = "BoonProgressionSubtitle",
+                    Text = "Wow, you sure used some boons today Zagreus."
+                }
+            }
+        }
+    })
 
     return value
 end, ZyruIncremental)
