@@ -274,6 +274,7 @@ end
 
 function ZyruIncremental.RenderComponents(screen, componentsToRender, args)    
     -- Handle rendering overrides
+    args = args or {}
     if type(componentsToRender) == "string" then
         if type(_G[componentsToRender]) == "function" then
             return _G[componentsToRender](screen, args.Source) -- TODO: do secondary args make sense here?

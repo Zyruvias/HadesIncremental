@@ -155,7 +155,7 @@ ModUtil.LoadOnce( function ( )
       if upgrade.OnApplyFunctions ~= nil then
           for k, functionName in ipairs(upgrade.OnApplyFunctions) do
               local functionArgs = upgrade.OnApplyFunctionArgs[k]
-              DebugPrint { Text = "Processing Savefile Upgrades: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
+              -- DebugPrint { Text = "Processing Savefile Upgrades: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
               _G[functionName](functionArgs)
           end
       end

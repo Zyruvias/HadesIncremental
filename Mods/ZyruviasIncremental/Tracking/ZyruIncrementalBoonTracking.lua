@@ -183,7 +183,7 @@ ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
       
       DebugPrint { Text = "Rolled " .. chosenRarity }
       if rarityTable[chosenRarity] ~= nil and rarityTable[chosenRarity][upgradeData.ItemName] then
-DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
+        DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
         upgradeData.Rarity = chosenRarity
       end
 		end
@@ -314,7 +314,8 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     
       local addDamageMultiplier = function( data, multiplier )
         -- CHANGES
-        DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
+        -- DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
+        -- TODO: Nyx levels
         if ignoreDamageSourceTraitMap[data.Name] == nil then
           table.insert(enemyDamageSources, { 
             Name = data.Name, 
@@ -1010,7 +1011,7 @@ OnEffectApply{
     if triggerArgs == nil or triggerArgs.EffectType == "GRIP" or triggerArgs.EffectType == "UNKNOWN" then
       return
     end
-DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
+    -- DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
     if triggerArgs.EffectName == "DelayedDamage" and triggerArgs.Reapplied then
       if HeroHasTrait("AresLoadCurseTrait") then
         ZyruIncremental.TrackBoonEffect("AresLoadCurseTrait")

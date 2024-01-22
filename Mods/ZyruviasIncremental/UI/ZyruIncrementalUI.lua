@@ -128,27 +128,6 @@ function CreateAnalyticsScreen (screen)
 
     local components = screen.Components
 
-    components.Blackout = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
-	SetScale({ Id = components.Blackout.Id, Fraction = 10 })
-	SetColor({ Id = components.Blackout.Id, Color = Color.Black })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0 })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0.85, Duration = 0.5 })
-
-    components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
-	Attach({ Id = components.CloseButton.Id, DestinationId = components.Blackout.Id, OffsetX = 3, OffsetY = 480 })
-	components.CloseButton.OnPressedFunctionName = "CloseZyruBoonProgressScreen"
-	components.CloseButton.ControlHotkey = "Cancel"
-
-    CreateTextBox({ Id = components.Blackout.Id,
-		Text = "Boon Progression",
-		FontSize = 32,
-		X = ScreenCenterX, OffsetY = -480,
-		Color = { 255, 255, 255, 255 },
-		Font = "AlegreyaSansSCRegular",
-		ShadowBlur = 0, ShadowColor = {0,0,0,0}, ShadowOffset={0, 3},
-		Justification = "Center" 
-    })
-
     -- TODO: sort boons by zyruData
     local boonsToDisplay = {}
 
@@ -197,7 +176,8 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
                     Text = "Wow, you sure used some boons today Zagreus."
                 }
             }
-        }
+        },
+        Source = "LolLmao"
     })
 
     return value
