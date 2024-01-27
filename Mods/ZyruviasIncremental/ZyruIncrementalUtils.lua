@@ -224,7 +224,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
   baseFunc()
 end, ZyruIncremental)
 -- TODO: wrapping setupRunData versus just redoing it manually
-SetupRunData()
+-- SetupRunData()
 
 
 -- Dev scripts

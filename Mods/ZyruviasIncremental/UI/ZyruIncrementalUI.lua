@@ -964,7 +964,6 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     end
     
     LoadPackages({Name = "DeathArea"})
-    base(currentRun, currentRoom)
 
     local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
     selector.BlockExitUntilUsed = true
@@ -989,6 +988,9 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
     SetColor{ Id = selector.ObjectId, Color = { 120, 255, 0, 255 } }
     SetupObstacle( selector )
+
+    
+    base(currentRun, currentRoom)
     
     
 end, ZyruIncremental)

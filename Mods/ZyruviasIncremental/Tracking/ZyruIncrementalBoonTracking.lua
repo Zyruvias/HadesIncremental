@@ -106,10 +106,10 @@ end, ZyruIncremental)
 
 ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
   -- Calculate normal rarity for the sake of Duos / Legendaries, I like the current system.
-  DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
+  -- DebugPrint { Text = ModUtil.ToString.Shallow(lootData)}
   baseFunc(lootData, args)
-  ZyruIncremental.DebugLoot = DeepCopyTable(lootData)
-  ZyruIncremental.DebugArgs = DeepCopyTable(args)
+  -- ZyruIncremental.DebugLoot = DeepCopyTable(lootData)
+  -- ZyruIncremental.DebugArgs = DeepCopyTable(args)
   if lootData.ForceCommon then
     -- respect common forces from first run or other sources. hammer  / pom later?
     return
@@ -624,7 +624,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       return
     end
 
-    local damageResult = damageMultiplierMap
+    local damageResult = DeepCopyTable(damageMultiplierMap)
     if damageResult == nil then
       DebugPrint { Text = " NULL DAMAGE RESULT FOUND"}
       ZyruIncremental.Debug = {
@@ -865,11 +865,6 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
     end
   end
 end
-
-ModUtil.Path.Wrap("PurchaseConsumableItem", function ( baseFunc, currentRun, consumableItem, args) 
-  -- consumableItem.Name
-  baseFunc(currentRun, consumableItem, args)
-end, ZyruIncremental)
 
 -------------------------------------------------------------------------------
 ------------------------------- ZEUS ------------------------------------------
