@@ -191,6 +191,7 @@ end, ZyruIncremental)
 
 function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
     local behavior = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior
+    godName = godName or "Unknown"
     if behavior == ZyruIncremental.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
         color = ZyruIncremental.BoonToGod[traitName] and Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
         thread( DisplayExperiencePopup, expGained, { Color = color })
@@ -267,15 +268,15 @@ function DisplayExperiencePopup (amount, args)
 					
 end
 
-function DisplayBoonLevelupPopup( traitNamesImproved, level )
+function DisplayBoonLevelupPopup( traitName, level )
 	local offsetY = 0
-	for i, traitName in ipairs( traitNamesImproved ) do
+	-- for i, traitName in ipairs( traitNamesImproved ) do
 		local traitTitle = traitName
 		if TraitData[traitName] then 
 			traitTitle = GetTraitTooltipTitle(TraitData[traitName])
 		end
 		CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-		thread( InCombatTextArgs, {
+		InCombatTextArgs({
             TargetId = CurrentRun.Hero.ObjectId,
             Text = traitTitle .. " level " .. tostring(level) .. "!",
             SkipRise = false,
@@ -288,7 +289,7 @@ function DisplayBoonLevelupPopup( traitNamesImproved, level )
 		PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
 		offsetY = offsetY - 60
 		wait(0.75)
-	end
+	-- end
 end
 
 function CloseScreenByName ( name )
@@ -962,6 +963,9 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     if ZyruIncremental.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
+
+    
+    base(currentRun, currentRoom)
     
     LoadPackages({Name = "DeathArea"})
 
@@ -988,9 +992,6 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
     SetColor{ Id = selector.ObjectId, Color = { 120, 255, 0, 255 } }
     SetupObstacle( selector )
-
-    
-    base(currentRun, currentRoom)
     
     
 end, ZyruIncremental)

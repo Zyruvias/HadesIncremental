@@ -110,7 +110,7 @@ ZyruIncremental.InitializeSaveData = function ()
     }
     ZyruIncremental.Data.FileOptions = {
       StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
-      Difficulty = ZyruIncremental.Constants.SaveFile.STANDARD,
+      DifficultySetting = ZyruIncremental.Constants.SaveFile.STANDARD,
       ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_HIT,
     }
     ZyruIncremental.Data.Flags = {
@@ -897,7 +897,7 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   if not ZyruIncremental.Data.Flags or not ZyruIncremental.Data.Flags.Initialized then
     return run
   end 
-  ZyruIncremental.DifficultyModifier = ComputeDifficultyModifier(
+  ZyruIncremental.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
     ZyruIncremental.Data.FileOptions.DifficultySetting,
     ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
   )
