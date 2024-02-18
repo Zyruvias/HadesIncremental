@@ -124,46 +124,9 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
 
 end
 
-ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
-    -- TODO: use new framework
-    local value = baseFunc( ... )
-
-    ScreenAnchors.ZyruBoonProgress = { Components = {} }
-	local screen = ScreenAnchors.ZyruBoonProgress
-	screen.Name = "ZyruBoonProgress"
+function CreateAnalyticsScreen (screen)
 
     local components = screen.Components
-
-    if IsScreenOpen( screen.Name ) then
-		return
-	end
-	OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-	HideCombatUI("BoonProgressMenu")
-	FreezePlayerUnit()
-	EnableShopGamepadCursor()
-
-	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
-
-    components.Blackout = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
-	SetScale({ Id = components.Blackout.Id, Fraction = 10 })
-	SetColor({ Id = components.Blackout.Id, Color = Color.Black })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0 })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0.85, Duration = 0.5 })
-
-    components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
-	Attach({ Id = components.CloseButton.Id, DestinationId = components.Blackout.Id, OffsetX = 3, OffsetY = 480 })
-	components.CloseButton.OnPressedFunctionName = "CloseZyruBoonProgressScreen"
-	components.CloseButton.ControlHotkey = "Cancel"
-
-    CreateTextBox({ Id = components.Blackout.Id,
-		Text = "Boon Progression",
-		FontSize = 32,
-		X = ScreenCenterX, OffsetY = -480,
-		Color = { 255, 255, 255, 255 },
-		Font = "AlegreyaSansSCRegular",
-		ShadowBlur = 0, ShadowColor = {0,0,0,0}, ShadowOffset={0, 3},
-		Justification = "Center" 
-    })
 
     -- TODO: sort boons by zyruData
     local boonsToDisplay = {}
@@ -183,8 +146,39 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
         local y = startY + yGap * ((i - 1) % 5)
         CreateBoonPresentation(screen, traitName, x, y)
     end
-    
-	HandleScreenInput( screen )
+end
+
+ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
+    local value = baseFunc( ... )
+
+    local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+        Pages = {
+            [1] = "CreateAnalyticsScreen"
+        },
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Close"
+            },
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "BoonProgressionTitle",
+                    Text = "Boon Progression"
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                Args = {
+                    FieldName = "BoonProgressionSubtitle",
+                    Text = "Wow, you sure used some boons today Zagreus."
+                }
+            }
+        },
+        Source = "LolLmao"
+    })
 
     return value
 end, ZyruIncremental)
@@ -323,6 +317,7 @@ end
 -- Courtyard Interface
 
 function LolLmao()
+    DebugPrint { Text = "hello"}
     local voiceline = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )

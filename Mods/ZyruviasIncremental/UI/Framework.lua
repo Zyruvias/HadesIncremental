@@ -221,7 +221,6 @@ end
 -- Create Menu
 function ZyruIncremental.CreateMenu(name, args)
     -- Screen / Hades Framework Setup
--- DebugPrint { Text = ModUtil.ToString.Deep(args)}
     args = args or {}
     local screen = { Components = {}, Name = name }
     ScreenAnchors[name] = screen
@@ -268,6 +267,9 @@ function ZyruIncremental.CreateMenu(name, args)
     end
 
 
+    -- TODO: SetConfigOption({ Name = "ExclusiveInteractGroup", Value = "Combat_Menu_TraitTray_Backing" })
+	screen.KeepOpen = true
+	thread( HandleWASDInput, ScreenAnchors[name] )
 	HandleScreenInput( screen )
     return screen
 end
@@ -502,7 +504,7 @@ function ZyruIncremental.RenderButton(screen, component)
     local components = screen.Components
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
     local buttonComponentName = buttonDefinition.Name or "BaseInteractableButton"
-    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0 })
+    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0, Group = "Combat_Menu_Overlay" })
     -- DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
 
     if buttonDefinition.Animation ~= nil then
@@ -522,6 +524,9 @@ function ZyruIncremental.RenderButton(screen, component)
     if buttonDefinition.Angle ~= nil then
         SetAngle({ Id = components[buttonName].Id, Angle = buttonDefinition.Angle})
     end
+    
+    components[buttonName].OnMouseOverFunctionName = "LolLmao"
+    components[buttonName].OnMouseOffFunctionName = "LolLmao"
     -- HardCoded, not sure how to get around this
     if buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Close" then
         local name = screen.Name

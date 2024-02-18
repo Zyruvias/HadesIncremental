@@ -259,8 +259,9 @@ ModUtil.LoadOnce(function ( )
       -- OFFENSIVE --
       ---------------
       IncreaseDamageTaken = "AphroditeWeakenTrait",
+      LastStandDamageBonus = "LastStandDamageBonusTrait",
       
-      ZeroAmmoBonusTrait = "ZeroAmmoBonusTrait",
+      ZeroRangedWeaponAmmoMultiplier = "ZeroAmmoBonusTrait",
       ---------------
       -- DEFENSIVE --
       ---------------
