@@ -252,9 +252,11 @@ ZyruIncremental.DamageCacheMap = {}
 
 function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
   local victim = args.Victim
+  local armorBeforeAttack = victim.HealthBuffer or 0
   local triggerArgs = args.TriggerArgs
   -- and victim.Name ~= "TrainingMelee" while testing
-  if RequiredKillEnemies[victim.ObjectId] == nil  then
+
+  if RequiredKillEnemies[victim.ObjectId] == nil and victim.Name ~= "TrainingMelee" then
     return
   end
   if damageResult == nil then
@@ -266,6 +268,8 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
   local weapon = nil
   local sourceName = nil
   local boonsUsed = {}
+
+  ZyruIncremental.Debug = args
 
   if triggerArgs.EffectName ~= nil then
     local traitUsed = ZyruIncremental.EffectToBoonMap[triggerArgs.EffectName]
@@ -312,6 +316,10 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
     end
 
     sourceName = weapon.Name
+  elseif ZyruIncremental.ProjectileToBoonMap[triggerArgs.SourceWeapon] ~= nil then
+    local traitUsed = ZyruIncremental.ProjectileToBoonMap[triggerArgs.SourceWeapon]
+    boonsUsed[traitUsed] = damageResult.BaseDamage
+    sourceName = triggerArgs.SourceWeapon
   elseif ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
     weapon = ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
     sourceName = weapon
@@ -334,6 +342,10 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
       boonsUsed[trait] = (boonsUsed[trait] or 0) + damageProportion
     end
   end
+  -- some boons have strict engine properties, not detectable lua changes:
+  -- hydraulic might, blood frenzy
+  if HeroHasTrait("LastStandDamageBonusTrait") then end
+  if HeroHasTrait("LastStandDamageBonusTrait") then end
 
   -- -- START DEBUG
   -- ZyruIncremental.Weapon = weapon
@@ -341,24 +353,63 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
   -- END DEBUG
 
   if triggerArgs.IsCrit then
-    -- TODO: distribute "exp" by source amount
+    local critChanceTotal = 0
+    local critDamageTotal = 0
+    local critChanceMap = {}
+    local critDamageMap = {}
+
+    -- get base crit info from weapon and map it
+    local critWeapon = GetEquippedWeapon()
+    local weaponCritChance = GetProjectileProperty{ Id = CurrentRun.Hero.ObjectId, WeaponName = critWeapon, Property = "CriticalHitChance" }
+    local weaponCritDamage = GetProjectileProperty{ Id = CurrentRun.Hero.ObjectId, WeaponName = critWeapon, Property = "CriticalHitMultiplier" }
+    critChanceTotal = critChanceTotal + weaponCritChance
+    critDamageTotal = weaponCritDamage + weaponCritDamage
+
     -- OnEffectApply version???
     if victim.ActiveEffectsAtDamageStart ~= nil and victim.ActiveEffectsAtDamageStart.CritVulnerability then
       -- HM
-      boonsUsed["CritVulnerabilityTrait"] = true
-    else
-      boonsUsed["CritBonusTrait"] = true
+      -- TODO: I cannot fucking find this goddamn value in engine calls so it's just going to get the base EXP always
+      critChanceMap["CritBonusTrait"] = 0.30
+      critChanceTotal = critChanceTotal + 0.30
+      --[[
+        GetEffectDataValue{ Id = 420928, EffectName = "CritVulnerability", Property = "CritVulnerabilityAddition", WeaponName = "CritVulnerabilityWeapon" }
+      ]]
     end
-    -- DR clause, OnEffectApply
+    if HeroHasTrait("CritBonusTrait") then
+      -- Pressure Points Critical Chace
+      local critChance = GetUnitDataValue { Id = CurrentRun.Hero.ObjectId, Property = "CritAddition" }
+      critChanceMap["CritBonusTrait"] = critChance
+      critChanceTotal = critChanceTotal + critChance
+    end
+    -- Has Deadly Reversal AND its active
+    if HeroHasTrait("ArtemisReflectBuffTrait") and GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "Duration" } then
+      local critChance = GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "CritAddition" }
+      critChanceMap["ArtemisReflectBuffTrait"] = critChance
+      critChanceTotal = critChanceTotal + critChance
+    end
 
     -- CleanKill
     if HeroHasTrait("ArtemisCriticalTrait") then
-      boonsUsed["ArtemisCriticalTrait"] = true
+      local critDamage = GetUnitDataValue{ Id = 40000, WeaponName = GetEquippedWeapon(), Property = "CritMultiplierAddition" }
+      critDamageMap["ArtemisCriticalTrait"] = critDamage
+      critDamageTotal = critDamageTotal + critDamage
     end
-    -- Hide Breakerf
-    if HeroHasTrait("CriticalBufferMultiplierTrait") and armorBeforeAttack > 0 then
-      boonsUsed["CriticalBufferMultiplierTrait"] = true
+    -- Hide Breaker
+    if armorBeforeAttack > 0 and HeroHasTrait("CriticalBufferMultiplierTrait") then
+      local critDamage = GetTotalHeroTraitValue("CriticalHealthBufferMultiplier") - 1 -- SourceIsMultiplier shenanigans
+      critDamageMap["CriticalBufferMultiplierTrait"] = critDamage
+      critDamageTotal = critDamageTotal + critDamage
     end
+    -- HeartRend? --later
+
+    for key, val in pairs(critDamageMap) do
+      boonsUsed[key] = val / critDamageTotal * damageResult.ResultingDamage
+    end
+    for key, val in pairs(critChanceMap) do
+      boonsUsed[key] = val / critChanceTotal * damageResult.ResultingDamage
+    end
+
+
   end
 
 
@@ -379,7 +430,6 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
 end
 
 function ZyruIncremental.ProcessDamageHeroValues (damageResult, victim, args)
-  if true then return end
   local boonsUsed = {}
   if damageResult == nil or damageResult.BaseDamage == nil then
     -- PureDamage?
@@ -403,7 +453,6 @@ function ZyruIncremental.ProcessDamageHeroValues (damageResult, victim, args)
 end
 
 ModUtil.Path.Context.Wrap("Damage", function ()
-  -- DebugPrint { Text = tostring({}):sub(8) }
 
   local damageMultiplierMap = {}
   local damageResult = {}
@@ -425,7 +474,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
 
       local addDamageMultiplier = function( data, multiplier )
         -- CHANGES
-        -- DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
+        DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
         if ignoreDamageSourceTraitMap[data.Name] == nil then
           if data ~= nil and data.Name ~= nil and multiplier ~= nil then
             damageMultiplierMap[data.Name] = (damageMultiplierMap[data.Name] or 1) + multiplier - 1
@@ -720,9 +769,11 @@ ModUtil.Path.Context.Wrap("Damage", function ()
       Victim = victim,
       TriggerArgs = {
         EffectName = triggerArgs.EffectName,
-        AttackerWeaponData = {
+        -- NOTE: AttackerWeaponData must be defined if and only if it's on the args otherwise
+        --       multiple boons' tracking fails
+        AttackerWeaponData = triggerArgs.AttackerWeaponData and {
           Name = triggerArgs.AttackerWeaponData and triggerArgs.AttackerWeaponData.Name or nil
-        },
+        } or nil,
         SourceWeapon = triggerArgs.SourceWeapon,
         AttackerIsObstacle = triggerArgs.AttackerIsObstacle,
         ProjectileDeflected = triggerArgs.ProjectileDeflected,
@@ -808,6 +859,7 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
   else
     saveTraitData.Experience = saveTraitData.Experience + ZyruIncremental.BoonExperiencePerUse[traitName]
     expGained = expGained + ZyruIncremental.BoonExperiencePerUse[traitName]
+    DebugPrint { Text = traitName .. " earned " .. tostring(expGained) .. " EXP."}
   end
 
   if expGained > 0 then
@@ -852,42 +904,32 @@ end, ZyruIncremental)
 -- END BILLOWING STRENGTH, BOILING POINT DETECTION
 
 -- DOUBLE STRIKE
-ModUtil.Path.Context.Wrap("FireWeaponWithinRange", function()
-  ModUtil.Path.Wrap("RandomChance", function(baseFunc, ...)
-    local randomRes = false
-    randomRes = baseFunc(...)
-    if randomRes then
+  ModUtil.Path.Wrap("FireWeaponWithinRange", function(baseFunc, args)
+    args.BonusChance = args.BonusChance or 0
+    args.Count = args.Count or 1
+    -- NOTE: this is an extra RNG increment. Do I care? idk yet.
+    if RandomChance( args.BonusChance ) then
       ZyruIncremental.TrackBoonEffect("ZeusBonusBoltTrait")
+      args.Count = args.Count + 1
     end
-    return randomRes
+    args.BonusChance = 0
+    baseFunc(args)
+    if doubleStrikeUsed then
+    end
   end, ZyruIncremental)
-end, ZyruIncremental)
 -- END DOUBLE STRIKE
 
 
 -------------------------------------------------------------------------------
 ------------------------------- DIONYSUS --------------------------------------
 -------------------------------------------------------------------------------
-
-
--- After Party
-ModUtil.Path.Context.Wrap("EndEncounterEffects", function () 
-  ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, traitName, args)
-    local res = baseFunc(traitName, args)
-    if traitName == "CombatEncounterHealthPercentFloor" and res > 0 then
-      ZyruIncremental.TrackBoonEffect("DoorHealTrait")
-    end
-    return res
-  end, ZyruIncremental)
-end, ZyruIncremental)
-
 -- LowHealthDefenseTrait (Positive Outlook)
 
 -- DionysusMaxHealthTrait (Premium Vintage)
 ModUtil.Path.Wrap("AddMaxHealth", function (baseFunc, amount, source)
   baseFunc(amount, source)
   if source == "DionysusMaxHealthTrait" then
-    ZyruIncremental.TrackBoonEffect(source)
+    ZyruIncremental.TrackBoonEffect(source, amount)
   end
 end, ZyruIncremental)
 
@@ -932,6 +974,12 @@ ModUtil.Path.Wrap("CheckLastStand", function (baseFunc, ...)
   return baseFunc(...)
 end, ZyruIncremental)
 
+OnEffectCleared { function (triggerArgs)
+  if triggerArgs.EffectName == "AthenaDefenseEffect" and triggerArgs.triggeredById ~= nil then
+    ZyruIncremental.TrackBoonEffect("ShieldHitTrait")
+  end
+end}
+
 
 
 -------------------------------------------------------------------------------
@@ -956,30 +1004,57 @@ OnEffectApply{
     if triggerArgs == nil or triggerArgs.EffectType == "GRIP" or triggerArgs.EffectType == "UNKNOWN" then
       return
     end
--- DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
     if triggerArgs.EffectName == "DelayedDamage" and triggerArgs.Reapplied then
       if HeroHasTrait("AresLoadCurseTrait") then
         ZyruIncremental.TrackBoonEffect("AresLoadCurseTrait")
       end
 
-    elseif triggerArgs.EffectName == "ReduceDamageOutput" and not triggerArgs.Reapplied then
-      if HeroHasTrait("AphroditeDurationTrait") then
+    elseif triggerArgs.EffectName == "ReduceDamageOutput" then
+      if not triggerArgs.Reapplied and HeroHasTrait("AphroditeDurationTrait") then
         ZyruIncremental.TrackBoonEffect("AphroditeDurationTrait")
+      end
+    elseif triggerArgs.EffectName == "Charm" then
+      if not triggerArgs.Reapplied and HeroHasTrait("CharmTrait") then
+        ZyruIncremental.TrackBoonEffect("CharmTrait")
       end
     end
     -- TODO: Numbing Sensation should go here.
   end
 }
 
+OnEffectCleared {
+  function (triggerArgs)
+    if triggerArgs == nil or triggerArgs.EffectType == "GRIP" or triggerArgs.EffectType == "UNKNOWN" then
+      return
+    end
+    if triggerArgs.EffectName == "KillDamageBonus" then
+      if HeroHasTrait("OnEnemyDeathDamageInstanceBuffTrait") then
+        ZyruIncremental.TrackBoonEffect("OnEnemyDeathDamageInstanceBuffTrait")
+      end
+    end
+  end
+}
+
 -------------------------------------------------------------------------------
--------vc------------------------ ARTEMIS ---------------------------------------
+------------------------------- ARTEMIS ---------------------------------------
 -------------------------------------------------------------------------------
--- ModUtil.Path.Context.Wrap("DamageEnemy", function ()
---   ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
---     "CriticalSuperGainAmount",
---     function (value) return value > 0 end
---   )
--- end, ZyruIncremental)
+ModUtil.Path.Context.Wrap("DamageEnemy", function ()
+  ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator(
+    "CriticalSuperGainAmount",
+    function (value) return value > 0 end
+  )
+end, ZyruIncremental)
+
+-------------------------------------------------------------------------------
+------------------------------- POSEIDON --------------------------------------
+-------------------------------------------------------------------------------
+OnEffectDelayedKnockbackForce{
+	function( triggerArgs )
+		if triggerArgs.EffectName == "DelayedKnockback" then
+			ZyruIncremental.TrackBoonEffect("DoubleCollisionTrait")
+		end
+	end
+}
 
 -------------------------------------------------------------------------------
 ------------------------------- HERMES ----------------------------------------
@@ -999,6 +1074,9 @@ OnWeaponFired{ "RangedWeapon",
     if HeroHasTrait("RapidCastTrait") then
       ZyruIncremental.TrackBoonEffect("RapidCastTrait")
     end
+    if HeroHasTrait("MoreAmmoTrait") then
+      ZyruIncremental.TrackBoonEffect("MoreAmmoTrait")
+    end
   end
 }
 -- AmmoReclaimTrait (Quick Reload)
@@ -1012,9 +1090,12 @@ ModUtil.Path.Context.Wrap("DropStoredAmmo", function ()
 end, ZyruIncremental)
 
 -- Quick Recovery
+-- After Party
 ModUtil.Path.Wrap("Heal", function (baseFunc, victim, args)
   if args.SourceName == "RallyHeal" and HeroHasTrait("RushRallyTrait") then
-    ZyruIncremental.TrackBoonEffect("RushRallyTrait")
+    ZyruIncremental.TrackBoonEffect("RushRallyTrait", args.HealAmount)
+  elseif args and args.Name == "EncounterHeal" and args.HealAmount > 0 then
+    ZyruIncremental.TrackBoonEffect("DoorHealTrait", args.HealAmount)
   end
   return baseFunc(victim, args)
 end, ZyruIncremental)
@@ -1120,12 +1201,16 @@ local getCoinScalar = function ()
   return (1 + (level - 1) * 0.1)
 end
 
+-- GetTotalHeroTraitValue tracking / mapping
+-- Life Affirmation
 ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, source, args)
   if source == "MaxHealthMultiplier" then
     return baseFunc(source, args) * getMaxHealthScalar()
   elseif source == "MoneyMultiplier" then
     DebugPrint({ Text =  "applying modified coin" })
     return baseFunc(source, args) * getCoinScalar()
+  elseif source == "HealthRewardBonus" then
+    ZyruIncremental.TrackBoonEffect("HealthRewardBonusTrait")
   end
   return baseFunc(source, args)
 end, ZyruIncremental)
