@@ -124,46 +124,9 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
 
 end
 
-ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
-    -- TODO: use new framework
-    local value = baseFunc( ... )
-
-    ScreenAnchors.ZyruBoonProgress = { Components = {} }
-	local screen = ScreenAnchors.ZyruBoonProgress
-	screen.Name = "ZyruBoonProgress"
+function CreateAnalyticsScreen (screen)
 
     local components = screen.Components
-
-    if IsScreenOpen( screen.Name ) then
-		return
-	end
-	OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-	HideCombatUI("BoonProgressMenu")
-	FreezePlayerUnit()
-	EnableShopGamepadCursor()
-
-	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
-
-    components.Blackout = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
-	SetScale({ Id = components.Blackout.Id, Fraction = 10 })
-	SetColor({ Id = components.Blackout.Id, Color = Color.Black })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0 })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0.85, Duration = 0.5 })
-
-    components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
-	Attach({ Id = components.CloseButton.Id, DestinationId = components.Blackout.Id, OffsetX = 3, OffsetY = 480 })
-	components.CloseButton.OnPressedFunctionName = "CloseZyruBoonProgressScreen"
-	components.CloseButton.ControlHotkey = "Cancel"
-
-    CreateTextBox({ Id = components.Blackout.Id,
-		Text = "Boon Progression",
-		FontSize = 32,
-		X = ScreenCenterX, OffsetY = -480,
-		Color = { 255, 255, 255, 255 },
-		Font = "AlegreyaSansSCRegular",
-		ShadowBlur = 0, ShadowColor = {0,0,0,0}, ShadowOffset={0, 3},
-		Justification = "Center" 
-    })
 
     -- TODO: sort boons by zyruData
     local boonsToDisplay = {}
@@ -183,14 +146,46 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
         local y = startY + yGap * ((i - 1) % 5)
         CreateBoonPresentation(screen, traitName, x, y)
     end
-    
-	HandleScreenInput( screen )
+end
+
+ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
+    local value = baseFunc( ... )
+
+    local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+        Pages = {
+            [1] = "CreateAnalyticsScreen"
+        },
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Close"
+            },
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "BoonProgressionTitle",
+                    Text = "Boon Progression"
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                Args = {
+                    FieldName = "BoonProgressionSubtitle",
+                    Text = "Wow, you sure used some boons today Zagreus."
+                }
+            }
+        },
+        Source = "LolLmao"
+    })
 
     return value
 end, ZyruIncremental)
 
 function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
     local behavior = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior
+    godName = godName or "Unknown"
     if behavior == ZyruIncremental.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
         color = ZyruIncremental.BoonToGod[traitName] and Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
         thread( DisplayExperiencePopup, expGained, { Color = color })
@@ -267,15 +262,15 @@ function DisplayExperiencePopup (amount, args)
 					
 end
 
-function DisplayBoonLevelupPopup( traitNamesImproved, level )
+function DisplayBoonLevelupPopup( traitName, level )
 	local offsetY = 0
-	for i, traitName in ipairs( traitNamesImproved ) do
+	-- for i, traitName in ipairs( traitNamesImproved ) do
 		local traitTitle = traitName
 		if TraitData[traitName] then 
 			traitTitle = GetTraitTooltipTitle(TraitData[traitName])
 		end
 		CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-		thread( InCombatTextArgs, {
+		InCombatTextArgs({
             TargetId = CurrentRun.Hero.ObjectId,
             Text = traitTitle .. " level " .. tostring(level) .. "!",
             SkipRise = false,
@@ -288,7 +283,7 @@ function DisplayBoonLevelupPopup( traitNamesImproved, level )
 		PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
 		offsetY = offsetY - 60
 		wait(0.75)
-	end
+	-- end
 end
 
 function CloseScreenByName ( name )
@@ -329,6 +324,7 @@ end
 -- Courtyard Interface
 
 function LolLmao()
+    DebugPrint { Text = "hello"}
     local voiceline = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )
@@ -969,9 +965,11 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     if ZyruIncremental.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
+
+    
+    base(currentRun, currentRoom)
     
     LoadPackages({Name = "DeathArea"})
-    base(currentRun, currentRoom)
 
     local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
     selector.BlockExitUntilUsed = true

@@ -4,8 +4,9 @@ function ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator (traitNameToTrac
         -- if debug then
         --     DebugPrint({ text = "GetTotalHeroTraitValue" })
         -- end
+        DebugPrint { Text = "Attempting to track " .. traitName .. " as " .. tostring(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack])}
         if traitName == traitNameToTrack and comparator(res) then
-            ZyruIncremental.TrackBoonEffect(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack])
+            ZyruIncremental.TrackBoonEffect(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack], res)
         end
         return res
     end, ZyruIncremental)
@@ -224,7 +225,7 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
   baseFunc()
 end, ZyruIncremental)
 -- TODO: wrapping setupRunData versus just redoing it manually
-SetupRunData()
+-- SetupRunData()
 
 
 -- Dev scripts
