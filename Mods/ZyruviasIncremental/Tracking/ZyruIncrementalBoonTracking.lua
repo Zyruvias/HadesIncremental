@@ -619,8 +619,8 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     ZyruIncremental.lta = obj
     ZyruIncremental.Victim = victim
     ZyruIncremental.DamageMap = damageMultiplierMap
-    -- and victim.Name ~= "TrainingMelee" while testing
-    if RequiredKillEnemies[victim.ObjectId] == nil  then
+    --  while testing
+    if RequiredKillEnemies[victim.ObjectId] == nil and victim.Name ~= "TrainingMelee" then
       return
     end
 
@@ -1010,7 +1010,7 @@ OnEffectApply{
     if triggerArgs == nil or triggerArgs.EffectType == "GRIP" or triggerArgs.EffectType == "UNKNOWN" then
       return
     end
-DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
+-- DebugPrint({ Text = ModUtil.ToString.Shallow(triggerArgs) })
     if triggerArgs.EffectName == "DelayedDamage" and triggerArgs.Reapplied then
       if HeroHasTrait("AresLoadCurseTrait") then
         ZyruIncremental.TrackBoonEffect("AresLoadCurseTrait")
@@ -1056,14 +1056,6 @@ OnWeaponFired{ "RangedWeapon",
   end
 }
 -- AmmoReclaimTrait (Quick Reload)
-ModUtil.Path.Context.Wrap("DropStoredAmmo", function ()
-  ModUtil.Path.Wrap("GetHeroTraitValues", function(baseFunc, source, args)
-    if source == ("AmmoDropWeapons") and HeroHasTrait("AmmoReclaimTrait") then
-      ZyruIncremental.TrackBoonEffect("AmmoReclaimTrait")
-    end
-    return baseFunc(source, args)
-  end, ZyruIncremental)
-end, ZyruIncremental)
 
 -- Quick Recovery
 ModUtil.Path.Wrap("Heal", function (baseFunc, victim, args)
@@ -1124,43 +1116,45 @@ OnPlayerMoveStopped{
 
 -- Swift Strike
 -- Swift Flourish
-ModUtil.LoadOnce( function (  ) 
-  local attackWeapons = ""
-  local specialWeapons = ""
-  for i, weaponName in ipairs(WeaponSets.HeroPhysicalWeapons) do
-    attackWeapons = attackWeapons .. " " .. weaponName
-    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
-      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
-        attackWeapons = attackWeapons .. " " .. w
-      end
+local attackWeapons = {}
+local specialWeapons = {}
+for i, weaponName in ipairs(WeaponSets.HeroPhysicalWeapons) do
+  attackWeapons[weaponName] = true
+  if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+    for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+      attackWeapons[w] = true
     end
   end
-  
-  for i, weaponName in ipairs(WeaponSets.HeroSecondaryWeapons) do
-    specialWeapons = specialWeapons .. " " .. weaponName
-    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
-      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
-        specialWeapons = specialWeapons .. " " .. w
-      end
+end
+
+for i, weaponName in ipairs(WeaponSets.HeroSecondaryWeapons) do
+  specialWeapons[weaponName] = true
+  if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+    for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+      specialWeapons[w] = true
     end
   end
-  
-  OnWeaponFired{ attackWeapons,
-    function ( triggerArgs )
-      if HeroHasTrait("HermesWeaponTrait") then
-        ZyruIncremental.TrackBoonEffect("HermesWeaponTrait")
-      end
+end
+
+OnWeaponFired{ 
+  function ( triggerArgs )
+    if HeroHasTrait("HermesWeaponTrait") and attackWeapons[triggerArgs.name] then
+      ZyruIncremental.TrackBoonEffect("HermesWeaponTrait")
     end
-  }
-  
-  OnWeaponFired{ specialWeapons,
-    function ( triggerArgs )
-      if HeroHasTrait("HermesSecondaryTrait") then
-        ZyruIncremental.TrackBoonEffect("HermesSecondaryTrait")
-      end
+    
+    if HeroHasTrait("HermesSecondaryTrait") and specialWeapons[triggerArgs.name]  then
+      ZyruIncremental.TrackBoonEffect("HermesSecondaryTrait")
     end
-  }
-end)
+  end
+}
+
+ModUtil.Path.Wrap("DropStoredAmmo", function (base, ...)
+  
+  if HeroHasTrait("AmmoReclaimTrait") then
+    ZyruIncremental.TrackBoonEffect("AmmoReclaimTrait")
+  end
+  base(...)
+end, ZyruIncremental)
 
 ---- DROP DATA SCALING
 -- TODO - ApplyConsumableItemResourceMultiplier wrap

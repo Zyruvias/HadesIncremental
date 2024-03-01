@@ -299,6 +299,13 @@ function CloseScreenByName ( name )
 	UnfreezePlayerUnit()
 	ToggleControl({ Names = { "AdvancedTooltip" }, Enabled = true })
 	ShowCombatUI(name)
+    screen.AllowInput = false
+	SetConfigOption({ Name = "ExclusiveInteractGroup", Value = nil })
+	SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.0 })
+	SetConfigOption({ Name = "GamepadCursorFreeFormSelect", Value = true })
+	SetConfigOption({ Name = "FreeFormSelectGridLock", Value = false })
+	SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8 })
+	SetConfigOption({ Name = "FreeFormSelecSearchFromId", Value = 0 })
 	screen.KeepOpen = false
 	OnScreenClosed({ Flag = screen.Name })
 end

@@ -259,7 +259,6 @@ ModUtil.LoadOnce(function ( )
       -- OFFENSIVE --
       ---------------
       IncreaseDamageTaken = "AphroditeWeakenTrait",
-      
       ZeroAmmoBonusTrait = "ZeroAmmoBonusTrait",
       ---------------
       -- DEFENSIVE --
@@ -378,7 +377,7 @@ ModUtil.LoadOnce(function ( )
       RoomAmmoTrait = 1,
       UnstoredAmmoDamageTrait = 1,
       AmmoReloadTrait = 1,
-      AmmoReclaimTrait = 1,
+      AmmoReclaimTrait = 0, -- NA
       CritBonusTrait = 1,
       ArtemisAmmoExitTrait = 1,
       CritVulnerabilityTrait = 1,
@@ -436,6 +435,7 @@ ModUtil.LoadOnce(function ( )
       DionysusPoisonPowerTrait = 1,
       DoorHealTrait = 1,
       DemeterWeaponTrait = 1,
+      MaximumChillBonusSlow = 1,
       DemeterSecondaryTrait = 1,
       DemeterRangedTrait = 1,
       DemeterRangedBonusTrait = 1,
@@ -447,8 +447,8 @@ ModUtil.LoadOnce(function ( )
       ZeroAmmoBonusTrait = 1,
       DemeterRetaliateTrait = 1,
       MagnetismTrait = 1,
-      BonusDashTrait = 1,
-      RapidRushTrait = 1,
+      BonusDashTrait = 0, -- NA
+      RapidRushTrait = 0, -- NA
       DeathDefianceFreezeTimeTrait = 1,
       FreezeTimeDashTrait = 1,
       CollisionTouchTrait = 1,
@@ -559,7 +559,7 @@ ModUtil.LoadOnce(function ( )
       RoomAmmoTrait = 1,
       UnstoredAmmoDamageTrait = 1,
       AmmoReloadTrait = 1,
-      AmmoReclaimTrait = 1,
+      AmmoReclaimTrait = 100,
       CritBonusTrait = 1,
       ArtemisAmmoExitTrait = 1,
       CritVulnerabilityTrait = 1,
@@ -617,6 +617,7 @@ ModUtil.LoadOnce(function ( )
       DionysusPoisonPowerTrait = 1,
       DoorHealTrait = 1,
       DemeterWeaponTrait = 1,
+      MaximumChillBonusSlow = 0,
       DemeterSecondaryTrait = 1,
       DemeterRangedTrait = 1,
       DemeterRangedBonusTrait = 1,
@@ -627,9 +628,9 @@ ModUtil.LoadOnce(function ( )
       HarvestBoonTrait = 1,
       ZeroAmmoBonusTrait = 1,
       DemeterRetaliateTrait = 1,
-      MagnetismTrait = 1,
-      BonusDashTrait = 1,
-      RapidRushTrait = 1,
+      MagnetismTrait = 100,
+      BonusDashTrait = 25,
+      RapidRushTrait = 25,
       DeathDefianceFreezeTimeTrait = 1,
       FreezeTimeDashTrait = 1,
       CollisionTouchTrait = 1,

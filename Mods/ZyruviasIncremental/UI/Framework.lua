@@ -235,6 +235,12 @@ function ZyruIncremental.CreateMenu(name, args)
     HideCombatUI(name)
     FreezePlayerUnit()
     EnableShopGamepadCursor()
+	SetConfigOption({ Name = "FreeFormSelectWrapY", Value = false })
+	SetConfigOption({ Name = "FreeFormSelectGridLock", Value = true })
+	SetConfigOption({ Name = "FreeFormSelectStepDistance", Value = 8 })
+	SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 2 })
+	SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.6 })
+	SetConfigOption({ Name = "FreeFormSelectRepeatInterval", Value = 0.1 })
 
     -- Initialize Background + Sounds
 	PlaySound({ Name = args.OpenSound or "/SFX/Menu Sounds/DialoguePanelIn" })
