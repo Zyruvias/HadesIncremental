@@ -149,9 +149,10 @@ function CreateAnalyticsScreen (screen)
 end
 
 ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
-    local value = baseFunc( ... )
+    baseFunc( ... )
 
     local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+        PauseBlock = true,
         Pages = {
             [1] = "CreateAnalyticsScreen"
         },
@@ -177,10 +178,7 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
                 }
             }
         },
-        Source = "LolLmao"
     })
-
-    return value
 end, ZyruIncremental)
 
 function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
@@ -296,11 +294,11 @@ function CloseScreenByName ( name )
 	ShowCombatUI(name)
     screen.AllowInput = false
 	SetConfigOption({ Name = "ExclusiveInteractGroup", Value = nil })
-	SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.0 })
-	SetConfigOption({ Name = "GamepadCursorFreeFormSelect", Value = true })
-	SetConfigOption({ Name = "FreeFormSelectGridLock", Value = false })
-	SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8 })
-	SetConfigOption({ Name = "FreeFormSelecSearchFromId", Value = 0 })
+	-- SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.0 })
+	-- SetConfigOption({ Name = "GamepadCursorFreeFormSelect", Value = true })
+	-- SetConfigOption({ Name = "FreeFormSelectGridLock", Value = false })
+	-- SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8 })
+	-- SetConfigOption({ Name = "FreeFormSelecSearchFromId", Value = 0 })
 	screen.KeepOpen = false
 	OnScreenClosed({ Flag = screen.Name })
 end
@@ -440,6 +438,7 @@ end}
 function ShowZyruSettingsMenu()
     ZyruIncremental.Data.Flags.SeenSettingsMenu = true
     local screen = ZyruIncremental.CreateMenu("SettingsMenu", {
+        PauseBlock = true,
         Components = {
             {
                 Type = "Text",
@@ -557,6 +556,7 @@ function ModInitializationScreen2()
         return
     end
     local screen = ZyruIncremental.CreateMenu("ModInitialization", {
+        PauseBlock = true,
         Pages = {
             [1] = {
                 {
@@ -726,7 +726,7 @@ function ModInitializationScreen2()
                         Items = {
                             Default = {
                                 Text = ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE,
-                                event = function() end
+                                event = function() ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Data.FileOptions.StartingPoint end
                             },
                             { 
                                 Text = ZyruIncremental.Constants.SaveFile.FRESH_FILE,
@@ -1244,6 +1244,7 @@ function ShowZyruProgressScreen()
     end
 
     local screen = ZyruIncremental.CreateMenu("ProgressScreen", {
+        PauseBlock = true,
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
@@ -1302,6 +1303,7 @@ function ShowZyruUpgradeScreen()
     end
 
     local screen = ZyruIncremental.CreateMenu("UpgradeScreen", {
+        PauseBlock = true,
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
