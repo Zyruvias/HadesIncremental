@@ -52,6 +52,7 @@ ZyruIncremental.BaseComponents = {
             OffsetX = -1 * ScreenWidth / 2 + 50,
             ComponentArgs = {
                 OnPressedFunctionName = "ScreenPageLeft",
+                ControlHotkeys = { "MenuLeft", "Left" }
             },
             Angle = -90
         },
