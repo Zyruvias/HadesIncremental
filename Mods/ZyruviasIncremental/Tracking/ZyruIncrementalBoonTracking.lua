@@ -1080,14 +1080,6 @@ OnWeaponFired{ "RangedWeapon",
   end
 }
 -- AmmoReclaimTrait (Quick Reload)
-ModUtil.Path.Context.Wrap("DropStoredAmmo", function ()
-  ModUtil.Path.Wrap("GetHeroTraitValues", function(baseFunc, source, args)
-    if source == ("AmmoDropWeapons") and HeroHasTrait("AmmoReclaimTrait") then
-      ZyruIncremental.TrackBoonEffect("AmmoReclaimTrait")
-    end
-    return baseFunc(source, args)
-  end, ZyruIncremental)
-end, ZyruIncremental)
 
 -- Quick Recovery
 -- After Party
@@ -1151,43 +1143,46 @@ OnPlayerMoveStopped{
 
 -- Swift Strike
 -- Swift Flourish
-ModUtil.LoadOnce( function (  ) 
-  local attackWeapons = ""
-  local specialWeapons = ""
-  for i, weaponName in ipairs(WeaponSets.HeroPhysicalWeapons) do
-    attackWeapons = attackWeapons .. " " .. weaponName
-    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
-      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
-        attackWeapons = attackWeapons .. " " .. w
-      end
+local attackWeapons = {}
+local specialWeapons = {}
+for i, weaponName in ipairs(WeaponSets.HeroPhysicalWeapons) do
+  attackWeapons[weaponName] = true
+  if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+    for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+      attackWeapons[w] = true
     end
   end
-  
-  for i, weaponName in ipairs(WeaponSets.HeroSecondaryWeapons) do
-    specialWeapons = specialWeapons .. " " .. weaponName
-    if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
-      for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
-        specialWeapons = specialWeapons .. " " .. w
-      end
+end
+
+for i, weaponName in ipairs(WeaponSets.HeroSecondaryWeapons) do
+  specialWeapons[weaponName] = true
+  if WeaponSets.LinkedWeaponUpgrades[weaponName] ~= nil then
+    for i, w in ipairs(WeaponSets.LinkedWeaponUpgrades[weaponName]) do
+      specialWeapons[w] = true
     end
   end
+
+end
+
+OnWeaponFired{ 
+  function ( triggerArgs )
+    if HeroHasTrait("HermesWeaponTrait") and attackWeapons[triggerArgs.name] then
+      ZyruIncremental.TrackBoonEffect("HermesWeaponTrait")
+    end
+    
+    if HeroHasTrait("HermesSecondaryTrait") and specialWeapons[triggerArgs.name]  then
+      ZyruIncremental.TrackBoonEffect("HermesSecondaryTrait")
+    end
+  end
+}
+
+ModUtil.Path.Wrap("DropStoredAmmo", function (base, ...)
   
-  -- OnWeaponFired{ attackWeapons,
-  --   function ( triggerArgs )
-  --     if HeroHasTrait("HermesWeaponTrait") then
-  --       ZyruIncremental.TrackBoonEffect("HermesWeaponTrait")
-  --     end
-  --   end
-  -- }
-  
-  -- OnWeaponFired{ specialWeapons,
-  --   function ( triggerArgs )
-  --     if HeroHasTrait("HermesSecondaryTrait") then
-  --       ZyruIncremental.TrackBoonEffect("HermesSecondaryTrait")
-  --     end
-  --   end
-  -- }
-end)
+  if HeroHasTrait("AmmoReclaimTrait") then
+    ZyruIncremental.TrackBoonEffect("AmmoReclaimTrait")
+  end
+  base(...)
+end, ZyruIncremental)
 
 ---- DROP DATA SCALING
 -- TODO - ApplyConsumableItemResourceMultiplier wrap
@@ -1218,14 +1213,21 @@ end, ZyruIncremental)
 
 -- Side Hustle
 ModUtil.Path.Wrap("AddMoney", function(baseFunc, amount, source)
-DebugPrint{ Text = tostring(amount) .. tostring(source)}
   if source == "Hermes Money Trait" and HeroHasTrait("ChamberGoldTrait") then
-    ZyruIncremental.TrackBoonEffect("ChamberGoldTrait")
+    ZyruIncremental.TrackBoonEffect("ChamberGoldTrait", amount)
   elseif source == "RoomRewardMoneyDrop" then
     amount = amount  * getCoinScalar()
     ZyruIncremental.TrackDrop(source, amount)
   end
   return baseFunc(amount, source)
+end, ZyruIncremental)
+
+-- Greater Recall
+ModUtil.Path.Wrap("AddAmmoPresentation", function (base, ...)
+  base(...)
+  if HeroHasTrait("MagnetismTrait") then
+    ZyruIncremental.TrackBoonEffect("MagnetismTrait")
+  end
 end, ZyruIncremental)
 
 

@@ -1148,37 +1148,37 @@ end
 
 -- Keepsake changes
 -- TODO: merge correctly in `SetupRunData` wrap
-ModUtil.LoadOnce(function ( )
-    -- ModUtil.Table.Merge(TraitData.GiftTrait, {
-    --     ChamberThresholds = {25, 50, 100, 150, 200, 250, 500, 1000},
-    --     RarityLevels = {
-    --         Heroic =
-    --         {
-    --             Multiplier = 2.5,
-    --         },
-    --         Supreme =
-    --         {
-    --             Multiplier = 3.0,
-    --         },
-    --         Ultimate =
-    --         {
-    --             Multiplier = 3.5,
-    --         },
-    --         Transcendental =
-    --         {
-    --             Multiplier = 4.0,
-    --         },
-    --         Mythic =
-    --         {
-    --             Multiplier = 4.5,
-    --         },
-    --         Olympic =
-    --         {
-    --             Multiplier = 5,
-    --         },
-    --     }
-    -- })
-end)
+-- ModUtil.LoadOnce(function ( )
+--     -- ModUtil.Table.Merge(TraitData.GiftTrait, {
+--     --     ChamberThresholds = {25, 50, 100, 150, 200, 250, 500, 1000},
+--     --     RarityLevels = {
+--     --         Heroic =
+--     --         {
+--     --             Multiplier = 2.5,
+--     --         },
+--     --         Supreme =
+--     --         {
+--     --             Multiplier = 3.0,
+--     --         },
+--     --         Ultimate =
+--     --         {
+--     --             Multiplier = 3.5,
+--     --         },
+--     --         Transcendental =
+--     --         {
+--     --             Multiplier = 4.0,
+--     --         },
+--     --         Mythic =
+--     --         {
+--     --             Multiplier = 4.5,
+--     --         },
+--     --         Olympic =
+--     --         {
+--     --             Multiplier = 5,
+--     --         },
+--     --     }
+--     -- })
+-- end)
 
 
 

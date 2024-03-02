@@ -60,6 +60,7 @@ ZyruIncremental.BaseComponents = {
             OffsetX = ScreenWidth / 2 - 50,
             ComponentArgs = {
                 OnPressedFunctionName = "ScreenPageRight",
+                ControlHotkeys = { "MenuRight", "RightLeft" }
             },
             Angle = 90
         },
@@ -135,6 +136,15 @@ ZyruIncremental.BaseComponents = {
     },
 
 }
+ZyruIncremental.PauseBlockScreens = {}
+ModUtil.Path.Wrap("IsPauseBlocked", function (base)
+	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
+		if ActiveScreens[name] then
+			return true
+		end
+	end
+    return base()
+end, ZyruIncremental)
 
 function GetScreenIdsToDestroy(screen) 
     local idsToKeep = screen.PermanentComponents or {}
@@ -191,11 +201,13 @@ function GetComponentDefinition(screen, component)
     if baseDefinition == nil then
         DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
     end
+    local groupToUse = ModUtil.Path.Get("Args.Group", component)
+        or baseDefinition.Group
+        or screen.Pages[screen.PageIndex].Group
+        or screen.Group
+    baseDefinition.Group = groupToUse
     local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-    ZyruIncremental.Screen = screen
-    -- DebugPrint { Text = ModUtil.ToString.Shallow(screen)}
     if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
-        -- DebugPrint { Text = "Reusing component definition for " .. fieldName }
         baseDefinition = ModUtil.Table.Merge(
             baseDefinition,
             screen.Components[fieldName].Args or {}
@@ -227,13 +239,27 @@ function ZyruIncremental.CreateMenu(name, args)
 
     local components = screen.Components
 
+    screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
+
     if IsScreenOpen( screen.Name ) then
 		return
 	end
-    OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
+    OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true })
     HideCombatUI(name)
     FreezePlayerUnit()
     EnableShopGamepadCursor()
+
+    -- Lets users use escape / cancel to exit the menu
+    if args.PauseBlock then
+        ZyruIncremental.PauseBlockScreens[screen.Name] = true
+    end
+    -- TODO: what the fuck do these do
+	-- SetConfigOption({ Name = "FreeFormSelectWrapY", Value = false })
+	-- SetConfigOption({ Name = "FreeFormSelectGridLock", Value = true })
+	-- SetConfigOption({ Name = "FreeFormSelectStepDistance", Value = 8 })
+	-- SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 2 })
+	-- SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.6 })
+	-- SetConfigOption({ Name = "FreeFormSelectRepeatInterval", Value = 0.1 })
 
     -- Initialize Background + Sounds
 	PlaySound({ Name = args.OpenSound or "/SFX/Menu Sounds/DialoguePanelIn" })
@@ -267,14 +293,22 @@ function ZyruIncremental.CreateMenu(name, args)
     end
 
 
-    -- TODO: SetConfigOption({ Name = "ExclusiveInteractGroup", Value = "Combat_Menu_TraitTray_Backing" })
+    -- local exclusionGroup = GetConfigOptionValue({ Name = "ExclusiveInteractGroup"})
+    -- if exclusionGroup ~= nil then
+    --     screen.PreviousExclusionGroup = exclusionGroup
+    -- end
+    -- SetConfigOption({ Name = "ExclusiveInteractGroup", Value = screenGroup })
 	screen.KeepOpen = true
 	thread( HandleWASDInput, ScreenAnchors[name] )
 	HandleScreenInput( screen )
     return screen
 end
 
-function ZyruIncremental.RenderComponents(screen, componentsToRender, args)    
+function ZyruIncremental.RenderComponents(screen, componentsToRender, args) 
+    args = args or {}
+    if componentsToRender == nil then
+        DebugPrint { Text = "componentsToRender was nil, not rendering anything"}
+    end
     -- Handle rendering overrides
     if type(componentsToRender) == "string" then
         if type(_G[componentsToRender]) == "function" then
@@ -282,10 +316,6 @@ function ZyruIncremental.RenderComponents(screen, componentsToRender, args)
         end
     elseif type(componentsToRender) == "function" then
         return componentsToRender(screen, args.Source)
-    end
-
-    if componentsToRender == nil then
-        DebugPrint { Text = "componentsToRender was nil, not rendering anything"}
     end
 
     -- default framework rendering
@@ -530,16 +560,19 @@ function ZyruIncremental.RenderButton(screen, component)
     -- HardCoded, not sure how to get around this
     if buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Close" then
         local name = screen.Name
+        DebugPrint { Text = "creating function Closing 2 with key " .. "Close" .. name .. "Screen"}
         components[buttonName].OnPressedFunctionName = "Close" .. name .. "Screen"
         if _G["Close" .. name .. "Screen"] == nil then
     
             _G["Close" .. name .. "Screen"] = function()
                 CloseScreenByName ( name )
+                DebugPrint { Text = "Closing 2"}
                 if buttonDefinition.CloseScreenFunction then
                     buttonDefinition.CloseScreenFunction(buttonDefinition.CloseScreenFunctionArgs)
                 elseif buttonDefinition.CloseScreenFunctionName ~= nil then
                     _G[buttonDefinition.CloseScreenFunctionName](buttonDefinition.CloseScreenFunctionArgs)
                 end
+                _G["Close" .. name .. "Screen"] = nil
             end
         end
     end
