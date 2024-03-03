@@ -95,6 +95,7 @@ ZyruIncremental.TraitData = {
         },
     },
 
+    -- TODO: on death defiance instead?
     AresHermesSynergyTrait = {
         Name = "AresHermesSynergyTrait",
         InheritFrom = { "SynergyTrait" },
@@ -108,7 +109,7 @@ ZyruIncremental.TraitData = {
             Name = "ResetBloodlust",
             Args = {},
         },
-        BloodlustDamageMultiplier =  1.01,
+        BloodlustDamageMultiplier =  1.05,
         AddOutgoingDamageModifiers =
         {
             UseTraitValue = "BloodlustDamageBonus",
@@ -191,7 +192,10 @@ ZyruIncremental.TraitData = {
         InheritFrom = { "ShopTier3Trait" },
         RequiredFalseTraits = { "ChangingTidesLegendary" },
         Icon = "Demeter_Artemis_01",
-        EnableTides = true,
+        SetupFunction = {
+            Name = "ZyruIncremental.SetupPoseidonVacuum",
+            RunOnce = true,
+        },
     },
     
     SeductiveVictoryLegendary = {
@@ -524,7 +528,8 @@ ZyruIncremental.UpgradeData = {
     -- HERMES DUOS --
     -----------------
     ZeusHermesSynergyTrait = {
-        Name = "ZeusHermesSynergyTrait",
+        Name = "ZeusHermesSynergyTraitUpgrade",
+        Type = "NewTrait",
         Sources = { ZyruIncremental.Constants.Gods.ZEUS, ZyruIncremental.Constants.Gods.HERMES },
         Costs = {
             [ZyruIncremental.Constants.Gods.ZEUS] = 100,
@@ -717,12 +722,27 @@ ZyruIncremental.UpgradeData = {
     -----------------
 
     -- POSEIDON
-    PoseidonAlternatingTidesUpgrade = {
-        Name = "PoseidonAlternatingTidesUpgrade",
+    ChangingTidesLegendaryUpgrade = {
+        Name = "ChangingTidesLegendaryUpgrade",
         Costs = {
             [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
         },
-        OnApplyFunction = "ZyruIncremental.EnablePoseidonVacuumFunction",
+        OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
+        OnApplyFunctionArgs = { 
+            Name = "ChangingTidesLegendary",
+            AddLinkedUpgrades = true,
+            LinkedUpgradeName = "PoseidonUpgrade",
+            LinkedUpgrades = {
+                OneFromEachSet = {
+                    -- TODO: add poseidon prereqs
+                    -- { "RapidCastTrait", "AmmoReloadTrait" },
+                    -- { "DemeterRangedTrait" },
+                    --TODO: beowulf flare
+                    { "PoseidonWeaponTrait", "PoseidonSecondaryTrait", "PoseidonRangedTrait", "PoseidonRushTrait"},
+                    { "SlipperyTrait" },
+                },
+            },
+        },
         Source = ZyruIncremental.Constants.Gods.POSEIDON,
     },
 
@@ -979,11 +999,112 @@ ZyruIncremental.UpgradeData = {
     ---------------------
     ZeusRarityUpgrade = {
         Name = "ZeusRarityUpgrade",
+        Type = "RarityBonus",
         CostsFunctionName = "GetRarityUpgradeCost",
         Source = ZyruIncremental.Constants.Gods.ZEUS,
         OnApplyFunction = "AugmentTransientState",
+        Value = 10,
         OnApplyFunctionArgs = {
             ZeusRarityBonus = 10,
+        },
+    },
+
+    
+    PoseidonRarityUpgrade = {
+        Name = "PoseidonRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.POSEIDON,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            PoseidonRarityBonus = 10,
+        },
+    },
+
+    
+    AthenaRarityUpgrade = {
+        Name = "AthenaRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.ATHENA,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            AthenaRarityBonus = 10,
+        },
+    },
+
+    
+    AresRarityUpgrade = {
+        Name = "AresRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.ARES,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            AresRarityBonus = 10,
+        },
+    },
+
+    AphroditeRarityUpgrade = {
+        Name = "AphroditeRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.APHRODITE,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            AphroditeRarityBonus = 10,
+        },
+    },
+
+    ArtemisRarityUpgrade = {
+        Name = "ArtemisRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.ARTEMIS,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            ArtemisRarityBonus = 10,
+        },
+    },
+
+    DionysusRarityUpgrade = {
+        Name = "DionysusRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.DIONYSUS,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            DionysusRarityBonus = 10,
+        },
+    },
+
+    HermesRarityUpgrade = {
+        Name = "HermesRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.HERMES,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            HermesRarityBonus = 10,
+        },
+    },
+
+    DemeterRarityUpgrade = {
+        Name = "DemeterRarityUpgrade",
+        Type = "RarityBonus",
+        CostsFunctionName = "GetRarityUpgradeCost",
+        Source = ZyruIncremental.Constants.Gods.DEMETER,
+        OnApplyFunction = "AugmentTransientState",
+        Value = 10,
+        OnApplyFunctionArgs = {
+            DemeterRarityBonus = 10,
         },
     },
 
@@ -1181,109 +1302,6 @@ end
 -- end)
 
 
-
--- PoseidonAlternatingTidesUpgrade
--- OnEffectApply{
---     function ( triggerArgs )
---         DebugPrint { Text = ModUtil.ToString.Shallow(triggerArgs.EffectName) }
---     end
--- }
-
-function ZyruIncremental.EnablePoseidonVacuumFunction( args )
-    ZyruIncremental.AddTraitToTraitData({ 
-        Name = "ChangingTidesLegendary",
-        AddLinkedUpgrades = true,
-        LinkedUpgradeName = "PoseidonUpgrade",
-        LinkedUpgrades = {
-            OneFromEachSet = {
-                -- TODO: add poseidon prereqs
-                -- { "RapidCastTrait", "AmmoReloadTrait" },
-                -- { "DemeterRangedTrait" },
-                --TODO: beowulf flare
-                { "PoseidonWeaponTrait", "PoseidonSecondaryTrait", "PoseidonRangedTrait", "PoseidonRushTrait"},
-                { "SlipperyTrait" },
-            },
-        },
-    })
-    -- initial push / pull behavior
-    local isActive = true
-    -- TODO: clean this up, do it like aphrodite's
-    local applyVacuumEffect
-    local isPush = true
-    applyVacuumEffect = function()
-        isActive = true
-        local leadLocation = SpawnObstacle({ Name = "InvisibleTarget", DestinationId = CurrentRun.Hero.ObjectId })
-        
-        -- DebugPrint { Text = "calculating applyVacuumEffect"}
-        local targetIds = GetClosestIds({
-            Id = CurrentRun.Hero.ObjectId,
-            DestinationName = "EnemyTeam",
-            IgnoreInvulnerable = true,
-            IgnoreHomingIneligible = true,
-            Distance = 10000 
-        })
-        -- DebugPrint { Text = tostring(targetIds)}
-        for i, targetId in pairs(targetIds) do
-            
-            -- DebugPrint { Text = tostring(targetId)}
-            if ActiveEnemies[targetId] ~= nil and not ActiveEnemies[targetId].IsDead then
-                local speed = isPush and -2500 or 0.666 * GetRequiredForceToEnemy( targetId, leadLocation)
-                local angle = GetAngleBetween({ Id = targetId, DestinationId = leadLocation })
-                -- DebugPrint { Text = "Applying force " .. tostring(speed) .."to " .. tostring(targetId) .. " at angle " .. tostring(angle)}
-                ApplyForce({
-                    Id = targetId,
-                    Speed = speed,
-                    Angle = angle
-                })
-            end
-        end
-        wait(3, "AlternatePoseidonLegendary")
-        if isActive then
-            applyVacuumEffect()
-        end
-    end
-    ModUtil.Path.Wrap("StartEncounterEffects", function ( baseFunc, currentRun )
-        local retVal = baseFunc(currentRun)
-        -- DebugPrint { Text = "Starting Encounter Effects"}
-        isPush = not isPush
-        isActive = false
-        for i, traitData in pairs(CurrentRun.Hero.Traits ) do
-            if traitData.EnableTides == true then
-                isActive = true
-            end
-        end
-        if isActive then
-            thread(applyVacuumEffect)
-        end
-        return retVal
-    end, ZyruIncremental)
-
-    -- EndEncounterEffects( currentRun, currentRoom, currentEncounter )
-    
-    ModUtil.Path.Wrap("EndEncounterEffects", function ( baseFunc, currentRun, currentRoom, currentEncounter )
-        isActive = false
-        -- DebugPrint { Text = "Ending Encounter Effects"}
-        return baseFunc(currentRun, currentRoom, currentEncounter)
-    end, ZyruIncremental)
-end
-
--- Aphrodite legendary, seductive victory
---[[
-    local shareData = GetHeroTraitValues("BondDamageShareData")[1]
-    local enemyIds = GetAllKeys( ActiveEnemies )
-    for index, id in pairs(enemyIds) do
-        local enemy = ActiveEnemies[id]
-        if enemy and not enemy.IsDead and IsEmpty( enemy.InvulnerableFlags ) and IsEmpty ( enemy.PersistentInvulnerableFlags )
-            and enemy.ActiveEffects and enemy.ActiveEffects.MarkBondTarget and Contains(shareData.WeaponNames, sourceWeaponData.Name ) and not triggerArgs.EffectName then
-            local damageAmount = triggerArgs.DamageAmount * shareData.Multiplier
-            if HeroData.DefaultHero.HeroAlliedUnits[ enemy.Name ] and shareData.AlliedDamageMultiplier then
-                damageAmount = damageAmount * shareData.AlliedDamageMultiplier
-            end
-            Damage( enemy, { EffectName = "DamageShare", DamageAmount = damageAmount, Silent = false, PureDamage = true } )
-        end
-    end
-]]
-
 function ZyruIncremental.SetupSeductiveVictory( hero, args )
     thread( SeductiveVictoryThread, args )
 end
@@ -1307,6 +1325,39 @@ function SeductiveVictoryThread( args )
 
 			end
 		end
+	end
+end
+
+function ZyruIncremental.SetupPoseidonVacuum(hero, args)
+    thread(AlternatingTidesThread, args)
+end
+
+function AlternatingTidesThread(args)
+    local isPush = true
+    while CurrentRun and CurrentRun.Hero and not CurrentRun.Hero.IsDead do
+        local leadLocation = SpawnObstacle({ Name = "InvisibleTarget", DestinationId = CurrentRun.Hero.ObjectId })
+        
+        local targetIds = GetClosestIds({
+            Id = CurrentRun.Hero.ObjectId,
+            DestinationName = "EnemyTeam",
+            IgnoreInvulnerable = true,
+            IgnoreHomingIneligible = true,
+            Distance = 10000 
+        })
+
+        for i, targetId in pairs(targetIds) do
+            if ActiveEnemies[targetId] ~= nil and not ActiveEnemies[targetId].IsDead then
+                local speed = (isPush and -1 or 1) * 0.666 * GetRequiredForceToEnemy( targetId, leadLocation )
+                local angle = GetAngleBetween({ Id = targetId, DestinationId = leadLocation })
+                ApplyForce({
+                    Id = targetId,
+                    Speed = speed,
+                    Angle = angle
+                })
+            end
+        end
+        wait(3, "AlternatePoseidonLegendary")
+        isPush = not isPush
 	end
 end
 

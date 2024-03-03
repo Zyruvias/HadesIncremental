@@ -1,6 +1,21 @@
 {
     Texts = [
         "_append"
+        // BEGIN GOD AGNOSTIC HELPTEXTS
+        {
+            Id = "GodRarityBonusBuff_Description"
+            DisplayName = "Gain a permanent {$TempTextData.Bonus}% Rarity Bonus for {$TempTextData.God}"
+        }
+        {
+            Id = "GodRarityBonusBuff"
+            DisplayName = "Permanent Rarity Bonus"
+        }
+        {
+            Id = "ZyruBoonLevelUp"
+            DisplayName = "{$TempTextData.Name} reached EXP Level {$TempTextData.Level}"
+        }
+        // END GOD AGNOSTIC HELPTEXTS
+        // BEGIN HERMES DUO HELPTEXTS
         {
             Id = "ZeusHermesSynergyTrait"
             DisplayName = "Superconductor"
@@ -12,6 +27,110 @@
             Description = "Enemies no longer resist lightning effects applied in quick succession."
         }
         {
+            Id = "ZeusHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Superconductor"
+        }
+        {
+            Id = "PoseidonHermesSynergyTrait"
+            DisplayName = "Alacritous Plunder"
+            Description = "Damaging foes grants a chance to steal resources, as a treat."
+        }
+        {
+            Id = "PoseidonHermesSynergyTrait_Initial"
+            InheritFrom = "PoseidonHermesSynergyTrait"
+            Description = "Damaging foes grants a chance to steal resources, as a treat."
+        }
+        {
+            Id = "PoseidonHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Alacritous Plunder"
+        }
+        {
+            Id = "AthenaHermesSynergyTrait"
+            DisplayName = "Swift Wit"
+            Description = "Bonus movement speed converts to additional damage reduction."
+        }
+        {
+            Id = "AthenaHermesSynergyTrait_Initial"
+            InheritFrom = "AthenaHermesSynergyTrait"
+            Description = "Bonus movement speed converts to additional damage reduction."
+        }
+        {
+            Id = "AthenaHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Swift Wit"
+        }
+        {
+            Id = "AresHermesSynergyTrait"
+            DisplayName = "Bloodlust"
+            Description = "Every death of a foe grants bonus damage, until you take damage."
+        }
+        {
+            Id = "AresHermesSynergyTrait_Initial"
+            InheritFrom = "AresHermesSynergyTrait"
+            Description = "Every death of a foe grants bonus damage, until you take damage."
+        }
+        {
+            Id = "AresHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Bloodlust"
+        }
+        {
+            Id = "AphroditeHermesSynergyTrait"
+            DisplayName = "Missed Connections"
+            Description = "Charm a foe immediately after dodging their attack."
+        }
+        {
+            Id = "AphroditeHermesSynergyTrait_Initial"
+            InheritFrom = "AphroditeHermesSynergyTrait"
+            Description = "Charm a foe immediately after dodging their attack."
+        }
+        {
+            Id = "AphroditeHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Missed Connections"
+        }
+        {
+            Id = "ArtemisHermesSynergyTrait"
+            DisplayName = "Found the Critorus"
+            Description = "Critically striking a foe grants bonus movespeed for a short duration."
+        }
+        {
+            Id = "ArtemisHermesSynergyTrait_Initial"
+            InheritFrom = "ArtemisHermesSynergyTrait"
+            Description = "Critically striking a foe grants bonus movespeed for a short duration."
+        }
+        {
+            Id = "ArtemisHermesSynergyTrait"
+            DisplayName = "Unlock Found the Critorus"
+        }
+        {
+            Id = "DionysusHermesSynergyTrait"
+            DisplayName = "TODO: name me fix me whatever me"
+            Description = "Critically striking a foe grants bonus movespeed for a short duration."
+        }
+        {
+            Id = "DionysusHermesSynergyTrait_Initial"
+            InheritFrom = "DionysusHermesSynergyTrait"
+            Description = "Critically striking a foe grants bonus movespeed for a short duration."
+        }
+        {
+            Id = "DionysusHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock ODO: name me fix me whatever me"
+        }
+        {
+            Id = "DemeterHermesSynergyTrait"
+            DisplayName = "Piercing Chill"
+            Description = "Your Cast pierces enemies and has a much longer range."
+        }
+        {
+            Id = "DemeterHermesSynergyTrait_Initial"
+            InheritFrom = "DemeterHermesSynergyTrait"
+            Description = "Your Cast pierces enemies and has a much longer range."
+        }
+        {
+            Id = "DemeterHermesSynergyTraitUpgrade"
+            DisplayName = "Unlock Piercing Chill"
+        }
+        // END HERMES DUO HELPTEXTS
+        // BEGIN LEGENDARY HELPTEXTS
+        {
             Id = "ChangingTidesLegendary"
             DisplayName = "Alternating Tides"
             Description = "Harness the power of the tides, pushing and pulling enemies with great force."
@@ -20,6 +139,10 @@
             Id = "ChangingTidesLegendary_Initial"
             InheritFrom = "ChangingTidesLegendary"
             Description = "Harness the power of the tides, pushing and pulling enemies with great force."
+        }
+        {
+            Id = "ChangingTidesLegendaryUpgrade"
+            DisplayName = "Unlock Alternating Tides"
         }
         {
             Id = "PermanentVulnerabilityLegendary"
@@ -32,6 +155,10 @@
             Description = "Enemies can no longer protect their weak spots, your Hunter's Mark no longer expires on hit."
         }
         {
+            Id = "PermanentVulnerabilityLegendaryUpgrade"
+            DisplayName = "Unlock Permanent Vulnerability"
+        }
+        {
             Id = "UnendingHangoverLegendary"
             DisplayName = "Unending Hangover"
             Description = "Your hangover effects no longer expire."
@@ -42,9 +169,22 @@
             Description = "Your hangover effects no longer expire."
         }
         {
+            Id = "UnendingHangoverLegendaryUpgrade"
+            DisplayName = "Unlock Unending Hangover"
+        }
+        {
             Id = "StrategicCooperationBlessingLegendary"
             DisplayName = "Strategic Cooperation"
             Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
+        }
+        {
+            Id = "StrategicCooperationBlessingLegendary_Initial"
+            DisplayName = "Strategic Cooperation"
+            Description = "Gain bonus damage for each Duo boon and Legendary boon from gods."
+        }
+        {
+            Id = "StrategicCooperationBlessingLegendaryUpgrade"
+            DisplayName = "Unlock Strategic Cooperation"
         }
         {
             Id = "ChaosRandomStatusLegendary"
@@ -67,5 +207,39 @@
             InheritFrom = "DemeterFamineLegendary"
             Description = "Non-Boss enemeis start with reduced health."
         }
+        {
+            Id = "DemeterFamineLegendaryUpgrade"
+            DisplayName = "Unlock Never Ending Famine"
+        }
+        {
+            Id = "SeductiveVictoryLegendary"
+            DisplayName = "Seductive Victory"
+            Description = "If all enemies in an encounter are weak, they are irreversably subsumed by their desires and are stuned every 0.5 seconds."
+        }
+        {
+            Id = "SeductiveVictoryLegendary_Initial"
+            InheritFrom = "SeductiveVictoryLegendary"
+            Description = "If all enemies in an encounter are weak, they are irreversably subsumed by their desires and are stuned every 0.5 seconds."
+        }
+        {
+            Id = "SeductiveVictoryUpgrade"
+            DisplayName = "Unlock Seductive Victory"
+        }
+        {
+            Id = "AresMurderousEfficacyLegendary"
+            DisplayName = "Murderous Efficacy"
+            Description = "Gain 50% increased damage from ALL sources."
+        }
+        {
+            Id = "AresMurderousEfficacyLegendary_Initial"
+            InheritFrom = "AresMurderousEfficacyLegendary"
+            Description = "Gain 50% increased damage from ALL sources."
+        }
+        {
+            Id = "AresMurderousEfficacyLegendaryUpgrade"
+            DisplayName = "Unlock Murderous Efficacy"
+        }
+        // END LEGENDARY HELPTEXTS
+
     ]
 }

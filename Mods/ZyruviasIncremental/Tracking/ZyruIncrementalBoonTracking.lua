@@ -864,9 +864,9 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
 
   if expGained > 0 then
     ZyruIncremental.HandleExperiencePresentationBehavior(traitName, ZyruIncremental.BoonToGod[traitName], expGained, victim)
+    thread(ZyruIncremental.CheckBoonDataLevelUp, traitName)
   end
 
-  thread(ZyruIncremental.CheckBoonDataLevelUp, traitName)
 end
 
 -------------------------------------------------------------------------------

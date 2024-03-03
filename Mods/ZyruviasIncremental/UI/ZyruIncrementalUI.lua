@@ -261,27 +261,23 @@ function DisplayExperiencePopup (amount, args)
 end
 
 function DisplayBoonLevelupPopup( traitName, level )
-	local offsetY = 0
-	-- for i, traitName in ipairs( traitNamesImproved ) do
-		local traitTitle = traitName
-		if TraitData[traitName] then 
-			traitTitle = GetTraitTooltipTitle(TraitData[traitName])
-		end
-		CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-		InCombatTextArgs({
-            TargetId = CurrentRun.Hero.ObjectId,
-            Text = traitTitle .. " level " .. tostring(level) .. "!",
-            SkipRise = false,
-            SkipFlash = true,
-            ShadowScale = 0.66,
-            Duration = 1.5,
-            OffsetY = -100 + offsetY,
-            LuaKey = "TempTextData",
-            LuaValue = { Name = traitTitle, Amount = level }})
-		PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
-		offsetY = offsetY - 60
-		wait(0.75)
-	-- end
+    local traitTitle = traitName
+    if TraitData[traitName] then 
+        traitTitle = GetTraitTooltipTitle(TraitData[traitName])
+    end
+    PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
+    InCombatTextArgs({
+        TargetId = CurrentRun.Hero.ObjectId,
+        Text = "ZyruBoonLevelUp",
+        SkipRise = true,
+        SkipFlash = true,
+        ShadowScale = 1.1,
+        ShadowScaleX = 1.2,
+        Duration = 1.5,
+        OffsetY = 0,
+        LuaKey = "TempTextData",
+        LuaValue = { Name = tostring(traitTitle), Level = tostring(level) }
+    })
 end
 
 function CloseScreenByName ( name )
@@ -321,8 +317,7 @@ end
 
 -- Courtyard Interface
 
-function LolLmao()
-    DebugPrint { Text = "hello"}
+function LolLmao(button)
     local voiceline = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )
@@ -855,13 +850,18 @@ function CloseInitializationScreen(screen, button)
                 -- "That oaf Poseidon spoke to you already, didn't he? All bluster, muscles, and bravado, that one. I'm glad you're not the type."
 				{ 
                     Cue = "/VO/Aphrodite_0045",
+                    Queue = "Interrupt"
                 },
                 -- "You've come to know your Uncle Zeus, by now, correct? Just want to let you know, good Zeus gets very busy on the regular, so you just stick with me, I've always time for you, Nephew!"
                 {
                     Cue = "/VO/Poseidon_0049",
+                    Queue = "Interrupt"
                 },
                 -- "I suppose even down in the Underworld, you would have heard such tales of me, young man. They're all untrue, hahaha! Except the tales of my bravery. Those are completely accurate, though all too modest, in most cases, I must say."
-                { Cue = "/VO/Zeus_0218", },
+                {
+                    Cue = "/VO/Zeus_0218",
+                    Queue = "Interrupt"
+                },
             }
         },
         { Proportion = 0, UpdateDuration = 0},
@@ -1393,6 +1393,28 @@ function GetUpgradeListItem(screen, upgrade)
     }
 end
 
+function GetRarityBuffListItem(screen, upgrade)
+    return {
+        event = function () 
+            UpdateUpgradeInfoScreen(screen, upgrade)
+        end,
+        Text = "GodRarityBonusBuff",
+        Description = "GodRarityBonusBuff_Description",
+        DescriptionArgs = {
+            LuaKey = "TempTextData",
+            LuaValue = {
+                Bonus = upgrade.Value,
+                God = upgrade.Source, -- TODO: upgrade source is hardcoded english, can I recursively translate?
+            }
+        },
+        ImageStyle = {
+            Image = GetTraitIcon( TraitData[upgrade.Name] or {} ),
+            Offset = {X = -225, Y = 0},
+            Scale = 0.7, 
+        },
+    }
+end
+
 function ShowGodUpgradeScreen(screen, button)
     -- upgradesTodisplay
     local source = button.PageIndex
@@ -1400,7 +1422,13 @@ function ShowGodUpgradeScreen(screen, button)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
-        table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+        if upgrade.Type == "NewTrait" then
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+        elseif upgrade.Type == "RarityBonus" then
+            table.insert(upgradeItemsToDisplay, GetRarityBuffListItem(screen, upgrade))
+        else
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+        end
     end
 
 
