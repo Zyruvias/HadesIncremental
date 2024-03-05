@@ -261,9 +261,11 @@ function ZyruIncremental.CreateMenu(name, args)
 		return
 	end
     OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true })
+    if args.SkipMeta == nil then
     HideCombatUI(name)
     FreezePlayerUnit()
     EnableShopGamepadCursor()
+    end
 
     -- Lets users use escape / cancel to exit the menu
     if args.PauseBlock then
@@ -351,7 +353,6 @@ function ZyruIncremental.RenderComponent(screen, component)
         -- establish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
         if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
-            -- DebugPrint { Text = "Setting component definition for " .. fieldName }
             screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
         end
     end
@@ -359,7 +360,7 @@ end
 
 function ZyruIncremental.UpdateComponent(screen, component, args)
     if not component or component.Type == nil then
-        -- DebugPrint { Text = "No component or no component Type property provided"}
+        DebugPrint { Text = "No component or no component Type property provided"}
         return
     end 
     if type(ZyruIncremental["Update" .. tostring(component.Type)]) == "function" then
@@ -367,7 +368,6 @@ function ZyruIncremental.UpdateComponent(screen, component, args)
 
         -- reestablish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-        -- DebugPrint { Text = "Updating component definition for " .. fieldName }
         screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
     end
 end
@@ -437,7 +437,6 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     SetScaleX{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.Proportion }
     SetScaleY{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.ScaleY }
 
-    --DebugPrint { Text = ModUtil.ToString.Deep(components)}
     
     -- TODO: left text / right text
     local barText = {
@@ -551,13 +550,12 @@ function ZyruIncremental.RenderButton(screen, component)
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
     local buttonComponentName = buttonDefinition.Name or "BaseInteractableButton"
     components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0  })
-    -- DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
 
     if buttonDefinition.Animation ~= nil then
         SetAnimation({ DestinationId = components[buttonName].Id, Name = buttonDefinition.Animation })
     end
     components[buttonName .. "HighlightTarget"] = CreateScreenComponent { Name = "BaseInteractableButton", DestinationId = components[buttonName].Id }
-    SetInteractProperty({ DestinationId = components[buttonName .. "HighlightTarget"].Id, Property = "HighlightOnAnimation", Value = "PortraitEmoteSparkly" })
+    -- SetInteractProperty({ DestinationId = components[buttonName .. "HighlightTarget"].Id, Property = "HighlightOnAnimation", Value = "PortraitEmoteSparkly" })
     -- SetInteractProperty({ DestinationId = components[buttonName].Id, Property = "HighlightOnAnimation", Value = "Portrait_Base_01_Exit" })
 
 
@@ -576,18 +574,16 @@ function ZyruIncremental.RenderButton(screen, component)
         SetAngle({ Id = components[buttonName].Id, Angle = buttonDefinition.Angle})
     end
     
-    components[buttonName].OnMouseOverFunctionName = "LolLmao"
-    components[buttonName].OnMouseOffFunctionName = "LolLmao"
+    -- components[buttonName].OnMouseOverFunctionName = "LolLmao"
+    -- components[buttonName].OnMouseOffFunctionName = "LolLmao"
     -- HardCoded, not sure how to get around this
     if buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Close" then
         local name = screen.Name
-        DebugPrint { Text = "creating function Closing 2 with key " .. "Close" .. name .. "Screen"}
         components[buttonName].OnPressedFunctionName = "Close" .. name .. "Screen"
         if _G["Close" .. name .. "Screen"] == nil then
     
             _G["Close" .. name .. "Screen"] = function()
                 CloseScreenByName ( name )
-                DebugPrint { Text = "Closing 2"}
                 if buttonDefinition.CloseScreenFunction then
                     buttonDefinition.CloseScreenFunction(buttonDefinition.CloseScreenFunctionArgs)
                 elseif buttonDefinition.CloseScreenFunctionName ~= nil then

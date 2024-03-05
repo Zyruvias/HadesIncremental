@@ -10,7 +10,6 @@ function ZyruIncremental.AddUpgrade(upgradeName, args)
     end
 
     local upgrade = ZyruIncremental.UpgradeData[upgradeName]
-    -- DebugPrint { Text = ModUtil.ToString.Deep(upgrade) }
     if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
     end
@@ -18,7 +17,6 @@ function ZyruIncremental.AddUpgrade(upgradeName, args)
     if upgrade.OnApplyFunctions ~= nil then
         for k, functionName in ipairs(upgrade.OnApplyFunctions) do
             local functionArgs = upgrade.OnApplyFunctionArgs[k]
-            -- DebugPrint { Text = "AddUpgrade: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
             _G[functionName](functionArgs)
         end
     end
@@ -167,5 +165,20 @@ function AugmentTransientState(args)
             ZyruIncremental.TransientState[name] = val
         end
 
+    end
+end
+
+function ApplyTransientPatches(args)
+    local fileOptions = ModUtil.Path.Get("Data.FileOptions", ZyruIncremental)
+    if fileOptions == nil then
+        return
+    end
+
+    if fileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
+        -- gotta strip requirements from cosmetic data...
+        DebugPrint { Text = "Attempting to apply transient patches..."}
+        for itemName, itemData in pairs(ConditionalItemData) do
+            itemData.GameStateRequirements = {}
+        end
     end
 end

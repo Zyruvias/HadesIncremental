@@ -4,7 +4,7 @@ ModUtil.Path.Wrap("HandleUpgradeChoiceSelection", function (baseFunc, screen, bu
     local traitName = button.Data.Name
     local levelCount  = GetTraitNameCount(CurrentRun.Hero, traitName)
     for i = levelCount, levelCount + button.LootData.StackNum - 1 do
-      DebugPrint { Text = i }
+      -- DebugPrint { Text = i }
       ZyruIncremental.TrackDrop(button.LootData.Name, math.floor(150 / math.pow(2, (i - 1) / 2)))
     end
   end
@@ -28,7 +28,7 @@ function ZyruIncremental.TrackDrop(source, amount)
     return
   end
   
-  DebugPrint { Text = "Drop Tracked: " .. source .. " for " .. tostring(amount) }
+  -- DebugPrint { Text = "Drop Tracked: " .. source .. " for " .. tostring(amount) }
   local dropData = ZyruIncremental.Data.DropData[source]
   dropData.Count = dropData.Count + 1
   dropData.Amount = dropData.Amount + amount
@@ -76,7 +76,8 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
 	end
   -- NOTE: Rare roll mirror upgrade is now resource generation
 	-- local metaupgradeRareBoost = 100 * GetNumMetaUpgrades( "RareBoonDropMetaUpgrade" ) * ( MetaUpgradeData.RareBoonDropMetaUpgrade.ChangeValue - 1 )
-	local metaupgradeEpicBoost = 100 * GetNumMetaUpgrades( "EpicBoonDropMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 ) + GetNumMetaUpgrades( "EpicHeroicBoonMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
+	local metaupgradeEpicBoost = 100 * GetNumMetaUpgrades( "EpicBoonDropMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
+    + GetNumMetaUpgrades( "EpicHeroicBoonMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
 	baseRarity = baseRarity + metaupgradeEpicBoost
   local metaupgradeLegendaryBoost = GetNumMetaUpgrades( "DuoRarityBoonDropMetaUpgrade" ) * ( MetaUpgradeData.EpicBoonDropMetaUpgrade.ChangeValue - 1 )
 	legendaryRoll = legendaryRoll + metaupgradeLegendaryBoost
@@ -86,11 +87,12 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
 		if rarityTraitData.RequiredGod == nil or rarityTraitData.RequiredGod == name then
 			if rarityTraitData.RareBonus then
 				baseRarity = baseRarity + 100 * rarityTraitData.RareBonus
+      end
+      
+      -- Exclusive Access and other new boons
+      if rarityTraitData.ZyruRarityBonus then
+				baseRarity = baseRarity + 100 * rarityTraitData.ZyruRarityBonus
 			end
-      -- TODO: Figure out Exclusive Access and if other epic sources make sense to preserve
-			-- if rarityTraitData.EpicBonus then
-			-- 	epicRoll = epicRoll + rarityTraitData.EpicBonus
-			-- end
 			if rarityTraitData.LegendaryBonus then
 				legendaryRoll = legendaryRoll + rarityTraitData.LegendaryBonus
 			end
@@ -99,7 +101,6 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
 
   local chances = ZyruIncremental.ComputeRarityDistribution( baseRarity )
 	chances.Legendary = legendaryRoll
-  -- DebugPrint { Text = "Chances at " .. tostring(baseRarity) .."%: " .. ModUtil.ToString.Deep(chances)}
   return chances
 end, ZyruIncremental)
 
@@ -181,9 +182,9 @@ ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
         cumulativeChance = cumulativeChance + chances[rarity]
       end
       
-      DebugPrint { Text = "Rolled " .. chosenRarity }
+      -- DebugPrint { Text = "Rolled " .. chosenRarity }
       if rarityTable[chosenRarity] ~= nil and rarityTable[chosenRarity][upgradeData.ItemName] then
-DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
+-- DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
         upgradeData.Rarity = chosenRarity
       end
 		end
@@ -474,7 +475,7 @@ ModUtil.Path.Context.Wrap("Damage", function ()
 
       local addDamageMultiplier = function( data, multiplier )
         -- CHANGES
-        DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
+        -- DebugPrint { Text = tostring(data.Name) .. " " .. tostring(multiplier) }
         if ignoreDamageSourceTraitMap[data.Name] == nil then
           if data ~= nil and data.Name ~= nil and multiplier ~= nil then
             damageMultiplierMap[data.Name] = (damageMultiplierMap[data.Name] or 1) + multiplier - 1
@@ -803,14 +804,9 @@ function ZyruIncremental.CheckBoonDataLevelUp(traitName)
     DebugPrint { Text = traitName .. " has reached level " .. tostring(saveTraitData.Level)}
     -- Add God Experience Levels
     AddGodExperience(ZyruIncremental.BoonToGod[traitName], saveTraitData.Level - 1)
-    -- TODO: Add queuing for boon levels/god levels
-    -- Add UI level up message
-    thread(DisplayBoonLevelupPopup, traitName, saveTraitData.Level)
+    -- Add handle level-up message behavior
     local god = ZyruIncremental.BoonToGod[traitName] or TraitData[traitName].God
-    if god ~= nil then
-      local voiceLine = GetRandomValue(ZyruIncremental.BoonLevelUpVoiceLines[god])
-      thread(PlayVoiceLine, voiceLine)
-    end
+    thread(ZyruIncremental.HandleBoonLevelupBehavior, traitName, saveTraitData.Level, god)
   end
 end
 
@@ -830,7 +826,6 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
   end
 
   if ZyruIncremental.Data.BoonData[traitName] == nil then
-    DebugPrint({ Text =  traitName .. " initialized" })
     ZyruIncremental.Data.BoonData[traitName] = {
       Count = 0,
       Value = 0,
@@ -843,30 +838,71 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
 
   -- assign use count, damage, experience
   local expGained = 0
-  saveTraitData.Count = saveTraitData.Count + 1
   if type(damageValue) == "number" then
     saveTraitData.Value = saveTraitData.Value + damageValue
     if (ZyruIncremental.BoonExperienceFactor[traitName] == nil) then
       DebugPrint { Text = traitName .. " not found in BoonExperienceFactor map"}
-      return
     end
-    saveTraitData.Experience = saveTraitData.Experience + ZyruIncremental.BoonExperienceFactor[traitName] * damageValue
-    expGained = expGained + ZyruIncremental.BoonExperienceFactor[traitName] * damageValue
+    expGained = expGained + (ZyruIncremental.BoonExperienceFactor[traitName] or 1) * damageValue
   end
 
-  if (ZyruIncremental.BoonExperiencePerUse[traitName] == nil) then
-    DebugPrint { Text = traitName .. " not found in BoonExperiencePerUse map"}
-  else
-    saveTraitData.Experience = saveTraitData.Experience + ZyruIncremental.BoonExperiencePerUse[traitName]
-    expGained = expGained + ZyruIncremental.BoonExperiencePerUse[traitName]
-    DebugPrint { Text = traitName .. " earned " .. tostring(expGained) .. " EXP."}
-  end
+  saveTraitData.Count = saveTraitData.Count + 1
+  expGained = expGained + (ZyruIncremental.BoonExperiencePerUse[traitName] or 0)
 
-  if expGained > 0 then
+  local expFactor = ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
+
+  expGained = expGained * expFactor
+
+  if expGained > 0  then
+    saveTraitData.Experience = saveTraitData.Experience + expGained
     ZyruIncremental.HandleExperiencePresentationBehavior(traitName, ZyruIncremental.BoonToGod[traitName], expGained, victim)
     thread(ZyruIncremental.CheckBoonDataLevelUp, traitName)
   end
 
+end
+
+function ZyruIncremental.IsExperienceEligible(traitName, contribution, victim)
+  -- check for active encounter
+  local encounter = ModUtil.Path.Get("CurrentRun.CurrentRoom.Encounter")
+    or ModUtil.Path.Get("CurrentRun.CurrentRoom.ChallengeEncounter")
+
+  if not IsCombatEncounterActive ( CurrentRun ) and not ZyruIncremental.BoonGrantExperienceOutCombat[traitName] then
+    return false
+  end
+  return true
+end
+
+function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
+  if not ZyruIncremental.IsExperienceEligible(traitName, damageValue, victim) then
+    return 0
+  end
+
+  local multiplier = 1
+  
+  local encounter = ModUtil.Path.Get("CurrentRun.CurrentRoom.Encounter")
+    or ModUtil.Path.Get("CurrentRun.CurrentRoom.ChallengeEncounter")
+
+  -- shrink multiplier by kill amount in survival rooms
+  if encounter.EncounterType == "SurvivalChallenge" then
+    local currentRoom = CurrentRun.CurrentRoom
+    -- TODO: figure out correct caching of this
+    if currentRoom.ZyruExpMult ~= nil then
+      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
+    else
+      local currentKillMap = currentRoom.Kills
+      local currentKillCount = 0
+      for name, count in pairs(currentKillMap) do
+        currentKillCount = currentKillCount + count
+      end
+      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
+    end
+  end
+
+  -- TODO: get other experience factors
+  
+    
+
+  return multiplier
 end
 
 -------------------------------------------------------------------------------
@@ -893,7 +929,6 @@ ModUtil.Path.Context.Wrap("CommenceSuperMove", function()
   ModUtil.Path.Wrap("GetHeroTraitValues", function (baseFunc, ...)
     local res = baseFunc(...)
     for key, trait in pairs(res) do
-      DebugPrint({ Text = ModUtil.ToString.Deep(trait) })
       if ZyruIncremental.SuperTraitMap[trait[1]] ~= nil then
         ZyruIncremental.TrackBoonEffect(ZyruIncremental.SuperTraitMap[trait[1]])
       end
@@ -1202,7 +1237,7 @@ ModUtil.Path.Wrap("GetTotalHeroTraitValue", function (baseFunc, source, args)
   if source == "MaxHealthMultiplier" then
     return baseFunc(source, args) * getMaxHealthScalar()
   elseif source == "MoneyMultiplier" then
-    DebugPrint({ Text =  "applying modified coin" })
+    -- DebugPrint({ Text =  "applying modified coin" })
     return baseFunc(source, args) * getCoinScalar()
   elseif source == "HealthRewardBonus" then
     ZyruIncremental.TrackBoonEffect("HealthRewardBonusTrait")
@@ -1288,7 +1323,7 @@ function ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, propert
     -- level 4 => 0.4 base -> (1 + 4 * 0.05) * 0.4 = 0.48
     -- 0.48 - 1
     propertyChange.IdenticalMultiplier.Value = (1 + val) * (1 + level * 0.1) - 1
-    DebugPrint { Text = val .. " " .. propertyChange.IdenticalMultiplier.Value }
+    -- DebugPrint { Text = val .. " " .. propertyChange.IdenticalMultiplier.Value }
   end
   return propertyChange
 end

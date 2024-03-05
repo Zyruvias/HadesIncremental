@@ -206,7 +206,8 @@ function ZyruIncremental.HandleKillEnemyExperiencePresentation(victim)
     end
     if  behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON then
         for traitName, expGained in pairs(victim.ZyruExperienceMap or {}) do
-            thread( DisplayExperiencePopup, expGained, { Color = Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"], DestinationId = victim.ObjectId })
+            local color = Color[tostring(ZyruIncremental.BoonToGod[traitName]) .. "DamageLight"] or Color.White
+            thread( DisplayExperiencePopup, expGained, { Color = color, DestinationId = victim.ObjectId })
             wait(0.1)
         end
     elseif behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD then
@@ -260,6 +261,37 @@ function DisplayExperiencePopup (amount, args)
 					
 end
 
+function ZyruIncremental.HandleBoonLevelupBehavior (traitName, level, god)
+
+    local showOverhead = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    local playVoiceline = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    local showPortrait = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    if showOverhead then
+        thread(DisplayBoonLevelupPopup, traitName, level)
+    end
+
+    if playVoiceline and god ~= nil then
+        local voiceLine = GetRandomValue(ZyruIncremental.BoonLevelUpVoiceLines[god])
+        thread(PlayVoiceLine, voiceLine)
+    end
+
+    if showPortrait and god ~= nil then
+        thread(ShowBoonLevelupPortrait, god)
+    end
+end
+
 function DisplayBoonLevelupPopup( traitName, level )
     local traitTitle = traitName
     if TraitData[traitName] then 
@@ -269,15 +301,25 @@ function DisplayBoonLevelupPopup( traitName, level )
     InCombatTextArgs({
         TargetId = CurrentRun.Hero.ObjectId,
         Text = "ZyruBoonLevelUp",
-        SkipRise = true,
+        SkipRise = false,
         SkipFlash = true,
         ShadowScale = 1.1,
         ShadowScaleX = 1.2,
         Duration = 1.5,
-        OffsetY = 0,
+        OffsetY = -150,
         LuaKey = "TempTextData",
         LuaValue = { Name = tostring(traitTitle), Level = tostring(level) }
     })
+end
+
+function ShowBoonLevelupPortrait (god)
+    local screen = {} -- TODO: is this a fine pattern to copy...
+    screen.PortraitId = CreateScreenObstacle({ Name = "BlankObstacle", X = ScreenCenterX - 490, Y = ScreenCenterY + 105, Group = "Combat_Menu" })
+    SetAnimation({ DestinationId = screen.PortraitId, Name = "Portrait_" .. god .. "_Default_01"})
+    wait(1.5)
+    SetAnimation({ DestinationId = screen.PortraitId, Name = "Portrait_" .. god .. "_Default_01_Exit"})
+    wait(0.3)
+    Destroy { Id = screen.PortraitId }
 end
 
 function CloseScreenByName ( name )
@@ -450,7 +492,8 @@ function ShowZyruSettingsMenu()
                     Text = "Change mod configurations according to your heart's desires.",
                     FieldName = "WelcomeTitle",
                 }
-            },{
+            },
+            {
                 Type = "Dropdown",
                 SubType = "Standard",
                 Args = {
@@ -493,15 +536,70 @@ function ShowZyruSettingsMenu()
                 SubType = "Paragraph",
                 Args = {
                     FieldName = "ExpDropText",
-                    Text = "On hit - every instance of damage or benefits from a boon will show an experience popup."
-                    .. " Please note that this is very visually noisy compared to the other options.\\n\\n"
-                    .." On kill, aggregated by Boon - each boon that contributes to an enemy kill will show an experience popup."
-                    .. " Mild visual noise with many boons. (Default Setting)\\n\\n"
-                    .." On kill, aggregated by God - each God that contributes to an enemy kill will show an experience popup."
-                    .. " Least visual noise."
-                    ,
+                    Text = "Configure EXP popup behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - ScreenHeight / 6 - 25,
+                    Width = ScreenWidth * 0.60
+                }
+            },
+            {
+                Type = "Dropdown",
+                SubType = "Standard",
+                Args = {
+                    FieldName = "LevelUpSettingDropdown",
+                    Group = "LevelupGroup",
+                    -- X, Y, Items, Name
+                    X = ScreenWidth / 6,
+                    Y = ScreenHeight / 2 - 125,
+                    Scale = {
+                        X = 0.5
+                    },
+                    Items = {
+                        Default = {
+                            Text = ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior or ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
+                            event = function() end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_POPUP,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_VOICELINE,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_VOICELINE
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_ALL,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_ALL
+                            end
+                        },
+                    }
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                Args = {
+                    FieldName = "LevelupText",
+                    Text = "Configure Level-up notification behavior",
+                    OffsetX = - ScreenWidth / 4 + 100,
+                    OffsetY = - 145,
                     Width = ScreenWidth * 0.60
                 }
             },
@@ -655,7 +753,7 @@ function ModInitializationScreen2()
                         Y = ScreenHeight / 3,
                         Items = {
                             Default = {
-                                Text = ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard",
+                                Text = "Select a difficulty...",
                                 event = function() end
                             },
                             { Text = "Easy", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy" end },
@@ -720,8 +818,8 @@ function ModInitializationScreen2()
                         Scale = { X = 1.0, Y = 1.0 },
                         Items = {
                             Default = {
-                                Text = ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE,
-                                event = function() ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Data.FileOptions.StartingPoint end
+                                Text = "Select a starting point...",
+                                event = function() end
                             },
                             { 
                                 Text = ZyruIncremental.Constants.SaveFile.FRESH_FILE,
@@ -844,31 +942,35 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-			Proportion = 1, UpdateDuration = 8, Text = "Settling familial disputes ...",
+			Proportion = 1, UpdateDuration = 17, Text = "Settling familial disputes ...",
+            CascadeVoicelines = true,
             Voicelines = {
-                AllowTalkOverTextLines = true,
                 -- "That oaf Poseidon spoke to you already, didn't he? All bluster, muscles, and bravado, that one. I'm glad you're not the type."
 				{ 
                     Cue = "/VO/Aphrodite_0045",
-                    Queue = "Interrupt"
                 },
                 -- "You've come to know your Uncle Zeus, by now, correct? Just want to let you know, good Zeus gets very busy on the regular, so you just stick with me, I've always time for you, Nephew!"
                 {
                     Cue = "/VO/Poseidon_0049",
-                    Queue = "Interrupt"
+                    PreLineWait = 1.0
                 },
                 -- "I suppose even down in the Underworld, you would have heard such tales of me, young man. They're all untrue, hahaha! Except the tales of my bravery. Those are completely accurate, though all too modest, in most cases, I must say."
                 {
                     Cue = "/VO/Zeus_0218",
-                    Queue = "Interrupt"
+                    PreLineWait = 2.0
+                },
+                -- I said, shut up, old man!
+                {
+                    Cue =  "/VO/ZagreusHome_0177",
+                    PreLineWait = 16
                 },
             }
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            Proportion = 1, UpdateDuration = 12, Text = "Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...",
+            Proportion = 1, UpdateDuration = 9, Text = "Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...",
             -- "No... Zagreus, what have you done? You've led them *here*? TODO: one more - boat line rides?
-            Voicelines = {{ Cue = "/VO/Persephone_0060", PreLineWait = 1.5}, }
+            Voicelines = {{ Cue = "/VO/Persephone_0060", PreLineWait = 2.0}, }
         },
         { Proportion = 0, UpdateDuration = 0},
         {
@@ -937,20 +1039,30 @@ function CloseInitializationScreen(screen, button)
     ZyruIncremental.RenderComponent(screen, progressBar)
     ZyruIncremental.RenderComponent(screen, progressText)
 
-    for _, stage in ipairs(stages) do
-        if stage.Voicelines then
-            thread( PlayVoiceLines, stage.Voicelines )
-        end
+    -- for _, stage in ipairs(stages) do
+    --     if stage.Voicelines then
+    --         if stage.CascadeVoicelines then
+    --             for i, line in ipairs(stage.Voicelines) do
+    --                 -- hack to get things to overlap...
+    --                 thread( function(line, k)
+    --                     wait (line.PreLineWait)
+    --                     PlaySpeech { Name = line.Cue, Id = k, UseSubtitles = false,  } 
+    --                 end, line, i)
+    --             end
+    --         else
+    --             thread( PlayVoiceLines, stage.Voicelines, false, {})
+    --         end
+    --     end
 
-        if stage.Text then
-            progressText.Args.Text = stage.Text
-            ZyruIncremental.UpdateComponent(screen, progressText)
-        end
+    --     if stage.Text then
+    --         progressText.Args.Text = stage.Text
+    --         ZyruIncremental.UpdateComponent(screen, progressText)
+    --     end
 
-        progressBar.Args.Proportion = stage.Proportion
-        progressBar.Args.UpdateDuration = stage.UpdateDuration
-        ZyruIncremental.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
-    end
+    --     progressBar.Args.Proportion = stage.Proportion
+    --     progressBar.Args.UpdateDuration = stage.UpdateDuration
+    --     ZyruIncremental.UpdateProgressBar(screen, progressBar, { WaitForUpdate = true })
+    -- end
 
 
     
@@ -960,16 +1072,18 @@ function CloseInitializationScreen(screen, button)
     Kill(CurrentRun.Hero)
 end
 
+ModUtil.Path.Wrap("SetupMap", function(base)
+    LoadPackages({Name = "DeathArea"})
+    base()
+end, ZyruIncremental)
+
 ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 
     if ZyruIncremental.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
 
-    
     base(currentRun, currentRoom)
-    
-    LoadPackages({Name = "DeathArea"})
 
     local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
     selector.BlockExitUntilUsed = true
@@ -977,7 +1091,6 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     selector.UseText = "{I} Begin Incremental Journey"
     selector.OnUsedFunctionName = "ModInitializationScreen2"
     selector.Activate = true
-
     
 	local targetId = SpawnObstacle({ Name = "BlankObstacle", Group = "Standing", DestinationId = CurrentRun.Hero.ObjectId, OffsetX = 0, OffsetY = 0 })
 
@@ -987,8 +1100,8 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
         DestinationId = targetId,
         ForceToValidLocation = true,
         AttachedTable = selector,
-        OffsetX = 500,
-        OffsetY = -0,
+        OffsetX = 2500,
+        OffsetY = -1000,
     })
     cabinetId = selector.ObjectId
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
@@ -998,30 +1111,30 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     
 end, ZyruIncremental)
 
-function ZyruIncremental.TestFrameworkMenu()
-    local screen = ZyruIncremental.CreateMenu("Test", {
-        Components = {
-            {
-                Type = "Button",
-                SubType = "Icon",
-                Args = {
-                    FieldName = "IconTest",
-                    Group = "Combat_Menu_TraitTray",
-                    Animation = "Codex_Portrait_Zagreus",
-                    OffsetX = 0,
-                    OffsetY = 0,
-                    ComponentArgs = {
-                        OnPressedFunctionName = "LolLmao"
-                    }
-                },
-            },
-            {
-                Type = "Button",
-                SubType = "Close",
-            }
-        }
-    })
-end
+-- function ZyruIncremental.TestFrameworkMenu()
+--     local screen = ZyruIncremental.CreateMenu("Test", {
+--         Components = {
+--             {
+--                 Type = "Button",
+--                 SubType = "Icon",
+--                 Args = {
+--                     FieldName = "IconTest",
+--                     Group = "Combat_Menu_TraitTray",
+--                     Animation = "Codex_Portrait_Zagreus",
+--                     OffsetX = 0,
+--                     OffsetY = 0,
+--                     ComponentArgs = {
+--                         OnPressedFunctionName = "LolLmao"
+--                     }
+--                 },
+--             },
+--             {
+--                 Type = "Button",
+--                 SubType = "Close",
+--             }
+--         }
+--     })
+-- end
 
 
 
@@ -1422,11 +1535,12 @@ function ShowGodUpgradeScreen(screen, button)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
-        if upgrade.Type == "NewTrait" then
+        if upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON then
             table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
-        elseif upgrade.Type == "RarityBonus" then
+        elseif upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.AUGMENT_RARITY then
             table.insert(upgradeItemsToDisplay, GetRarityBuffListItem(screen, upgrade))
         else
+            -- TODO: figure out default
             table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
         end
     end
@@ -1488,3 +1602,11 @@ function ShowGodUpgradeScreen(screen, button)
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
 end
+
+-- show pact of punishment immediately
+ModUtil.Path.Wrap("UseEscapeDoor", function (base, usee, args)
+    if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
+        return UseShrineObject(usee, args)
+    end
+    return base(usee, args)
+end, ZyruIncremental)

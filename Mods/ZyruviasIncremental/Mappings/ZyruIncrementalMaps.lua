@@ -1,71 +1,3 @@
-ZyruIncremental.Constants = {
-  SaveFile = {
-    -- starting point
-    EPILOGUE = "Epilogue",
-    FRESH_FILE = "Fresh File",
-    -- difficulty
-    EASY = "Easy",
-    STANDARD = "Standard",
-    HARD = "Hard",
-    HELL = "Hell",
-    FREEPLAY = "Freeplay",
-  },
-  Difficulty = {
-    Keys = {
-      HEALTH_SCALIING = "HealthScaling",
-      COST_SCALING = "CostScaling",
-      INCOMING_DAMAGE_SCALING = "IncomingDamageScaling",
-    },
-    HealthScaling = {
-      Easy = 1.02,
-      Standard = 1.04,
-      Hard = 1.06,
-      Hell = 1.10
-    },
-    CostScaling = {
-      Easy = 1.00,
-      Standard = 1.01,
-      Hard = 1.02,
-      Hell = 1.05
-    },
-    IncomingDamageScaling = {
-      Easy = 1.02,
-      Standard = 1.04,
-      Hard = 1.06,
-      Hell = 1.10
-    }
-  },
-  Components = {
-    RECTANGLE_01_HEIGHT = 270,
-    RECTANGLE_01_WIDTH = 480,
-    PROGRESS_BAR_SCALE_PROPORTION_X = 1,
-    PROGRESS_BAR_SCALE_PROPORTION_Y = 0.05
-  },
-  Gods = {
-    ZEUS = "Zeus",
-    POSEIDON = "Poseidon",
-    ATHENA = "Athena",
-    ARES = "Ares",
-    APHRODITE = "Aphrodite",
-    ARTEMIS = "Artemis",
-    DIONYSUS = "Dionysus",
-    DEMETER = "Demeter",
-    HERMES = "Hermes",
-    CHAOS = "Chaos",
-  },
-  Upgrades = {
-    Types = {
-      PURCHASE_BOON = "Purchase Boon",
-      AUGMENT_RARITY = "Augment Rarity Bonus"
-    },
-  },
-  Settings = {
-    EXP_ON_HIT = "On hit",
-    EXP_ON_DEATH_BY_BOON = "On kill, aggregated by Boon",
-    EXP_ON_DEATH_BY_GOD = "On kill, aggregated by God",
-  }
-}
-
 -- SAVE DATA SETUP
 ZyruIncremental.InitializeSaveData = function ()
   if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
@@ -112,6 +44,7 @@ ZyruIncremental.InitializeSaveData = function ()
       StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
       DifficultySetting = ZyruIncremental.Constants.SaveFile.STANDARD,
       ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_HIT,
+      LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
     }
     ZyruIncremental.Data.Flags = {
       Initialized = true,
@@ -120,33 +53,17 @@ ZyruIncremental.InitializeSaveData = function ()
 end
 
 ModUtil.LoadOnce(ZyruIncremental.InitializeSaveData)
-  function ZyruTestUpgrade(args) 
-    DebugPrint { Text = "Upgrade applied with args: " .. ModUtil.ToString.Deep(args)}
-  end
-
   -- SAVE DATA UPGRADE PROCESSING
 ModUtil.LoadOnce( function ( )
   if ZyruIncremental.Data.UpgradeData == nil then 
     return
   end
 
-  -- debug upgrade proof of concept
-  -- ZyruIncremental.AddUpgrade({
-  --   Name = "ZyruTestUpgrade",
-  --   OnApplyFunction = "ZyruTestUpgrade",
-  --   OnApplyFunctionArgs = {
-  --     Count = 1,
-  --   },
-  --   Purchased = true,
-  -- }, { 
-  --   SkipApply = true 
-  -- })
-
   -- process existing upgrades
   for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
     local upgrade = ZyruIncremental.UpgradeData[upgradeName]
     if upgrade == nil then
-      DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
+      -- DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
       ZyruIncremental.RemoveUpgrade(upgradeName)
     else
       if upgrade.OnApplyFunction ~= nil then
@@ -155,7 +72,6 @@ ModUtil.LoadOnce( function ( )
       if upgrade.OnApplyFunctions ~= nil then
           for k, functionName in ipairs(upgrade.OnApplyFunctions) do
               local functionArgs = upgrade.OnApplyFunctionArgs[k]
-              DebugPrint { Text = "Processing Savefile Upgrades: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
               _G[functionName](functionArgs)
           end
       end
@@ -165,7 +81,7 @@ ModUtil.LoadOnce( function ( )
 end)
 
 ModUtil.LoadOnce(function ( )
-    DebugPrint({ Text = "LOADING ZYRUMAP SETUP" })
+    DebugPrint({ Text = "LOADING ZyruIncremental Map Setup Data..." })
     ZyruIncremental.WhatTheFuckIsThisToBoonMap = {
       DemeterMaxChill = "MaximumChillBlast",
       PoseidonCollisionBlast = "SlamExplosionTrait",
@@ -467,7 +383,7 @@ ModUtil.LoadOnce(function ( )
       DodgeChanceTrait = 0,
       RapidCastTrait = 1,
       RushSpeedBoostTrait = 1,
-      MoveSpeedTrait = 1,
+      MoveSpeedTrait = 35,
       RushRallyTrait = 10,
       HermesShoutDodge = 0,
       HermesBonusProjectilesTrait = 1,
@@ -684,6 +600,10 @@ ModUtil.LoadOnce(function ( )
       AresHermesSynergyTrait = true
     }
 
+    ZyruIncremental.BoonGrantExperienceOutCombat = {
+      -- TODO: does anything go here?
+    }
+
 end)
 
 
@@ -897,10 +817,29 @@ end, ZyruIncremental)
 function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
   local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
-  -- if property == "Cost" then
-  --   difficultyScalar = 1 + (difficultyScalar - 1) / 2
-  -- end
-  return math.pow(difficultyScalar, TableLength(GameState.RunHistory) - 1)
+  local numRunsToExponentiate = TableLength(GameState.RunHistory) - 1
+  if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
+    if GetNumsRunsCleared() < 10 then
+      return 1
+    elseif ZyruIncremental.Data.FreshFileRunCompletion == nil then
+      -- compute the file-cached multiplier
+      local runIndex = 0
+      local attemptIndex = 1
+      for k, run in pairs( GameState.RunHistory ) do
+        if run.Cleared then
+          runIndex = runIndex + 1
+        end
+        if runIndex == 10 then
+          ZyruIncremental.Data.FreshFileRunCompletion = attemptIndex
+          break
+        end
+      end
+    end
+    -- return the cached value
+    -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
+    numRunsToExponentiate = numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
+  end
+  return math.pow(difficultyScalar, numRunsToExponentiate)
 end
 
 ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
@@ -1078,14 +1017,21 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     VulnerabilityEffectBonusMetaUpgrade = true,
     TrapDamageShrineUpgrade = true
   }
-  -- Quest Data -- complete, allow players to cash them in whenever
-  -- Cosmetics.QuestLog = true for unlock below
+  -- Quest completion
   for k, questName in ipairs( QuestOrderData ) do
 		local questData = QuestData[questName]
-    -- GameState.QuestStatus[questData.Name] = "Complete"
-    ModUtil.Table.Replace(QuestData[questData.Name].UnlockGameStateRequirements, {})
-    ModUtil.Table.Replace(QuestData[questData.Name].CompleteGameStateRequirements, {})
+    GameState.QuestStatus[questData.Name] = "CashedOut"
   end
+  -- TODO: starting resources?
+  GameState.Resources = {
+    SuperGiftPoints = 10,
+    MetaPoints = 5000,
+    LockKeys = 50,
+    SuperLockKeys = 50,
+    Gems = 2500,
+    SuperGems = 20,
+    GiftPoints = 100
+  }
   -- Cosmetic Items
   GameState.Cosmetics = {
     -- House Items
@@ -1100,30 +1046,36 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     ElysiumReprieve = true,
     UnusedWeaponBonusAddGems = true,
     GiftDropRunProgress = true,
+    HadesEMFight = true,
 
 
   }
   GameState.CosmeticsAdded = {
     CodexBoonList = true,
   }
+  
   for cosmeticName, cosmeticData in pairs( ConditionalItemData ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
 			end
 	end
   for cosmeticName, cosmeticData in pairs( GameData.MiscCosmetics ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
 			end
 	end
   for cosmeticName, cosmeticData in pairs( GameData.LoungeCosmetics ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
 			end
 	end
   for trackName, trackData in pairs( MusicPlayerTrackData ) do
 		if not trackData.DebugOnly and trackData.ResourceCost ~= nil then
 			GameState.CosmeticsAdded[trackData.Name] = true
+      GameState.Cosmetics[trackData.Name] = true
 		end
 	end
   -- QoL to disable the tutorials
@@ -1161,27 +1113,17 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     BowTutorialLoad = true,
     Fishing = true
   }
-  -- TODO: starting resources?
-  GameState.Resources = {
-    SuperGiftPoints = 0,
-    MetaPoints = 0,
-    LockKeys = 0,
-    SuperLockKeys = 0,
-    Gems = 0,
-    SuperGems = 0,
-    GiftPoints = 0
-  }
   -- Inspect Points?
   -- TextSpeechRecord?
   for npcKey, npcObj in pairs(UnitSetData.NPCs) do
-DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
+-- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
     for propKey, propValue in pairs(npcObj) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
+-- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+-- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1191,20 +1133,31 @@ DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
 
   -- LootData Text Lines
   for lootKey, lootValue in pairs(LootData) do
-DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
+-- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
     for propKey, propValue in pairs(lootValue) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
+-- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
+-- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
       end
     end
   end
+
+  -- initialize sex scenes
+  TextLinesRecord["BecameCloseWithMegaera01"] = true
+  TextLinesRecord["BecameCloseWithThanatos01"] = true
+  TextLinesRecord["BecameCloseWithDusa01"] = true
+  -- inititalize EM4 availability
+  TextLinesRecord["Fury2FirstAppearance"] = true
+  TextLinesRecord["Fury3FirstAppearance"] = true
+  -- allow keepsakes in Hades immediately
+  TextLinesRecord["HadesAllowsLegendaryKeepsakes01"] = true
+
   
   -- Codex -- enable and fill out progress by threshold and unlock amounts
   CodexStatus.Enabled = true
@@ -1246,6 +1199,7 @@ DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
 		end
 	end
   UnlockExistingEntries()
-
+  -- gotta do this after file state change
+  ApplyTransientPatches({})
 
 end

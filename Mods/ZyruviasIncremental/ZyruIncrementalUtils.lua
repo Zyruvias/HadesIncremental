@@ -4,7 +4,7 @@ function ZyruIncremental.GetTotalHeroTraitValueWrapperGenerator (traitNameToTrac
         -- if debug then
         --     DebugPrint({ text = "GetTotalHeroTraitValue" })
         -- end
-        DebugPrint { Text = "Attempting to track " .. traitName .. " as " .. tostring(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack])}
+        -- DebugPrint { Text = "Attempting to track " .. traitName .. " as " .. tostring(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack])}
         if traitName == traitNameToTrack and comparator(res) then
             ZyruIncremental.TrackBoonEffect(ZyruIncremental.GetHeroTraitValuesMap[traitNameToTrack], res)
         end
@@ -19,40 +19,6 @@ function ToLookupValue( table, setValue )
           lookup[value] = setValueToUse
       end
       return lookup
-end
-
-
-function ZyruIncremental.GetSourceDamageName(triggerArgs)
-    local sourceWeaponData = triggerArgs.AttackerWeaponData
-  
-    if triggerArgs.EffectName ~= nil then
-      return triggerArgs.EffectName
-    elseif sourceWeaponData ~= nil then
-      -- Actual source can vary within sourceWeaponData
-      if sourceWeaponData.Name == "RushWeapon" then
-        for k, trait in pairs(CurrentRun.Hero.Traits) do
-          if trait.Slot == "Rush" then
-            return trait.Name
-          end
-        end
-      elseif sourceWeaponData.Name == "RangedWeapon" then
-        for k, trait in pairs(CurrentRun.Hero.Traits) do
-          if trait.Slot == "Ranged" then
-            return trait.Name
-          end
-        end
-      elseif ZyruIncremental.WeaponToBoonMap[sourceWeaponData.Name] ~= nil then
-        return sourceWeaponData.Name
-      end
-      return sourceWeaponData.Name
-      -- end sourceWeaponData variance check
-    elseif ProjectileData[triggerArgs.SourceWeapon] ~= nil then
-      return ProjectileData[triggerArgs.SourceWeapon].Name
-    elseif ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon] ~= nil then
-      return ZyruIncremental.WhatTheFuckIsThisToBoonMap[triggerArgs.SourceWeapon]
-    end
-    return triggerArgs.SourceWeapon
-  
 end
 
 -------------------
@@ -86,7 +52,6 @@ function AddGodExperience ( god, amount )
   end
 
   if type(amount) ~= "number" then
-    -- DebugPrint { Text = "GodExperience gain was not a number: " .. ModUtil.ToString.Deep(amount)}
     return
   end
 
@@ -149,10 +114,7 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
     chances[rarity] = boonRarityChance
   end
 
--- DebugPrint {Text = "Last rarity: " .. lastRarity .. ", Last Result: " .. previousValue}
   chances[lastRarity] = chances[lastRarity] + 1 - previousValue
-
--- DebugPrint { Text = "Rarity: " .. tostring((1 + actualRarityBonus) * 100) .. "%%: ".. ModUtil.ToString.Deep(chances)}
 
   ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] = chances
   return chances

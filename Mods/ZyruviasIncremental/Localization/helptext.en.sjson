@@ -14,6 +14,17 @@
             Id = "ZyruBoonLevelUp"
             DisplayName = "{$TempTextData.Name} reached EXP Level {$TempTextData.Level}"
         }
+        {
+            Id = "RareBoonChance"
+            DisplayName = "Olympian Favor"
+            Description = "Increases the total proportion of spendable resources received, {#TooltipUpgradeFormat}{$TempTextData.BaseValue:P} {#PreviousFormat}per rank."
+        }
+        
+        {
+            Id = "EpicBoonChance"
+            DisplayName = "Gods' Pride"
+            Description = "Increases the rarity bonus for a {#BoldFormatGraft}{$Keywords.GodBoon} {#PreviousFormat} offering, {#TooltipUpgradeFormat}{$TempTextData.BaseValue:P} {#PreviousFormat}per rank."
+        }
         // END GOD AGNOSTIC HELPTEXTS
         // BEGIN HERMES DUO HELPTEXTS
         {
