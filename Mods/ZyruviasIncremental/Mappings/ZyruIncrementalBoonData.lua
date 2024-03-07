@@ -279,7 +279,7 @@ ModUtil.LoadOnce(function ( )
       ZyruRarityBonus = 2
     })
     -- TODO: Rare Crop rewrite
-    ModUtil.Table.Merge(TraitData.HarvestBoonDrop, {
+    ModUtil.Table.Merge(TraitData.HarvestBoonTrait, {
 		  RoomsPerUpgrade = 5,
     })
   end, ZyruIncremental)

@@ -88,6 +88,8 @@ ModUtil.LoadOnce(function ( )
     }
     -- Second-to-Last runort WeaponData table -> Boon conversion
     ZyruIncremental.WeaponToBoonMap = {
+      -- Zeus
+      LightningStrikeX = "ZeusShoutTrait",
       -- Ares
       AresSurgeWeapon = "AresShoutTrait",
       -- Aphrodite
@@ -170,7 +172,6 @@ ModUtil.LoadOnce(function ( )
     ZyruIncremental.SuperTraitMap = {
       SuperGainMultiplier = "SuperGenerationTrait", -- zeus
       DefensiveSuperGainMultiplier = "DefensiveSuperGenerationTrait", -- Poseidon
-      AresShoutBuff = "OnWrathDamageBuffTrait", -- zeus billowing
       HermesWrathBuff = "HermesShoutDodge" -- Second Wind
     }
     
@@ -180,6 +181,8 @@ ModUtil.LoadOnce(function ( )
       ---------------
       IncreaseDamageTaken = "AphroditeWeakenTrait",
       LastStandDamageBonus = "LastStandDamageBonusTrait",
+      ShoutDamageBonus = "OnWrathDamageBuffTrait",
+      AresShoutBuff = "OnWrathDamageBuffTrait", -- zeus billowing
       
       ZeroRangedWeaponAmmoMultiplier = "ZeroAmmoBonusTrait",
       AthenaBackstabVulnerability = "AthenaBackstabDebuffTrait",
@@ -233,8 +236,8 @@ ModUtil.LoadOnce(function ( )
 
     ZyruIncremental.BoonExperienceFactor = {
       RetaliateWeaponTrait = 1,
-      SuperGenerationTrait = 1,
-      DefensiveSuperGenerationTrait = 1,
+      SuperGenerationTrait = 20,
+      DefensiveSuperGenerationTrait = 10,
       ZeusBoltAoETrait =  1,
       ZeusBonusBoltTrait =  0,
       ZeusBonusBounceTrait =  0,

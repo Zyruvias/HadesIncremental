@@ -1,7 +1,8 @@
 local CreateBoonPresentation = function (screen, traitName, x, y)
 
     -- fetchInfo
-    local zyruBoonData = ZyruIncremental.Data.BoonData[traitName]
+    local originalData = ZyruIncremental.Data.BoonData[traitName]
+    local zyruBoonData = CurrentRun.ZyruBoonData[traitName]
     local trait = TraitData[traitName]
 
     --setup UI info
@@ -21,10 +22,12 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
     if GetTraitFrame(trait) ~= nil then
         local traitFrame = GetTraitFrame( trait )
         local rarityValue = GetRarityValue( trait )
-        for i, existingTrait in pairs( CurrentRun.Hero.TraitDictionary[trait.Name]) do
-            if (AreTraitsIdentical(trait, existingTrait) and rarityValue < GetRarityValue( existingTrait.Rarity )) then
-                rarityValue = GetRarityValue( existingTrait.Rarity )
-                traitFrame = GetTraitFrame( existingTrait )
+        if CurrentRun.Hero.TraitDictionary[trait.Name] ~= nil then
+            for i, existingTrait in pairs( CurrentRun.Hero.TraitDictionary[trait.Name]) do
+                if (AreTraitsIdentical(trait, existingTrait) and rarityValue < GetRarityValue( existingTrait.Rarity )) then
+                    rarityValue = GetRarityValue( existingTrait.Rarity )
+                    traitFrame = GetTraitFrame( existingTrait )
+                end
             end
         end
         SetAnimation({ Name = traitFrame, DestinationId = traitFrameId })
@@ -109,7 +112,7 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
     traitTextOffsetY = traitTextOffsetY + TraitUI.SpacerY / 4
     CreateTextBox({
         Id = traitIcon.Id,
-        Text = "Boon Level: " .. tostring(round(zyruBoonData.Level or 0)),
+        Text = "Boon Level: " .. tostring(round(originalData.Level) or 0),
         FontSize = 14,
         OffsetX = 60,
         OffsetY = traitTextOffsetY,
@@ -131,16 +134,16 @@ function CreateAnalyticsScreen (screen)
     -- TODO: sort boons by zyruData
     local boonsToDisplay = {}
 
-    for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if ZyruIncremental.Data.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
-            table.insert(boonsToDisplay, trait.Name)
+    for name, data in pairs(CurrentRun.ZyruBoonData) do
+        if TraitData[name] ~= nil and ZyruIncremental.Data.BoonData[name] ~= nil and not Contains(boonsToDisplay, name) then
+            table.insert(boonsToDisplay, name)
         end
     end
 
     local startX = TraitUI.SpacerX + 100
-    local startY = TraitUI.SpacerY + 100
+    local startY = TraitUI.SpacerY + 250
     local xGap = ScreenWidth / 5
-    local yGap = ScreenHeight / 6
+    local yGap = ScreenHeight / 7
     for i, traitName in ipairs(boonsToDisplay) do
         local x = startX + xGap * math.floor((i - 1) / 5)
         local y = startY + yGap * ((i - 1) % 5)
@@ -150,35 +153,37 @@ end
 
 ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
     baseFunc( ... )
-
-    local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
-        PauseBlock = true,
-        Pages = {
-            [1] = "CreateAnalyticsScreen"
-        },
-        Components = {
-            {
-                Type = "Button",
-                SubType = "Close"
+    -- note: threading to not force players to give up in case of crash, sorry beta users.
+    thread(function()
+        local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+            PauseBlock = true,
+            Pages = {
+                [1] = "CreateAnalyticsScreen"
             },
-            {
-                Type = "Text",
-                SubType = "Title",
-                Args = {
-                    FieldName = "BoonProgressionTitle",
-                    Text = "Boon Progression"
+            Components = {
+                {
+                    Type = "Button",
+                    SubType = "Close"
+                },
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    Args = {
+                        FieldName = "BoonProgressionTitle",
+                        Text = "Boon Progression"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "BoonProgressionSubtitle",
+                        Text = "Wow, you sure used some boons today Zagreus."
+                    }
                 }
             },
-            {
-                Type = "Text",
-                SubType = "Subtitle",
-                Args = {
-                    FieldName = "BoonProgressionSubtitle",
-                    Text = "Wow, you sure used some boons today Zagreus."
-                }
-            }
-        },
-    })
+        })
+    end)
 end, ZyruIncremental)
 
 function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
@@ -401,7 +406,7 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- Boon Data Loading
     
     selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
-    selector.UseText = "{I} View Progress"
+    selector.UseText = "{I} View Progress and Stats"
     selector.OnUsedFunctionName = "ShowZyruProgressScreen"
     selector.Activate = true
     selector.ObjectId = SpawnObstacle({
@@ -1159,7 +1164,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
         Args = {
             FieldName = "BoonProgressBoonIcon",
             Animation = GetTraitIcon( TraitData[boonName] or {} ),
-            Scale = 4.0
+            Scale = 2.0
         }
     })
     -- UPDATE PROGRESS BAR
@@ -1184,7 +1189,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             Proportion = 0,
             UpdateDuration = 0,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-            Y = ScreenCenterY + ScreenHeight / 5,
+            Y = ScreenCenterY - ScreenHeight / 8,
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
@@ -1201,7 +1206,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             Proportion = expProportion,
             UpdateDuration = 1,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-            Y = ScreenCenterY + ScreenHeight / 5,
+            Y = ScreenCenterY - ScreenHeight / 8,
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
@@ -1272,9 +1277,9 @@ function ShowGodProgressScreen(screen, button)
             SubType = "Standard",
             Args = {
                 FieldName = "BoonProgressBoonIcon",
-                OffsetX = ScreenWidth / 6,
-                OffsetY = -100,
-                Scale = 4,
+                OffsetX = ScreenWidth / 3,
+                OffsetY = -250,
+                Scale = 2,
             }
         },
         -- progress bar
@@ -1284,7 +1289,7 @@ function ShowGodProgressScreen(screen, button)
             Args = {
                 FieldName = "BoonProgressBar",
                 X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-                Y = ScreenCenterY + ScreenHeight / 5,
+                Y = ScreenCenterY - ScreenHeight / 8,
                 -- BackgroundColor = {0, 0, 0, 0},
                 ScaleX = 1.5,
                 ScaleY = 1.5,
@@ -1294,15 +1299,111 @@ function ShowGodProgressScreen(screen, button)
             -- TODO: fix this shit
             Type = "Button",
             SubType = "Close",
-            Args = {
-                -- OnPressedFunctionName = "GoToPageFromSource",
-            },
             ComponentArgs = {
                 PageIndex = 1,
+                OnPressedFunctionName = "GoToPageFromSource",
             }
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
+    ZyruIncremental.RenderComponents(screen, "ZyruIncremental.ShowGodProgressUI", { Source = button })
+end
+
+function ZyruIncremental.GetRarityDistributionForUI(god)
+    local chanceArray = ZyruIncremental.ComputeRarityArrayForGod( god )
+    local distributionData = {}
+    for rarityName, rarityValue in pairs(chanceArray) do
+        distributionData[GetRarityValue(rarityName)] = {
+            Name = rarityName,
+            Value = rarityValue,
+            Color = Color["BoonPatch" .. rarityName]
+        }
+    end
+    DebugPrint { Text = ModUtil.ToString.Deep(chanceArray)}
+    return distributionData
+end
+
+function ZyruIncremental.ShowGodProgressUI(screen, button)
+
+    local rarityBarLabel = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "DistributionLabel",
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 - 100,
+            Text = "Rarity Bonus: " .. (100 + ZyruIncremental.ComputeRarityBonusForGod(button.PageIndex)) .. "% \\n Boons' Offered Rarity Distribution",
+            FontSize = 20,
+        }
+    }
+    local rarityBarComponent = {
+        Type = "Distribution",
+        SubType = "Standard",
+        Args = {
+            FieldName = "RarityDistributionBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            DistributionData = ZyruIncremental.GetRarityDistributionForUI(button.PageIndex)
+        }
+    }
+
+    ZyruIncremental.RenderComponent(screen, rarityBarLabel)
+    ZyruIncremental.RenderComponent(screen, rarityBarComponent)
+
+    -- UPDATE EXP PROGRESS BAR
+    local data = ZyruIncremental.Data.GodData[button.PageIndex]
+
+    local level = data.Level or 1
+    -- show exp to next level, bar in bottom
+
+    local exp = data.Experience or 0
+    local expBaseline = exp - ZyruIncremental.GetExperienceForNextGodLevel(level - 1)
+    local expTNL = ZyruIncremental.GetExperienceForNextGodLevel ( level ) - ZyruIncremental.GetExperienceForNextGodLevel(level - 1)
+    local expProportion = expBaseline / expTNL
+    local expProportionLabel = tostring(math.floor((1000 * expBaseline) / expTNL) / 10) .. "%"
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "GodProgressBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            Proportion = 0,
+            UpdateDuration = 0,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 + 150,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            BarText = tostring(math.floor(expBaseline)) .. " / " .. tostring(expTNL) .. " = " .. expProportionLabel,
+            LeftText = "Level " .. tostring(level),
+            RightText = "Level " .. tostring(level + 1)
+        }
+    })
+    ZyruIncremental.UpdateProgressBar(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "GodProgressBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            Proportion = expProportion,
+            UpdateDuration = 1,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 + 150,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            BarText = tostring(math.floor(expBaseline)) .. " / " .. tostring(expTNL) .. " = " .. expProportionLabel,
+            LeftText = "Level " .. tostring(level),
+            RightText = "Level " .. tostring(level + 1)
+        }
+    })
 end
 
 function ShowZyruProgressScreen()
@@ -1431,8 +1532,11 @@ function GetUpgradeGostText(upgrade)
         table.insert(sourceCostTexts, tostring(cost or 0) .. " " .. source .. " Points")
     end
     if upgrade.Sources ~= nil then
+        DebugPrint { Text = ModUtil.ToString.Deep(upgrade.Sources) .. " " .. ModUtil.ToString.Deep(sourceCostTexts)}
         -- TODO: generalize
-        return costText .. sourceCostTexts[1] .. " and " .. sourceCostTexts[2]
+        if sourceCostTexts[1] and sourceCostTexts[2] then 
+            return costText .. tostring(sourceCostTexts[1]) .. " and " .. (sourceCostTexts[2])
+        end
     end
     return costText .. sourceCostTexts[1]
 end

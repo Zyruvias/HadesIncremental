@@ -3,7 +3,7 @@ TODO:
 [X] progress bar dialogue fixing
 [X] Don't fuck meg or than immediately
 [X] solve quests, give starting resources
--- fresh file start doesn't scale difficulty
+[X] fresh file start doesn't scale difficulty
 [X] enable pact immediately
 [X] companions for hades
 [X] cosmetics are broken?
@@ -11,12 +11,20 @@ TODO:
 [X] God's pride description
 [X] EXP boundaries -- encounter / survival
 [X] Greater Haste balancing
--- end screen adjustments
--- shop purchases not working
+[X] end screen adjustments
+[X] shop purchases not working
 
 -- patch notes / roadmap
 
--- rare crop rework / exclusive access rework
+-- stabilize cabinet spawn location
+-- opening menu text persistence
+-- Hermes in styx rarity check
+[X] clouded judgement, Billowing Strength
+-- available point text not updating
+-- well items not tracking (aether net -> proud bearing)
+[X] life afffirmation is ... showing up unexpectedly
+
+[X] rare crop rework / exclusive access rework
 
 Minor TODO:
 -- initial weapon grab dialogue

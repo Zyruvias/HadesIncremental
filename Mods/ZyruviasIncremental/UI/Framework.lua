@@ -83,6 +83,17 @@ ZyruIncremental.BaseComponents = {
             ScaleX = 1.0,
             X = ScreenCenterX - 240,
             Y = ScreenCenterY,
+        },
+    },
+    Distribution = {
+        Standard = {
+            Name = "rectangle01",
+            BackgroundColor = {96, 96, 96, 255},
+            ForegroundColor = Color.White,
+            ScaleY = 1.0,
+            ScaleX = 1.0,
+            X = ScreenCenterX - 240,
+            Y = ScreenCenterY,
         }
     },
     Background = {
@@ -138,19 +149,9 @@ ZyruIncremental.BaseComponents = {
 
 }
 
-
-ErumiUILib = {
-    Slider = {},
-    Dropdown = {},
-    RadialMenu = {},
-    Keyboard = {},
-    Textbox = {},
-    SubScreen = {
-        OpenScreens = {}
-    },
-    ScrollingList = {},
-    Misc = {}
-}
+-- holdover pattern from absorbing ErumiUILib
+ZyruIncremental.Dropdown = {}
+ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
@@ -213,6 +214,10 @@ end
 -- Generates a component definition from either an existing screen component or the base definition
 function GetComponentDefinition(screen, component)
     -- TODO: do I need to require a type and subtype all the time?
+    if not component or not component.Type or not component.SubType then
+        DebugPrint { Text = "Bad component received .. " .. ModUtil.ToString.Shallow(component)}
+        return
+    end
     local baseDefinition = DeepCopyTable(ZyruIncremental.BaseComponents[component.Type][component.SubType])
     if baseDefinition == nil then
         DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
@@ -234,6 +239,7 @@ function GetComponentDefinition(screen, component)
         baseDefinition,
         DeepCopyTable(component.Args or {})
     )
+    -- DebugPrint { Text = tostring(fieldName) .. ": " .. ModUtil.ToString.Shallow(componentDefinition)}
     return componentDefinition
 end
 
@@ -364,11 +370,12 @@ function ZyruIncremental.UpdateComponent(screen, component, args)
         return
     end 
     if type(ZyruIncremental["Update" .. tostring(component.Type)]) == "function" then
+        DebugPrint { Text = "calling ZyruIncrenmental." .. "Update" .. tostring(component.Type)}
         ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
 
         -- reestablish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-        screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
+        screen.Components[fieldName].Args = GetComponentDefinition(screen, args)
     end
 end
 
@@ -403,6 +410,129 @@ function ZyruIncremental.UpdateIcon(screen, component)
     
 end
 
+local CHUNK_MIN_WIDTH = 5
+local CHUNK_WIDTH_TO_FLIP_OFFSET = 100
+-- Create DistributionBar
+function ZyruIncremental.RenderDistribution(screen, component)
+    local barDefinition = GetComponentDefinition(screen, component)
+    barDefinition.ScaleY = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
+    local components = screen.Components
+    local barName = barDefinition.FieldName or ""
+
+    local barBackgroundDefinition = {
+        Name = barDefinition.Name,
+        X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+        Y = barDefinition.Y,
+    }
+
+    components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
+    if barDefinition.Label ~= nil then
+        local label = {
+            Type = "Text",
+            SubType = "Note",
+            Args = {
+                FieldName = barName .. "BarLabel",
+                Text = barDefinition.label or "",
+                Parent = barName .. "BarBackground",
+                X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+                Y = barDefinition.Y,
+                Justification = "Center"
+            }
+        }
+        barDefinition.Label.Parent = barName
+        ZyruIncremental.RenderText(screen, barDefinition.Label)
+    end
+    SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
+    SetScaleX{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleX }
+    SetScaleY{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleY }
+
+    -- createForeground bars
+    -- barDefinition.ScaleX *
+    -- ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X
+    -- * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+    local cumulativeProportion = 0
+    local backgroundBarWidth = barDefinition.ScaleX
+        * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X *
+        ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH
+    local sign = 1
+    local previousChunkWidth
+    for i, data in ipairs(barDefinition.DistributionData) do
+        local chunkName = data.Name or tostring(i)
+        local chunkComponentName = barName .. "BarForeground" .. chunkName
+        local chunkWidth = barDefinition.ScaleX
+            * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X *
+            ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH * data.Value
+        if chunkWidth >= CHUNK_MIN_WIDTH then
+            local chunkDefinition = {
+                X = barDefinition.X + chunkWidth / 2 + cumulativeProportion * backgroundBarWidth,
+                Y = barDefinition.Y,
+            }
+            components[chunkComponentName] = CreateScreenComponent({
+                Name = "rectangle01",
+                -- add offset based on proportion and cumulative proportion
+                X = chunkDefinition.X,
+                Y = chunkDefinition.Y,
+            })
+            cumulativeProportion = cumulativeProportion + data.Value
+            components[chunkComponentName].Proportion = barDefinition.Proportion
+            SetColor{ Id = components[chunkComponentName].Id, Color = data.Color or barDefinition.ForegroundColor}
+            SetScaleX{ Id = components[chunkComponentName].Id, Fraction = data.Value * barDefinition.ScaleX}
+            SetScaleY{ Id = components[chunkComponentName].Id, Fraction = barDefinition.ScaleY }
+
+            -- TEXT to render
+
+
+            local chunkText = 
+                (sign == 1 and "^ \\n " or "") ..
+                data.Name .. " - " .. tonumber(string.format("%.1f", data.Value * 100)) .. "%" ..
+                (sign == -1 and "\\n  v" or "")
+            local text = {
+                Type = "Text",
+                SubType = "Note",
+                Args = {
+                    FieldName = chunkComponentName .. "Text",
+                    Text = chunkText,
+                    Parent = chunkComponentName .. "BarBackground",
+                    X = chunkDefinition.X,
+                    Y = chunkDefinition.Y + (ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y *
+                        ZyruIncremental.Constants.Components.RECTANGLE_01_HEIGHT + 20) * sign,
+                    Justification = "Center",
+                    Color = Color.White
+                }
+            }            
+            -- if chunkWidth < CHUNK_WIDTH_TO_FLIP_OFFSET and previousChunkWidth ~= nil or (previousChunkWidth or 999999999999) < CHUNK_WIDTH_TO_FLIP_OFFSET then
+            sign = -1 * sign
+            previousChunkWidth = chunkWidth
+            -- end
+            ZyruIncremental.RenderComponent(screen, text)
+        end
+        
+    end
+
+
+    
+    -- TODO: left text / right text
+    -- local barText = {
+    --     Type = "Text",
+    --     SubType = "Note",
+    --     Args = {
+    --         FieldName = barName .. "BarText",
+    --         Text = barDefinition.BarText or "",
+    --         Parent = barName .. "BarBackground",
+            
+    --         X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+    --         Y = barDefinition.Y,
+    --         Justification = "Center"
+    --     }
+    -- }
+    -- ZyruIncremental.RenderText(screen, barText)
+end
+
+function ZyruIncremental.UpdateDistribution(screen, component)
+
+end
+
 -- Create Progress Bar
 function ZyruIncremental.RenderProgressBar(screen, component)
     local barDefinition = GetComponentDefinition(screen, component)
@@ -419,7 +549,22 @@ function ZyruIncremental.RenderProgressBar(screen, component)
 
     components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
     if barDefinition.Label ~= nil then
-        barDefinition.Label.Parent = barName
+        if type(barDefinition.Label) == "table" then
+            barDefinition.Label.Parent = barName .. "BarBackground"
+        else
+            barDefinition.Label = {
+                Type = "Text",
+                SubType = "Note",
+                Args = {
+                    FieldName = barName .. "BarLabel",
+                    Text = barDefinition.Label,
+                    Parent = barName .. "BarBackground",
+                    X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+                    Y = barDefinition.Y - 25,
+                    Justification = "Center"
+                }
+            }
+        end
         ZyruIncremental.RenderText(screen, barDefinition.Label)
     end
     SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
@@ -479,6 +624,7 @@ function ZyruIncremental.RenderProgressBar(screen, component)
         }
     }
     ZyruIncremental.RenderText(screen, rightText)
+    ZyruIncremental.UpdateProgressBar(screen, component, args)
 end
 
 function ZyruIncremental.UpdateProgressBar(screen, component, args)
@@ -540,7 +686,7 @@ function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
     
-    ErumiUILib.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
 end
 
 function ZyruIncremental.RenderButton(screen, component)
@@ -619,6 +765,24 @@ function ZyruIncremental.RenderButton(screen, component)
     return components[buttonName]
 end
 
+function ZyruIncremental.UpdateButton(screen, component)
+
+    local buttonDefinition = GetComponentDefinition(screen, component)
+    local components = screen.Components
+
+    local button = components[buttonDefinition.FieldName]
+
+    -- NOTE: this is a shallow merge because button.Upgrade needs to
+    -- be fully replaced in the case PurchaseButton usage...
+    -- TODO: generalize with a meta field or something idk
+    
+    -- ModUtil.Table.Merge(button, buttonDefinition.ComponentArgs)
+    for setKey, setVal in pairs( buttonDefinition.ComponentArgs ) do
+		button[setKey] = setVal
+	end
+
+end
+
 -- Create Text Box
 function ZyruIncremental.RenderText(screen, component)
     local textDefinition = GetComponentDefinition(screen, component)
@@ -665,7 +829,7 @@ end
 function ZyruIncremental.RenderList(screen, component)
     local listDefinition = GetComponentDefinition(screen, component)
 
-    local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(
+    local scrollingList = ZyruIncremental.ScrollingList.CreateScrollingList(
 		screen, listDefinition
     )
 end
@@ -680,7 +844,7 @@ end
     4) Make the generic component hooks work for multi-element things...
 ]]
 
-function ErumiUILib.ScrollingList.CreateScrollingList(screen, args)
+function ZyruIncremental.ScrollingList.CreateScrollingList(screen, args)
     local xPos = (args.X or 0)
     local yPos = (args.Y or 0)
     local components = screen.Components
@@ -695,10 +859,10 @@ function ErumiUILib.ScrollingList.CreateScrollingList(screen, args)
     components[scrollingListTopBackingKey].CurrentPage = 0
     components[scrollingListTopBackingKey].args = args
 
-    ErumiUILib.ScrollingList.Update(components[scrollingListTopBackingKey])
+    ZyruIncremental.ScrollingList.Update(components[scrollingListTopBackingKey])
     return components[scrollingListTopBackingKey]
 end
-function ErumiUILib.ScrollingList.Update(scrollingList)
+function ZyruIncremental.ScrollingList.Update(scrollingList)
     local args = scrollingList.args
     local screen = scrollingList.screen
     local xPos = (args.X or 0)
@@ -786,7 +950,7 @@ function ErumiUILib.ScrollingList.Update(scrollingList)
             scrollingList.Children[scrollingListItemImageBackingKey] = components[scrollingListItemImageBackingKey]
         end
         if v.IsEnabled ~= false then
-            components[scrollingListItemBackingKey].OnPressedFunctionName = "ErumiUILib.ScrollingList.ButtonPressed"
+            components[scrollingListItemBackingKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.ButtonPressed"
         else
             SetColor({ Id = components[scrollingListItemBackingKey].Id , Color = args.DeEnabledColor or {1,1,1,0.33} })
         end
@@ -794,7 +958,7 @@ function ErumiUILib.ScrollingList.Update(scrollingList)
         local createUpArrow = function()
             local scrollingListItemArrowKey = args.Name .. "ScrollingListArrowUp" .. k
             components[scrollingListItemArrowKey] = CreateScreenComponent({ Name = "ButtonCodexUp", X = (args.X or 0) + (args.ArrowStyle.Offset.X or 0), Y = (args.Y or 0) + ySpaceAmount + (args.ArrowStyle.Offset.Y or 0), Scale = args.ArrowStyle.Scale, Sound = "/SFX/Menu Sounds/GeneralWhooshMENU", Group = args.Group .. "Arrows" })
-            components[scrollingListItemArrowKey].OnPressedFunctionName = "ErumiUILib.ScrollingList.PreviousPage"
+            components[scrollingListItemArrowKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.PreviousPage"
             components[scrollingListItemArrowKey].args = args
             components[scrollingListItemArrowKey].Parent = scrollingList
             
@@ -805,7 +969,7 @@ function ErumiUILib.ScrollingList.Update(scrollingList)
             local scrollingListItemArrowKey = args.Name .. "ScrollingListArrowDown" .. k
             components[scrollingListItemArrowKey] = CreateScreenComponent({ Name = "ButtonCodexDown", X = (args.X or 0) + (args.ArrowStyle.Offset.X or 0), Y = (args.Y or 0) + ySpaceAmount + (args.ArrowStyle.Offset.Y or 0), Scale = args.ArrowStyle.Scale, Sound = "/SFX/Menu Sounds/GeneralWhooshMENU", Group = args.Group .. "Arrows" })
             scrollingList.Children[components[scrollingListItemArrowKey].Id] = components[scrollingListItemArrowKey]
-            components[scrollingListItemArrowKey].OnPressedFunctionName = "ErumiUILib.ScrollingList.NextPage"
+            components[scrollingListItemArrowKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.NextPage"
             components[scrollingListItemArrowKey].args = args
             components[scrollingListItemArrowKey].Parent = scrollingList
             
@@ -832,26 +996,26 @@ function ErumiUILib.ScrollingList.Update(scrollingList)
         end
     end
 end
-function ErumiUILib.ScrollingList.PreviousPage(screen, button)
+function ZyruIncremental.ScrollingList.PreviousPage(screen, button)
     local parent = button.Parent
     local args = button.args
     if parent.CurrentPage - 1 >= 0 then
         parent.CurrentPage = parent.CurrentPage - 1
-        ErumiUILib.ScrollingList.Update(parent)
+        ZyruIncremental.ScrollingList.Update(parent)
     end
     
 end
-function ErumiUILib.ScrollingList.NextPage(screen, button)
+function ZyruIncremental.ScrollingList.NextPage(screen, button)
     local parent = button.Parent
     local args = button.args
     if #args.Items > (parent.CurrentPage + 1) * args.ItemsPerPage then
         parent.CurrentPage = parent.CurrentPage + 1
-        ErumiUILib.ScrollingList.Update(parent)
+        ZyruIncremental.ScrollingList.Update(parent)
     end
     
 end
 
-function ErumiUILib.ScrollingList.ButtonPressed(screen, button)
+function ZyruIncremental.ScrollingList.ButtonPressed(screen, button)
   local args = button.scrollingListPressedArgs.Args
   local components = screen.Components
   local itemToSwapTo = args.Items[button.scrollingListPressedArgs.Index]
@@ -863,7 +1027,7 @@ function ErumiUILib.ScrollingList.ButtonPressed(screen, button)
       args.GeneralEvent(parentButton, itemToSwapTo)
   end
 end
-function ErumiUILib.ScrollingList.GetEntries(scrollingList)
+function ZyruIncremental.ScrollingList.GetEntries(scrollingList)
   local returnItems = {}
   for k,v in pairs(scrollingList.scrollingListPressedArgs.Items)do
       if v.IsEnabled == true or v.IsEnabled == nil then
@@ -872,12 +1036,12 @@ function ErumiUILib.ScrollingList.GetEntries(scrollingList)
   end
   return returnItems
 end
-function ErumiUILib.ScrollingList.NewEntry(scrollingList, value)
+function ZyruIncremental.ScrollingList.NewEntry(scrollingList, value)
   table.insert(scrollingList.scrollingListPressedArgs.Items, value)
   local screen = scrollingList.screen
-  ErumiUILib.ScrollingList.Update(scrollingList)
+  ZyruIncremental.ScrollingList.Update(scrollingList)
 end
-function ErumiUILib.ScrollingList.DelEntry(scrollingList, value)
+function ZyruIncremental.ScrollingList.DelEntry(scrollingList, value)
   local itemToRemove = nil
   local itemToRemoveIndex = nil
   local items = scrollingList.scrollingListPressedArgs.Items
@@ -898,10 +1062,10 @@ function ErumiUILib.ScrollingList.DelEntry(scrollingList, value)
   if itemToRemove ~= nil and itemToRemove ~= scrollingList.currentItem then
       table.remove(scrollingList.scrollingListPressedArgs.Items, itemToRemoveIndex)
       local screen = scrollingList.screen
-      ErumiUILib.ScrollingList.Update(scrollingList)
+      ZyruIncremental.ScrollingList.Update(scrollingList)
   end
 end
-function ErumiUILib.ScrollingList.DisableEntry(scrollingList, value)
+function ZyruIncremental.ScrollingList.DisableEntry(scrollingList, value)
   local itemToDisable = nil
   local itemToDisableIndex = nil
   local items = scrollingList.scrollingListPressedArgs.Items
@@ -921,10 +1085,10 @@ function ErumiUILib.ScrollingList.DisableEntry(scrollingList, value)
   end
   if itemToDisable ~= nil and itemToDisable ~= scrollingList.currentItem then
       items[itemToDisableIndex].IsEnabled = false
-      ErumiUILib.ScrollingList.Update(scrollingList)
+      ZyruIncremental.ScrollingList.Update(scrollingList)
   end
 end
-function ErumiUILib.ScrollingList.EnableEntry(scrollingList, value)
+function ZyruIncremental.ScrollingList.EnableEntry(scrollingList, value)
   local itemToDisable = nil
   local itemToDisableIndex = nil
   local items = scrollingList.scrollingListPressedArgs.Items
@@ -944,10 +1108,10 @@ function ErumiUILib.ScrollingList.EnableEntry(scrollingList, value)
   end
   if itemToDisable ~= nil and itemToDisable ~= scrollingList.currentItem then
     items[itemToDisableIndex].IsEnabled = true
-    ErumiUILib.ScrollingList.Update(scrollingList)
+    ZyruIncremental.ScrollingList.Update(scrollingList)
 end
 end
-function ErumiUILib.ScrollingList.Destroy(scrollingList)
+function ZyruIncremental.ScrollingList.Destroy(scrollingList)
   local components = scrollingList.screen.components
   for _,v in pairs(scrollingList.Children) do
       if components[v.Id] ~= nil then
@@ -958,7 +1122,7 @@ function ErumiUILib.ScrollingList.Destroy(scrollingList)
 end
 
 --#region Dropdowns
-function ErumiUILib.Dropdown.CreateDropdown(screen, args)
+function ZyruIncremental.Dropdown.CreateDropdown(screen, args)
     local xPos = (args.X or 0)
   local yPos = (args.Y or 0)
   local components = screen.Components
@@ -970,7 +1134,7 @@ function ErumiUILib.Dropdown.CreateDropdown(screen, args)
   SetScaleY({ Id = components[dropDownTopBackingKey].Id , Fraction = args.Scale.Y or 1 })
   SetScaleX({ Id = components[dropDownTopBackingKey].Id , Fraction = args.Scale.X or 1 })
 
-  components[dropDownTopBackingKey].OnPressedFunctionName = "ErumiUILibToggleDropdown"
+  components[dropDownTopBackingKey].OnPressedFunctionName = "ZyruIncrementalToggleDropdown"
   components[dropDownTopBackingKey].dropDownPressedArgs = args
   components[dropDownTopBackingKey].isExpanded = false
   components[dropDownTopBackingKey].isEnabled = true
@@ -979,7 +1143,7 @@ function ErumiUILib.Dropdown.CreateDropdown(screen, args)
   components[dropDownTopBackingKey].currentItem = args.Items.Default
   components[dropDownTopBackingKey].screen = screen
 
-  ErumiUILib.Dropdown.UpdateBaseText(screen, components[dropDownTopBackingKey])
+  ZyruIncremental.Dropdown.UpdateBaseText(screen, components[dropDownTopBackingKey])
 
   if args.Items.Default.event ~= nil then
       args.Items.Default.event(components[dropDownTopBackingKey])
@@ -987,18 +1151,18 @@ function ErumiUILib.Dropdown.CreateDropdown(screen, args)
   return components[dropDownTopBackingKey]
 end
 
-function ErumiUILibToggleDropdown(screen, button)
+function ZyruIncrementalToggleDropdown(screen, button)
   if not button.isEnabled then
     return
   end
   button.isExpanded = not button.isExpanded
   if button.isExpanded then
-      ErumiUILib.Dropdown.Expand(screen, button)
+      ZyruIncremental.Dropdown.Expand(screen, button)
   else
-      ErumiUILib.Dropdown.Collapse(screen, button)
+      ZyruIncremental.Dropdown.Collapse(screen, button)
   end
 end
-function ErumiUILib.Dropdown.Expand(screen, button)
+function ZyruIncremental.Dropdown.Expand(screen, button)
   local args = button.dropDownPressedArgs
   local components = screen.Components
   ModifyTextBox({Id = components[args.Name .. "BaseTextbox"].Id, Color = {1, 1, 1, 0.2}})
@@ -1008,7 +1172,7 @@ function ErumiUILib.Dropdown.Expand(screen, button)
           local ySpaceAmount = 102* k * args.Scale.Y + (args.Padding.Y * k)
           components[dropDownItemBackingKey] = CreateScreenComponent({ Name = "MarketSlot", Group = args.Group .. "Dropdown", Scale = 1, X = (args.X or 0), Y = (args.Y or 0) + ySpaceAmount})
           components[dropDownItemBackingKey].dropDownPressedArgs = {Args = args, parent = button, Index = k}
-          components[dropDownItemBackingKey].OnPressedFunctionName = "ErumiUILibDropdownButtonPressed"
+          components[dropDownItemBackingKey].OnPressedFunctionName = "ZyruIncrementalDropdownButtonPressed"
 
           SetScaleY({ Id = components[dropDownItemBackingKey].Id , Fraction = args.Scale.Y or 1 })
           SetScaleX({ Id = components[dropDownItemBackingKey].Id , Fraction = args.Scale.X or 1 })
@@ -1042,7 +1206,7 @@ function ErumiUILib.Dropdown.Expand(screen, button)
       end
   end
 end
-function ErumiUILibDropdownButtonPressed(screen, button)
+function ZyruIncrementalDropdownButtonPressed(screen, button)
   local args = button.dropDownPressedArgs.Args
   local components = screen.Components
   local itemToSwapTo = args.Items[button.dropDownPressedArgs.Index]
@@ -1051,8 +1215,8 @@ function ErumiUILibDropdownButtonPressed(screen, button)
   parentButton.isExpanded = not parentButton.isExpanded
   parentButton.currentItem = itemToSwapTo
 
-  ErumiUILib.Dropdown.UpdateBaseText(screen, parentButton)
-  ErumiUILib.Dropdown.Collapse(screen, parentButton)
+  ZyruIncremental.Dropdown.UpdateBaseText(screen, parentButton)
+  ZyruIncremental.Dropdown.Collapse(screen, parentButton)
 
   if itemToSwapTo.event ~= nil then
       itemToSwapTo.event(parentButton, itemToSwapTo)
@@ -1060,7 +1224,7 @@ function ErumiUILibDropdownButtonPressed(screen, button)
       args.GeneralEvent(parentButton, itemToSwapTo)
   end
 end
-function ErumiUILib.Dropdown.Collapse(screen, button)
+function ZyruIncremental.Dropdown.Collapse(screen, button)
   local components = screen.Components
   for k,v in pairs(components) do
       if string.find(k, button.dropDownPressedArgs.Name .. "DropdownBacking") then
@@ -1069,7 +1233,7 @@ function ErumiUILib.Dropdown.Collapse(screen, button)
   end
   ModifyTextBox({ Id = components[button.dropDownPressedArgs.Name .. "BaseTextbox"].Id, Color = {1, 1, 1, 1}})
 end
-function ErumiUILib.Dropdown.UpdateBaseText(screen, dropdown)
+function ZyruIncremental.Dropdown.UpdateBaseText(screen, dropdown)
   local args = dropdown.dropDownPressedArgs
   local components = screen.Components
   local itemToSwapTo = dropdown.currentItem
@@ -1105,10 +1269,10 @@ function ErumiUILib.Dropdown.UpdateBaseText(screen, dropdown)
   end
   components[textboxContainerName] = textboxContainer
 end
-function ErumiUILib.Dropdown.GetValue(dropdown)
+function ZyruIncremental.Dropdown.GetValue(dropdown)
   return dropdown.currentItem
 end
-function ErumiUILib.Dropdown.SetValue(dropdown, value)
+function ZyruIncremental.Dropdown.SetValue(dropdown, value)
   local itemToSet = nil
   local items = dropdown.dropDownPressedArgs.Items
   if type(value) == "number" then
@@ -1127,10 +1291,10 @@ function ErumiUILib.Dropdown.SetValue(dropdown, value)
   end
   if itemToSet ~= nil then
       dropdown.currentItem = itemToSet
-      ErumiUILib.Dropdown.UpdateBaseText(dropdown.screen, dropdown)
+      ZyruIncremental.Dropdown.UpdateBaseText(dropdown.screen, dropdown)
   end
 end
-function ErumiUILib.Dropdown.GetEntries(dropdown)
+function ZyruIncremental.Dropdown.GetEntries(dropdown)
   local returnItems = {}
   for k,v in pairs(dropdown.dropDownPressedArgs.Items)do
       if v.IsEnabled == true or v.IsEnabled == nil then
@@ -1139,15 +1303,15 @@ function ErumiUILib.Dropdown.GetEntries(dropdown)
   end
   return returnItems
 end
-function ErumiUILib.Dropdown.NewEntry(dropdown, value)
+function ZyruIncremental.Dropdown.NewEntry(dropdown, value)
   table.insert(dropdown.dropDownPressedArgs.Items, value)
   local screen = dropdown.screen
   if dropdown.isExpanded then
-      ErumiUILib.Dropdown.Collapse(screen, dropdown)
-      ErumiUILib.Dropdown.Expand(screen, dropdown)
+      ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+      ZyruIncremental.Dropdown.Expand(screen, dropdown)
   end
 end
-function ErumiUILib.Dropdown.DelEntry(dropdown, value)
+function ZyruIncremental.Dropdown.DelEntry(dropdown, value)
   local itemToRemove = nil
   local itemToRemoveIndex = nil
   local items = dropdown.dropDownPressedArgs.Items
@@ -1169,12 +1333,12 @@ function ErumiUILib.Dropdown.DelEntry(dropdown, value)
       table.remove(dropdown.dropDownPressedArgs.Items, itemToRemoveIndex)
       local screen = dropdown.screen
       if dropdown.isExpanded then
-          ErumiUILib.Dropdown.Collapse(screen, dropdown)
-          ErumiUILib.Dropdown.Expand(screen, dropdown)
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
       end
   end
 end
-function ErumiUILib.Dropdown.DisableEntry(dropdown, value)
+function ZyruIncremental.Dropdown.DisableEntry(dropdown, value)
   local itemToDisable = nil
   local itemToDisableIndex = nil
   local items = dropdown.dropDownPressedArgs.Items
@@ -1196,12 +1360,12 @@ function ErumiUILib.Dropdown.DisableEntry(dropdown, value)
       items[itemToDisableIndex].IsEnabled = false
       local screen = dropdown.screen
       if dropdown.isExpanded then
-          ErumiUILib.Dropdown.Collapse(screen, dropdown)
-          ErumiUILib.Dropdown.Expand(screen, dropdown)
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
       end
   end
 end
-function ErumiUILib.Dropdown.EnableEntry(dropdown, value)
+function ZyruIncremental.Dropdown.EnableEntry(dropdown, value)
   local itemToDisable = nil
   local itemToDisableIndex = nil
   local items = dropdown.dropDownPressedArgs.Items
@@ -1223,20 +1387,20 @@ function ErumiUILib.Dropdown.EnableEntry(dropdown, value)
       items[itemToDisableIndex].IsEnabled = true
       local screen = dropdown.screen
       if dropdown.isExpanded then
-          ErumiUILib.Dropdown.Collapse(screen, dropdown)
-          ErumiUILib.Dropdown.Expand(screen, dropdown)
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
       end
   end
 end
-function ErumiUILib.Dropdown.EnableDropdown(dropdown)
+function ZyruIncremental.Dropdown.EnableDropdown(dropdown)
   dropdown.isEnabled = false
   ModifyTextBox({ Id = dropdown.Id, Color = {1, 1, 1, 1}})
 end
-function ErumiUILib.Dropdown.DisableDropdown(dropdown)
+function ZyruIncremental.Dropdown.DisableDropdown(dropdown)
   dropdown.isEnabled = true
   ModifyTextBox({ Id = dropdown.Id, Color = {1, 1, 1, 0.2}})
 end
-function ErumiUILib.Dropdown.Destroy(dropdown)
+function ZyruIncremental.Dropdown.Destroy(dropdown)
   local components = dropdown.screen.components
   for _,v in pairs(dropdown.Children) do
       if components[v.Id] ~= nil then

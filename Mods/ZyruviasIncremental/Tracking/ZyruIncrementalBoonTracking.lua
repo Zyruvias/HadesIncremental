@@ -370,7 +370,7 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
     if victim.ActiveEffectsAtDamageStart ~= nil and victim.ActiveEffectsAtDamageStart.CritVulnerability then
       -- HM
       -- TODO: I cannot fucking find this goddamn value in engine calls so it's just going to get the base EXP always
-      critChanceMap["CritBonusTrait"] = 0.30
+      critChanceMap["CritVulnerabilityTrait"] = 0.30
       critChanceTotal = critChanceTotal + 0.30
       --[[
         GetEffectDataValue{ Id = 420928, EffectName = "CritVulnerability", Property = "CritVulnerabilityAddition", WeaponName = "CritVulnerabilityWeapon" }
@@ -825,6 +825,7 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
     return
   end
 
+  -- track save-file data
   if ZyruIncremental.Data.BoonData[traitName] == nil then
     ZyruIncremental.Data.BoonData[traitName] = {
       Count = 0,
@@ -833,13 +834,26 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
       Level = 1
     }
   end
-
   local saveTraitData = ZyruIncremental.Data.BoonData[traitName]
+
+  -- track current run data
+  CurrentRun.ZyruBoonData = CurrentRun.ZyruBoonData or {}
+  if CurrentRun.ZyruBoonData[traitName] == nil then
+    CurrentRun.ZyruBoonData[traitName] = {
+      Count = 0,
+      Value = 0,
+      Experience = 0,
+      Level =  saveTraitData.Level -- starting level
+    }
+  end
+  local currentRunData = CurrentRun.ZyruBoonData[traitName]
+
 
   -- assign use count, damage, experience
   local expGained = 0
   if type(damageValue) == "number" then
     saveTraitData.Value = saveTraitData.Value + damageValue
+    currentRunData.Value = currentRunData.Value + damageValue
     if (ZyruIncremental.BoonExperienceFactor[traitName] == nil) then
       DebugPrint { Text = traitName .. " not found in BoonExperienceFactor map"}
     end
@@ -847,6 +861,7 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
   end
 
   saveTraitData.Count = saveTraitData.Count + 1
+  currentRunData.Count = currentRunData.Count + 1
   expGained = expGained + (ZyruIncremental.BoonExperiencePerUse[traitName] or 0)
 
   local expFactor = ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
@@ -855,6 +870,7 @@ function ZyruIncremental.TrackBoonEffect ( traitName, damageValue, victim )
 
   if expGained > 0  then
     saveTraitData.Experience = saveTraitData.Experience + expGained
+    currentRunData.Experience = currentRunData.Experience + expGained
     ZyruIncremental.HandleExperiencePresentationBehavior(traitName, ZyruIncremental.BoonToGod[traitName], expGained, victim)
     thread(ZyruIncremental.CheckBoonDataLevelUp, traitName)
   end
@@ -916,6 +932,7 @@ ModUtil.Path.Context.Wrap("CalculateSuperGain", function()
     local res = baseFunc(traitName, args)
     if ZyruIncremental.SuperTraitMap[traitName] ~= nil then
       if res > 1 then
+        DebugPrint { Text = "trying to track CalculateSuperGain for " .. traitName .. " " .. tostring(res)}
         ZyruIncremental.TrackBoonEffect(ZyruIncremental.SuperTraitMap[traitName])
       end
     end
@@ -924,7 +941,77 @@ ModUtil.Path.Context.Wrap("CalculateSuperGain", function()
 end, ZyruIncremental)
 -- END CLOUDED JUDGEMENT, BOILING POINT DETECTION
 
--- START BILLOWING STRENGTH, SECOND WIND DETECTION
+ModUtil.Path.Wrap("CalculateSuperGain", function (base, triggerArgs, sourceWeaponData, victim)
+	local damageAmount = triggerArgs.DamageAmount
+  local meterAmount = 0
+	if victim == CurrentRun.Hero then
+		meterAmount = ( damageAmount / victim.MaxHealth ) * CurrentRun.Hero.Super.DamageTakenMultiplier
+    local cloudedJudgementMult = GetTotalHeroTraitValue("SuperGainMultiplier", { IsMultiplier = true }) - 1
+    local boilingPointMult = GetTotalHeroTraitValue("DefensiveSuperGainMultiplier", { IsMultiplier = true }) - 1
+    local mult = 1 + cloudedJudgementMult + boilingPointMult
+    if cloudedJudgementMult > 0 then
+      ZyruIncremental.TrackBoonEffect("SuperGenerationTrait", cloudedJudgementMult * meterAmount)
+    end
+    if boilingPointMult > 0 then
+      ZyruIncremental.TrackBoonEffect("DefensiveSuperGenerationTrait", boilingPointMult * meterAmount)
+    end
+		meterAmount = meterAmount * mult
+	else
+		local stepdownCutoff = 60
+		if damageAmount > stepdownCutoff then
+			damageAmount = stepdownCutoff + math.sqrt(damageAmount - stepdownCutoff)
+		end
+
+		meterAmount = damageAmount * CurrentRun.Hero.Super.DamageDealtMultiplier
+		meterAmount = meterAmount * MetaUpgradeData.LimitMetaUpgrade.ChangeValue * (1 + GetNumMetaUpgrades("LimitMetaUpgrade"))
+    local cloudedJudgementMult = GetTotalHeroTraitValue("SuperGainMultiplier", { IsMultiplier = true }) - 1
+    local mult = 1 + cloudedJudgementMult
+		meterAmount = meterAmount * cloudedJudgementMult
+    
+		if victim.MeterMultiplier then
+			meterAmount = meterAmount * victim.MeterMultiplier
+		end
+    DebugPrint { Text = tostring(cloudedJudgementMult) .. " " .. tostring(cloudedJudgementMult * meterAmount) }
+    if cloudedJudgementMult > 0 then
+      ZyruIncremental.TrackBoonEffect("SuperGenerationTrait", 100 * cloudedJudgementMult * meterAmount)
+    end
+	end
+  return base(triggerArgs, sourceWeaponData, victim)
+end, ZyruIncremental)
+--[[
+  
+	local damageAmount = triggerArgs.DamageAmount
+	if triggerArgs.PureDamage then
+		return 0
+	end
+	if victim ~= nil and victim.BlockWrathGain then
+		return 0
+	end
+	if sourceWeaponData ~= nil and sourceWeaponData.BlockWrathGain then
+		return 0
+	end
+	local meterAmount = 0
+	if victim == CurrentRun.Hero then
+		meterAmount = ( damageAmount / victim.MaxHealth ) * CurrentRun.Hero.Super.DamageTakenMultiplier
+		meterAmount = meterAmount * (1 + GetTotalHeroTraitValue("SuperGainMultiplier", { IsMultiplier = true }) - 1 + GetTotalHeroTraitValue("DefensiveSuperGainMultiplier", { IsMultiplier = true }) - 1)
+	else
+		local stepdownCutoff = 60
+		if damageAmount > stepdownCutoff then
+			damageAmount = stepdownCutoff + math.sqrt(damageAmount - stepdownCutoff)
+		end
+
+		meterAmount = damageAmount * CurrentRun.Hero.Super.DamageDealtMultiplier
+		meterAmount = meterAmount * MetaUpgradeData.LimitMetaUpgrade.ChangeValue * (1 + GetNumMetaUpgrades("LimitMetaUpgrade"))
+		meterAmount = meterAmount * GetTotalHeroTraitValue("SuperGainMultiplier", { IsMultiplier = true })
+		if victim.MeterMultiplier then
+			thread( MarkObjectiveComplete, "BuildSuper" )
+			meterAmount = meterAmount * victim.MeterMultiplier
+		end
+	end
+	BuildSuperMeter( CurrentRun, meterAmount )
+]]
+
+-- SECOND WIND DETECTION
 ModUtil.Path.Context.Wrap("CommenceSuperMove", function()
   ModUtil.Path.Wrap("GetHeroTraitValues", function (baseFunc, ...)
     local res = baseFunc(...)
@@ -936,7 +1023,7 @@ ModUtil.Path.Context.Wrap("CommenceSuperMove", function()
     return res
   end, ZyruIncremental)
 end, ZyruIncremental)
--- END BILLOWING STRENGTH, BOILING POINT DETECTION
+-- END SECOND WIND DETECTION
 
 -- DOUBLE STRIKE
   ModUtil.Path.Wrap("FireWeaponWithinRange", function(baseFunc, args)
@@ -949,8 +1036,6 @@ end, ZyruIncremental)
     end
     args.BonusChance = 0
     baseFunc(args)
-    if doubleStrikeUsed then
-    end
   end, ZyruIncremental)
 -- END DOUBLE STRIKE
 
@@ -1130,7 +1215,7 @@ end, ZyruIncremental)
 -- Greater Reflex
 OnWeaponFired{ "RushWeapon",
   function ( triggerArgs )
-    for k, v in pairs({"BonusDashTrait", "RushSpeedBoostTrait" }) do
+    for k, v in ipairs({"BonusDashTrait", "RushSpeedBoostTrait" }) do
       if HeroHasTrait(v) then
         ZyruIncremental.TrackBoonEffect(v)
       end
