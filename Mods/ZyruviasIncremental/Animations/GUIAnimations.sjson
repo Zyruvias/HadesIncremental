@@ -36,5 +36,25 @@
             AddColor = true
             Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
         }
+        {
+            
+            Name = "SimpleGrow"
+            Type = "Constant"
+            StartScale = 1
+            EndScale = 1.1
+            Duration = 0.2
+            EaseIn = 0.75
+            EaseOut = 1
+        }
+        {
+            
+            Name = "SimpleShrink"
+            Type = "Constant"
+            StartScale = 1.1
+            EndScale = 10
+            Duration = 0.2
+            EaseIn = 0.75
+            EaseOut = 1
+        }
     ]
 }

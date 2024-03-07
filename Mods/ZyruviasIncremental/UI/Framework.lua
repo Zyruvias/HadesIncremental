@@ -83,6 +83,17 @@ ZyruIncremental.BaseComponents = {
             ScaleX = 1.0,
             X = ScreenCenterX - 240,
             Y = ScreenCenterY,
+        },
+    },
+    Distribution = {
+        Standard = {
+            Name = "rectangle01",
+            BackgroundColor = {96, 96, 96, 255},
+            ForegroundColor = Color.White,
+            ScaleY = 1.0,
+            ScaleX = 1.0,
+            X = ScreenCenterX - 240,
+            Y = ScreenCenterY,
         }
     },
     Background = {
@@ -137,13 +148,18 @@ ZyruIncremental.BaseComponents = {
     },
 
 }
+
+-- holdover pattern from absorbing ErumiUILib
+ZyruIncremental.Dropdown = {}
+ZyruIncremental.ScrollingList = {}
+
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
-	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
-		if ActiveScreens[name] then
-			return true
-		end
-	end
+	-- for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
+	-- 	if ActiveScreens[name] then
+	-- 		return true
+	-- 	end
+	-- end
     return base()
 end, ZyruIncremental)
 
@@ -198,13 +214,17 @@ end
 -- Generates a component definition from either an existing screen component or the base definition
 function GetComponentDefinition(screen, component)
     -- TODO: do I need to require a type and subtype all the time?
+    if not component or not component.Type or not component.SubType then
+        DebugPrint { Text = "Bad component received .. " .. ModUtil.ToString.Shallow(component)}
+        return
+    end
     local baseDefinition = DeepCopyTable(ZyruIncremental.BaseComponents[component.Type][component.SubType])
     if baseDefinition == nil then
         DebugPrint { Text = "bad baseDefinition generated for " .. tostring((component.Args or {}).FieldName)}
     end
     local groupToUse = ModUtil.Path.Get("Args.Group", component)
         or baseDefinition.Group
-        or screen.Pages[screen.PageIndex].Group
+        or ModUtil.Path.Get("Pages[" .. tostring(screen.PageIndex) .. "].Group", screen)
         or screen.Group
     baseDefinition.Group = groupToUse
     local fieldName = ModUtil.Path.Get("Args.FieldName", component)
@@ -219,6 +239,7 @@ function GetComponentDefinition(screen, component)
         baseDefinition,
         DeepCopyTable(component.Args or {})
     )
+    -- DebugPrint { Text = tostring(fieldName) .. ": " .. ModUtil.ToString.Shallow(componentDefinition)}
     return componentDefinition
 end
 
@@ -246,9 +267,11 @@ function ZyruIncremental.CreateMenu(name, args)
 		return
 	end
     OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true })
+    if args.SkipMeta == nil then
     HideCombatUI(name)
     FreezePlayerUnit()
     EnableShopGamepadCursor()
+    end
 
     -- Lets users use escape / cancel to exit the menu
     if args.PauseBlock then
@@ -336,7 +359,6 @@ function ZyruIncremental.RenderComponent(screen, component)
         -- establish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
         if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
-            -- DebugPrint { Text = "Setting component definition for " .. fieldName }
             screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
         end
     end
@@ -344,16 +366,16 @@ end
 
 function ZyruIncremental.UpdateComponent(screen, component, args)
     if not component or component.Type == nil then
-        -- DebugPrint { Text = "No component or no component Type property provided"}
+        DebugPrint { Text = "No component or no component Type property provided"}
         return
     end 
     if type(ZyruIncremental["Update" .. tostring(component.Type)]) == "function" then
+        DebugPrint { Text = "calling ZyruIncrenmental." .. "Update" .. tostring(component.Type)}
         ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
 
         -- reestablish definition on screen object for later access
         local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-        -- DebugPrint { Text = "Updating component definition for " .. fieldName }
-        screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
+        screen.Components[fieldName].Args = GetComponentDefinition(screen, args)
     end
 end
 
@@ -388,6 +410,129 @@ function ZyruIncremental.UpdateIcon(screen, component)
     
 end
 
+local CHUNK_MIN_WIDTH = 5
+local CHUNK_WIDTH_TO_FLIP_OFFSET = 100
+-- Create DistributionBar
+function ZyruIncremental.RenderDistribution(screen, component)
+    local barDefinition = GetComponentDefinition(screen, component)
+    barDefinition.ScaleY = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y * barDefinition.ScaleY
+    barDefinition.ScaleX = ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * barDefinition.ScaleX
+    local components = screen.Components
+    local barName = barDefinition.FieldName or ""
+
+    local barBackgroundDefinition = {
+        Name = barDefinition.Name,
+        X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+        Y = barDefinition.Y,
+    }
+
+    components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
+    if barDefinition.Label ~= nil then
+        local label = {
+            Type = "Text",
+            SubType = "Note",
+            Args = {
+                FieldName = barName .. "BarLabel",
+                Text = barDefinition.label or "",
+                Parent = barName .. "BarBackground",
+                X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+                Y = barDefinition.Y,
+                Justification = "Center"
+            }
+        }
+        barDefinition.Label.Parent = barName
+        ZyruIncremental.RenderText(screen, barDefinition.Label)
+    end
+    SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
+    SetScaleX{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleX }
+    SetScaleY{ Id = components[barName .. "BarBackground"].Id, Fraction = barDefinition.ScaleY }
+
+    -- createForeground bars
+    -- barDefinition.ScaleX *
+    -- ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X
+    -- * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+    local cumulativeProportion = 0
+    local backgroundBarWidth = barDefinition.ScaleX
+        * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X *
+        ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH
+    local sign = 1
+    local previousChunkWidth
+    for i, data in ipairs(barDefinition.DistributionData) do
+        local chunkName = data.Name or tostring(i)
+        local chunkComponentName = barName .. "BarForeground" .. chunkName
+        local chunkWidth = barDefinition.ScaleX
+            * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X *
+            ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH * data.Value
+        if chunkWidth >= CHUNK_MIN_WIDTH then
+            local chunkDefinition = {
+                X = barDefinition.X + chunkWidth / 2 + cumulativeProportion * backgroundBarWidth,
+                Y = barDefinition.Y,
+            }
+            components[chunkComponentName] = CreateScreenComponent({
+                Name = "rectangle01",
+                -- add offset based on proportion and cumulative proportion
+                X = chunkDefinition.X,
+                Y = chunkDefinition.Y,
+            })
+            cumulativeProportion = cumulativeProportion + data.Value
+            components[chunkComponentName].Proportion = barDefinition.Proportion
+            SetColor{ Id = components[chunkComponentName].Id, Color = data.Color or barDefinition.ForegroundColor}
+            SetScaleX{ Id = components[chunkComponentName].Id, Fraction = data.Value * barDefinition.ScaleX}
+            SetScaleY{ Id = components[chunkComponentName].Id, Fraction = barDefinition.ScaleY }
+
+            -- TEXT to render
+
+
+            local chunkText = 
+                (sign == 1 and "^ \\n " or "") ..
+                data.Name .. " - " .. tonumber(string.format("%.1f", data.Value * 100)) .. "%" ..
+                (sign == -1 and "\\n  v" or "")
+            local text = {
+                Type = "Text",
+                SubType = "Note",
+                Args = {
+                    FieldName = chunkComponentName .. "Text",
+                    Text = chunkText,
+                    Parent = chunkComponentName .. "BarBackground",
+                    X = chunkDefinition.X,
+                    Y = chunkDefinition.Y + (ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_Y *
+                        ZyruIncremental.Constants.Components.RECTANGLE_01_HEIGHT + 20) * sign,
+                    Justification = "Center",
+                    Color = Color.White
+                }
+            }            
+            -- if chunkWidth < CHUNK_WIDTH_TO_FLIP_OFFSET and previousChunkWidth ~= nil or (previousChunkWidth or 999999999999) < CHUNK_WIDTH_TO_FLIP_OFFSET then
+            sign = -1 * sign
+            previousChunkWidth = chunkWidth
+            -- end
+            ZyruIncremental.RenderComponent(screen, text)
+        end
+        
+    end
+
+
+    
+    -- TODO: left text / right text
+    -- local barText = {
+    --     Type = "Text",
+    --     SubType = "Note",
+    --     Args = {
+    --         FieldName = barName .. "BarText",
+    --         Text = barDefinition.BarText or "",
+    --         Parent = barName .. "BarBackground",
+            
+    --         X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+    --         Y = barDefinition.Y,
+    --         Justification = "Center"
+    --     }
+    -- }
+    -- ZyruIncremental.RenderText(screen, barText)
+end
+
+function ZyruIncremental.UpdateDistribution(screen, component)
+
+end
+
 -- Create Progress Bar
 function ZyruIncremental.RenderProgressBar(screen, component)
     local barDefinition = GetComponentDefinition(screen, component)
@@ -404,7 +549,22 @@ function ZyruIncremental.RenderProgressBar(screen, component)
 
     components[barName .. "BarBackground"] = CreateScreenComponent(barBackgroundDefinition)
     if barDefinition.Label ~= nil then
-        barDefinition.Label.Parent = barName
+        if type(barDefinition.Label) == "table" then
+            barDefinition.Label.Parent = barName .. "BarBackground"
+        else
+            barDefinition.Label = {
+                Type = "Text",
+                SubType = "Note",
+                Args = {
+                    FieldName = barName .. "BarLabel",
+                    Text = barDefinition.Label,
+                    Parent = barName .. "BarBackground",
+                    X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
+                    Y = barDefinition.Y - 25,
+                    Justification = "Center"
+                }
+            }
+        end
         ZyruIncremental.RenderText(screen, barDefinition.Label)
     end
     SetColor{ Id = components[barName .. "BarBackground"].Id, Color = barDefinition.BackgroundColor}
@@ -422,7 +582,6 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     SetScaleX{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.Proportion }
     SetScaleY{ Id = components[barName .. "BarForeground"].Id, Fraction = barDefinition.ScaleY }
 
-    --DebugPrint { Text = ModUtil.ToString.Deep(components)}
     
     -- TODO: left text / right text
     local barText = {
@@ -465,6 +624,7 @@ function ZyruIncremental.RenderProgressBar(screen, component)
         }
     }
     ZyruIncremental.RenderText(screen, rightText)
+    ZyruIncremental.UpdateProgressBar(screen, component, args)
 end
 
 function ZyruIncremental.UpdateProgressBar(screen, component, args)
@@ -526,7 +686,7 @@ function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
     
-    ErumiUILib.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
 end
 
 function ZyruIncremental.RenderButton(screen, component)
@@ -535,12 +695,16 @@ function ZyruIncremental.RenderButton(screen, component)
     local components = screen.Components
     local buttonName = buttonDefinition.FieldName or buttonDefinition.Name
     local buttonComponentName = buttonDefinition.Name or "BaseInteractableButton"
-    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0, Group = "Combat_Menu_Overlay" })
-    -- DebugPrint { Text = ModUtil.ToString.Deep(buttonDefinition)}
+    components[buttonName] = CreateScreenComponent({ Name = buttonComponentName, Scale = buttonDefinition.Scale or 1.0  })
 
     if buttonDefinition.Animation ~= nil then
         SetAnimation({ DestinationId = components[buttonName].Id, Name = buttonDefinition.Animation })
     end
+    components[buttonName .. "HighlightTarget"] = CreateScreenComponent { Name = "BaseInteractableButton", DestinationId = components[buttonName].Id }
+    -- SetInteractProperty({ DestinationId = components[buttonName .. "HighlightTarget"].Id, Property = "HighlightOnAnimation", Value = "PortraitEmoteSparkly" })
+    -- SetInteractProperty({ DestinationId = components[buttonName].Id, Property = "HighlightOnAnimation", Value = "Portrait_Base_01_Exit" })
+
+
 
 
 	Attach({
@@ -556,18 +720,16 @@ function ZyruIncremental.RenderButton(screen, component)
         SetAngle({ Id = components[buttonName].Id, Angle = buttonDefinition.Angle})
     end
     
-    components[buttonName].OnMouseOverFunctionName = "LolLmao"
-    components[buttonName].OnMouseOffFunctionName = "LolLmao"
+    -- components[buttonName].OnMouseOverFunctionName = "LolLmao"
+    -- components[buttonName].OnMouseOffFunctionName = "LolLmao"
     -- HardCoded, not sure how to get around this
     if buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Close" then
         local name = screen.Name
-        DebugPrint { Text = "creating function Closing 2 with key " .. "Close" .. name .. "Screen"}
         components[buttonName].OnPressedFunctionName = "Close" .. name .. "Screen"
         if _G["Close" .. name .. "Screen"] == nil then
     
             _G["Close" .. name .. "Screen"] = function()
                 CloseScreenByName ( name )
-                DebugPrint { Text = "Closing 2"}
                 if buttonDefinition.CloseScreenFunction then
                     buttonDefinition.CloseScreenFunction(buttonDefinition.CloseScreenFunctionArgs)
                 elseif buttonDefinition.CloseScreenFunctionName ~= nil then
@@ -601,6 +763,24 @@ function ZyruIncremental.RenderButton(screen, component)
     end
 
     return components[buttonName]
+end
+
+function ZyruIncremental.UpdateButton(screen, component)
+
+    local buttonDefinition = GetComponentDefinition(screen, component)
+    local components = screen.Components
+
+    local button = components[buttonDefinition.FieldName]
+
+    -- NOTE: this is a shallow merge because button.Upgrade needs to
+    -- be fully replaced in the case PurchaseButton usage...
+    -- TODO: generalize with a meta field or something idk
+    
+    -- ModUtil.Table.Merge(button, buttonDefinition.ComponentArgs)
+    for setKey, setVal in pairs( buttonDefinition.ComponentArgs ) do
+		button[setKey] = setVal
+	end
+
 end
 
 -- Create Text Box
@@ -649,7 +829,7 @@ end
 function ZyruIncremental.RenderList(screen, component)
     local listDefinition = GetComponentDefinition(screen, component)
 
-    local scrollingList = ErumiUILib.ScrollingList.CreateScrollingList(
+    local scrollingList = ZyruIncremental.ScrollingList.CreateScrollingList(
 		screen, listDefinition
     )
 end
@@ -663,3 +843,570 @@ end
     3) Make labels on components more ubiquotious and add support for either object or plain text
     4) Make the generic component hooks work for multi-element things...
 ]]
+
+function ZyruIncremental.ScrollingList.CreateScrollingList(screen, args)
+    local xPos = (args.X or 0)
+    local yPos = (args.Y or 0)
+    local components = screen.Components
+    local Name = (args.Name or "UnnamedScrollingList")
+    --Create base default text and backingKey
+    local scrollingListTopBackingKey = Name .. "BaseBacking"
+    components[scrollingListTopBackingKey] = CreateScreenComponent({ Name = "BlankObstacle", Group = args.Group, Scale = 1, X = xPos, Y = yPos })
+
+    components[scrollingListTopBackingKey].isEnabled = true
+    components[scrollingListTopBackingKey].Children = {}
+    components[scrollingListTopBackingKey].screen = screen
+    components[scrollingListTopBackingKey].CurrentPage = 0
+    components[scrollingListTopBackingKey].args = args
+
+    ZyruIncremental.ScrollingList.Update(components[scrollingListTopBackingKey])
+    return components[scrollingListTopBackingKey]
+end
+function ZyruIncremental.ScrollingList.Update(scrollingList)
+    local args = scrollingList.args
+    local screen = scrollingList.screen
+    local xPos = (args.X or 0)
+    local yPos = (args.Y or 0)
+    local components = screen.Components
+    local Name = (args.Name or "UnnamedScrollingList")
+    --Create base default text and backingKey
+    local scrollingListTopBackingKey = Name .. "BaseBacking"
+    local currentPageItems = {}
+
+    for _,v in pairs(scrollingList.Children) do
+        Destroy({Id = v.Id})
+    end
+
+    for i = 1, args.ItemsPerPage do
+        local curItem = args.Items[i + (scrollingList.CurrentPage * args.ItemsPerPage)]
+        if curItem == nil then
+            break
+        end
+            table.insert(currentPageItems, curItem)
+        
+    end
+    for k,v in pairs(currentPageItems) do
+        local scrollingListItemBackingKey = args.Name .. "ScrollingListBacking" .. k
+        local ySpaceAmount = 102* (k - 1) * args.Scale.Y + (args.Padding.Y * k)
+        components[scrollingListItemBackingKey] = CreateScreenComponent({ Name = "MarketSlot", Group = args.Group .. "ScrollingList", Scale = 1, X = (args.X or 0), Y = (args.Y or 0) + ySpaceAmount})
+        components[scrollingListItemBackingKey].scrollingListPressedArgs = {Args = args, parent = scrollingList, Index = k + (scrollingList.CurrentPage * args.ItemsPerPage)}
+
+        SetScaleY({ Id = components[scrollingListItemBackingKey].Id , Fraction = args.Scale.Y or 1 })
+        SetScaleX({ Id = components[scrollingListItemBackingKey].Id , Fraction = args.Scale.X or 1 })
+        local offsetX = (args.GeneralOffset or {X = 0}).X
+        if v.Offset ~= nil then
+            offsetX = v.Offset.X
+        end
+        local offsetY = (args.GeneralOffset or {Y = 0}).Y
+        if v.Offset ~= nil then
+            offsetY = v.Offset.Y
+        end
+        local textColor = Color.White
+        CreateTextBox({ Id = components[scrollingListItemBackingKey].Id, Text = v.Text,
+            FontSize = v.FontSize or args.GeneralFontSize,
+            OffsetX = offsetX, OffsetY = offsetY,
+            Width = 665,
+            Justification = (v.Justification or args.Justification) or "Center",
+            VerticalJustification = (v.VerticalJustification or args.VerticalJustification) or "Center",
+            LineSpacingBottom = 8,
+            Font = (v.Font or args.Font) or "AlegreyaSansSCBold",
+            Color = textColor,
+            ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
+            TextSymbolScale = 0.8,
+        })
+        if v.Description then
+            local descriptionDefinition = { 
+                Id = components[scrollingListItemBackingKey].Id, Text = v.Description,
+                FontSize = v.DescriptionFontSize or args.DescriptionFontSize or 10,
+                OffsetX = (v.DescriptionOffset or args.DescriptionOffset).X or 0, OffsetY = (v.DescriptionOffset or args.DescriptionOffset).Y or 0,
+                Width = 665,
+                Justification = (v.Justification or args.Justification) or "Center",
+                VerticalJustification = (v.VerticalJustification or args.VerticalJustification) or "Center",
+                LineSpacingBottom = 8,
+                Font = (v.Font or args.Font) or "AlegreyaSansSCBold",
+                Color = args.DescriptionColor,
+                ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
+                TextSymbolScale = 0.8,
+            }
+            if v.DescriptionArgs ~= nil then
+                ModUtil.Table.Merge(
+                    descriptionDefinition,
+                    v.DescriptionArgs
+                )
+            end
+            CreateTextBox(descriptionDefinition)
+        end
+        if v.ImageStyle ~= nil and v.ImageStyle.Image ~= nil then
+            local scrollingListItemImageBackingKey = args.Name .. "ScrollingListIcon" .. k
+            components[scrollingListItemImageBackingKey] = CreateScreenComponent({ Name = "BlankObstacle", Group = args.Group .. "Image", Scale = v.ImageStyle.Scale or 1 })
+            SetAnimation({ Name = v.ImageStyle.Image  , DestinationId = components[scrollingListItemImageBackingKey].Id, Scale = 1 })
+            Attach({ Id = components[scrollingListItemImageBackingKey].Id, DestinationId = components[scrollingListItemBackingKey].Id, OffsetX = v.ImageStyle.Offset.X or 0, OffsetY = v.ImageStyle.Offset.Y or 0})
+            components[scrollingListTopBackingKey].Children[components[scrollingListItemImageBackingKey].Id] = components[scrollingListItemImageBackingKey]
+        elseif args.ImageStyle ~= nil and args.ImageStyle.Image ~= nil then
+            local scrollingListItemImageBackingKey = args.Name .. "ScrollingListIcon" .. k
+            components[scrollingListItemImageBackingKey] = CreateScreenComponent({ Name = "BlankObstacle", Group = args.Group .. "Image", Scale = args.ImageStyle.Scale or 1 })
+            SetAnimation({ Name = args.ImageStyle.Image, DestinationId = components[scrollingListItemImageBackingKey].Id, Scale = 1 })
+            Attach({ Id = components[scrollingListItemImageBackingKey].Id, DestinationId = components[scrollingListItemBackingKey].Id, OffsetX = args.ImageStyle.Offset.X or 0, OffsetY = args.ImageStyle.Offset.Y or 0})
+            scrollingList.Children[scrollingListItemImageBackingKey] = components[scrollingListItemImageBackingKey]
+        end
+        if v.IsEnabled ~= false then
+            components[scrollingListItemBackingKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.ButtonPressed"
+        else
+            SetColor({ Id = components[scrollingListItemBackingKey].Id , Color = args.DeEnabledColor or {1,1,1,0.33} })
+        end
+        scrollingList.Children[scrollingListItemBackingKey] = components[scrollingListItemBackingKey]
+        local createUpArrow = function()
+            local scrollingListItemArrowKey = args.Name .. "ScrollingListArrowUp" .. k
+            components[scrollingListItemArrowKey] = CreateScreenComponent({ Name = "ButtonCodexUp", X = (args.X or 0) + (args.ArrowStyle.Offset.X or 0), Y = (args.Y or 0) + ySpaceAmount + (args.ArrowStyle.Offset.Y or 0), Scale = args.ArrowStyle.Scale, Sound = "/SFX/Menu Sounds/GeneralWhooshMENU", Group = args.Group .. "Arrows" })
+            components[scrollingListItemArrowKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.PreviousPage"
+            components[scrollingListItemArrowKey].args = args
+            components[scrollingListItemArrowKey].Parent = scrollingList
+            
+            scrollingList.Children[components[scrollingListItemArrowKey].Id] = components[scrollingListItemArrowKey]
+            
+        end
+        local createDownArrow = function()
+            local scrollingListItemArrowKey = args.Name .. "ScrollingListArrowDown" .. k
+            components[scrollingListItemArrowKey] = CreateScreenComponent({ Name = "ButtonCodexDown", X = (args.X or 0) + (args.ArrowStyle.Offset.X or 0), Y = (args.Y or 0) + ySpaceAmount + (args.ArrowStyle.Offset.Y or 0), Scale = args.ArrowStyle.Scale, Sound = "/SFX/Menu Sounds/GeneralWhooshMENU", Group = args.Group .. "Arrows" })
+            scrollingList.Children[components[scrollingListItemArrowKey].Id] = components[scrollingListItemArrowKey]
+            components[scrollingListItemArrowKey].OnPressedFunctionName = "ZyruIncremental.ScrollingList.NextPage"
+            components[scrollingListItemArrowKey].args = args
+            components[scrollingListItemArrowKey].Parent = scrollingList
+            
+            scrollingList.Children[components[scrollingListItemArrowKey].Id] = components[scrollingListItemArrowKey]
+        end
+        if args.ArrowStyle.CreationPositions.Style == "First" then
+            if k == 1 and args.ArrowStyle ~= nil then
+                createUpArrow()
+            elseif k == 2 and args.ArrowStyle ~= nil then
+                createDownArrow()    
+            end
+        elseif args.ArrowStyle.CreationPositions.Style == "TB" or args.ArrowStyle.CreationPositions.Style == "Top-Bottom" then
+            if k == 1 and args.ArrowStyle ~= nil then
+                createUpArrow()            
+            elseif k == #currentPageItems and args.ArrowStyle ~= nil then
+                createDownArrow()
+            end
+        elseif args.ArrowStyle.CreationPositions.Style == "Custom" then
+            if args.ArrowStyle ~= nil and k == args.ArrowStyle.CreationPositions.Positions[1] then
+                createUpArrow()
+            elseif args.ArrowStyle ~= nil and k == args.ArrowStyle.CreationPositions.Positions[2] then
+                createDownArrow()
+            end
+        end
+    end
+end
+function ZyruIncremental.ScrollingList.PreviousPage(screen, button)
+    local parent = button.Parent
+    local args = button.args
+    if parent.CurrentPage - 1 >= 0 then
+        parent.CurrentPage = parent.CurrentPage - 1
+        ZyruIncremental.ScrollingList.Update(parent)
+    end
+    
+end
+function ZyruIncremental.ScrollingList.NextPage(screen, button)
+    local parent = button.Parent
+    local args = button.args
+    if #args.Items > (parent.CurrentPage + 1) * args.ItemsPerPage then
+        parent.CurrentPage = parent.CurrentPage + 1
+        ZyruIncremental.ScrollingList.Update(parent)
+    end
+    
+end
+
+function ZyruIncremental.ScrollingList.ButtonPressed(screen, button)
+  local args = button.scrollingListPressedArgs.Args
+  local components = screen.Components
+  local itemToSwapTo = args.Items[button.scrollingListPressedArgs.Index]
+  local parentButton = button.scrollingListPressedArgs.parent
+
+  if itemToSwapTo.event ~= nil then
+      itemToSwapTo.event(parentButton, itemToSwapTo)
+  elseif args.GeneralEvent ~= nil then
+      args.GeneralEvent(parentButton, itemToSwapTo)
+  end
+end
+function ZyruIncremental.ScrollingList.GetEntries(scrollingList)
+  local returnItems = {}
+  for k,v in pairs(scrollingList.scrollingListPressedArgs.Items)do
+      if v.IsEnabled == true or v.IsEnabled == nil then
+          table.insert(returnItems, v)
+      end
+  end
+  return returnItems
+end
+function ZyruIncremental.ScrollingList.NewEntry(scrollingList, value)
+  table.insert(scrollingList.scrollingListPressedArgs.Items, value)
+  local screen = scrollingList.screen
+  ZyruIncremental.ScrollingList.Update(scrollingList)
+end
+function ZyruIncremental.ScrollingList.DelEntry(scrollingList, value)
+  local itemToRemove = nil
+  local itemToRemoveIndex = nil
+  local items = scrollingList.scrollingListPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToRemove = items[value]
+          itemToRemoveIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToRemove = v
+              itemToRemoveIndex = k
+              break
+          end
+      end
+  end
+  if itemToRemove ~= nil and itemToRemove ~= scrollingList.currentItem then
+      table.remove(scrollingList.scrollingListPressedArgs.Items, itemToRemoveIndex)
+      local screen = scrollingList.screen
+      ZyruIncremental.ScrollingList.Update(scrollingList)
+  end
+end
+function ZyruIncremental.ScrollingList.DisableEntry(scrollingList, value)
+  local itemToDisable = nil
+  local itemToDisableIndex = nil
+  local items = scrollingList.scrollingListPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToDisable = items[value]
+          itemToDisableIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToDisable = v
+              itemToDisableIndex = k
+              break
+          end
+      end
+  end
+  if itemToDisable ~= nil and itemToDisable ~= scrollingList.currentItem then
+      items[itemToDisableIndex].IsEnabled = false
+      ZyruIncremental.ScrollingList.Update(scrollingList)
+  end
+end
+function ZyruIncremental.ScrollingList.EnableEntry(scrollingList, value)
+  local itemToDisable = nil
+  local itemToDisableIndex = nil
+  local items = scrollingList.scrollingListPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToDisable = items[value]
+          itemToDisableIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToDisable = v
+              itemToDisableIndex = k
+              break
+          end
+      end
+  end
+  if itemToDisable ~= nil and itemToDisable ~= scrollingList.currentItem then
+    items[itemToDisableIndex].IsEnabled = true
+    ZyruIncremental.ScrollingList.Update(scrollingList)
+end
+end
+function ZyruIncremental.ScrollingList.Destroy(scrollingList)
+  local components = scrollingList.screen.components
+  for _,v in pairs(scrollingList.Children) do
+      if components[v.Id] ~= nil then
+          Destroy({Id = v.Id})
+      end
+  end
+  Destroy({Id = scrollingList.Id})
+end
+
+--#region Dropdowns
+function ZyruIncremental.Dropdown.CreateDropdown(screen, args)
+    local xPos = (args.X or 0)
+  local yPos = (args.Y or 0)
+  local components = screen.Components
+  local Name = (args.Name or "UnnamedDropdown")
+  --Create base default text and backingKey
+  local dropDownTopBackingKey = Name .. "BaseBacking"
+  components[dropDownTopBackingKey] = CreateScreenComponent({ Name = "MarketSlot", Group = args.Group, Scale = 1, X = xPos, Y = yPos })
+
+  SetScaleY({ Id = components[dropDownTopBackingKey].Id , Fraction = args.Scale.Y or 1 })
+  SetScaleX({ Id = components[dropDownTopBackingKey].Id , Fraction = args.Scale.X or 1 })
+
+  components[dropDownTopBackingKey].OnPressedFunctionName = "ZyruIncrementalToggleDropdown"
+  components[dropDownTopBackingKey].dropDownPressedArgs = args
+  components[dropDownTopBackingKey].isExpanded = false
+  components[dropDownTopBackingKey].isEnabled = true
+  components[dropDownTopBackingKey].Children = {}
+
+  components[dropDownTopBackingKey].currentItem = args.Items.Default
+  components[dropDownTopBackingKey].screen = screen
+
+  ZyruIncremental.Dropdown.UpdateBaseText(screen, components[dropDownTopBackingKey])
+
+  if args.Items.Default.event ~= nil then
+      args.Items.Default.event(components[dropDownTopBackingKey])
+  end
+  return components[dropDownTopBackingKey]
+end
+
+function ZyruIncrementalToggleDropdown(screen, button)
+  if not button.isEnabled then
+    return
+  end
+  button.isExpanded = not button.isExpanded
+  if button.isExpanded then
+      ZyruIncremental.Dropdown.Expand(screen, button)
+  else
+      ZyruIncremental.Dropdown.Collapse(screen, button)
+  end
+end
+function ZyruIncremental.Dropdown.Expand(screen, button)
+  local args = button.dropDownPressedArgs
+  local components = screen.Components
+  ModifyTextBox({Id = components[args.Name .. "BaseTextbox"].Id, Color = {1, 1, 1, 0.2}})
+  for k,v in pairs(args.Items) do
+      if k ~= "Default" then
+          local dropDownItemBackingKey = args.Name .. "DropdownBacking" .. k
+          local ySpaceAmount = 102* k * args.Scale.Y + (args.Padding.Y * k)
+          components[dropDownItemBackingKey] = CreateScreenComponent({ Name = "MarketSlot", Group = args.Group .. "Dropdown", Scale = 1, X = (args.X or 0), Y = (args.Y or 0) + ySpaceAmount})
+          components[dropDownItemBackingKey].dropDownPressedArgs = {Args = args, parent = button, Index = k}
+          components[dropDownItemBackingKey].OnPressedFunctionName = "ZyruIncrementalDropdownButtonPressed"
+
+          SetScaleY({ Id = components[dropDownItemBackingKey].Id , Fraction = args.Scale.Y or 1 })
+          SetScaleX({ Id = components[dropDownItemBackingKey].Id , Fraction = args.Scale.X or 1 })
+          local offsetX = (args.GeneralOffset or {X = 0}).X
+          if v.Offset ~= nil then
+              offsetX = v.Offset.X
+          end
+          local offsetY = (args.GeneralOffset or {Y = 0}).Y
+          if v.Offset ~= nil then
+              offsetY = v.Offset.Y
+          end
+          local textColor = Color.White
+          if v.IsEnabled == false then
+              textColor = {255, 255, 255, .2}
+              components[dropDownItemBackingKey].OnPressedFunctionName = nil
+              textColor = {1, 1, 1, 0.2}
+          end
+          CreateTextBox({ Id = components[dropDownItemBackingKey].Id, Text = v.Text,
+              FontSize = v.FontSize or args.GeneralFontSize,
+              OffsetX = offsetX, OffsetY = offsetY,
+              Width = 665,
+              Justification = (v.Justification or args.Justification) or "Center",
+              VerticalJustification = (v.VerticalJustification or args.VerticalJustification) or "Center",
+              LineSpacingBottom = 8,
+              Font = (v.Font or args.Font) or "AlegreyaSansSCBold",
+              Color = textColor,
+              ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
+              TextSymbolScale = 0.8,
+      })
+      button.Children[dropDownItemBackingKey] = components[dropDownItemBackingKey]
+      end
+  end
+end
+function ZyruIncrementalDropdownButtonPressed(screen, button)
+  local args = button.dropDownPressedArgs.Args
+  local components = screen.Components
+  local itemToSwapTo = args.Items[button.dropDownPressedArgs.Index]
+  local parentButton = button.dropDownPressedArgs.parent
+
+  parentButton.isExpanded = not parentButton.isExpanded
+  parentButton.currentItem = itemToSwapTo
+
+  ZyruIncremental.Dropdown.UpdateBaseText(screen, parentButton)
+  ZyruIncremental.Dropdown.Collapse(screen, parentButton)
+
+  if itemToSwapTo.event ~= nil then
+      itemToSwapTo.event(parentButton, itemToSwapTo)
+  elseif args.GeneralEvent ~= nil then
+      args.GeneralEvent(parentButton, itemToSwapTo)
+  end
+end
+function ZyruIncremental.Dropdown.Collapse(screen, button)
+  local components = screen.Components
+  for k,v in pairs(components) do
+      if string.find(k, button.dropDownPressedArgs.Name .. "DropdownBacking") then
+          Destroy({Id = v.Id})
+      end
+  end
+  ModifyTextBox({ Id = components[button.dropDownPressedArgs.Name .. "BaseTextbox"].Id, Color = {1, 1, 1, 1}})
+end
+function ZyruIncremental.Dropdown.UpdateBaseText(screen, dropdown)
+  local args = dropdown.dropDownPressedArgs
+  local components = screen.Components
+  local itemToSwapTo = dropdown.currentItem
+
+  local offsetX = (args.GeneralOffset or {X = 0}).X
+  if itemToSwapTo.Offset ~= nil then
+      offsetX = itemToSwapTo.Offset.X
+  end
+  local offsetY = (args.GeneralOffset or {Y = 0}).Y
+  if itemToSwapTo.Offset ~= nil then
+      offsetY = itemToSwapTo.Offset.Y
+  end
+
+  local textboxContainerName = args.Name .. "BaseTextbox"
+  local textboxContainer = components[textboxContainerName]
+  if textboxContainer == nil then
+    textboxContainer = CreateScreenComponent({ Name = "BlankObstacle", Group = args.Group, Scale = 1, X = args.X or 0, Y = args.Y or 0})
+    SetScaleY({ Id = textboxContainer.Id , Fraction = args.Scale.Y or 1 })
+    SetScaleX({ Id = textboxContainer.Id , Fraction = args.Scale.X or 1 })
+    CreateTextBox({ Id = textboxContainer.Id, Text = itemToSwapTo.Text,
+        FontSize = itemToSwapTo.FontSize or args.GeneralFontSize,
+        OffsetX = offsetX, OffsetY = offsetY,
+        Width = 665,
+        Justification = (itemToSwapTo.Justification or args.Justification) or "Center",
+        VerticalJustification = (itemToSwapTo.VerticalJustification or args.VerticalJustification) or "Center",
+        LineSpacingBottom = 8,
+        Font = (itemToSwapTo.Font or args.Font) or "AlegreyaSansSCBold",
+        ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
+        TextSymbolScale = 0.8,
+    })
+  else
+    ModifyTextBox({ Id = textboxContainer.Id, Text = itemToSwapTo.Text, Color = {1, 1, 1, 1}})
+  end
+  components[textboxContainerName] = textboxContainer
+end
+function ZyruIncremental.Dropdown.GetValue(dropdown)
+  return dropdown.currentItem
+end
+function ZyruIncremental.Dropdown.SetValue(dropdown, value)
+  local itemToSet = nil
+  local items = dropdown.dropDownPressedArgs.Items
+  if type(value) == "number" then
+      if value ~= -1 then
+          itemToSet = items[value]
+      else
+          itemToSet = items.Default
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToSet = v
+              break
+          end
+      end
+  end
+  if itemToSet ~= nil then
+      dropdown.currentItem = itemToSet
+      ZyruIncremental.Dropdown.UpdateBaseText(dropdown.screen, dropdown)
+  end
+end
+function ZyruIncremental.Dropdown.GetEntries(dropdown)
+  local returnItems = {}
+  for k,v in pairs(dropdown.dropDownPressedArgs.Items)do
+      if v.IsEnabled == true or v.IsEnabled == nil then
+          table.insert(returnItems, v)
+      end
+  end
+  return returnItems
+end
+function ZyruIncremental.Dropdown.NewEntry(dropdown, value)
+  table.insert(dropdown.dropDownPressedArgs.Items, value)
+  local screen = dropdown.screen
+  if dropdown.isExpanded then
+      ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+      ZyruIncremental.Dropdown.Expand(screen, dropdown)
+  end
+end
+function ZyruIncremental.Dropdown.DelEntry(dropdown, value)
+  local itemToRemove = nil
+  local itemToRemoveIndex = nil
+  local items = dropdown.dropDownPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToRemove = items[value]
+          itemToRemoveIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToRemove = v
+              itemToRemoveIndex = k
+              break
+          end
+      end
+  end
+  if itemToRemove ~= nil and itemToRemove ~= dropdown.currentItem then
+      table.remove(dropdown.dropDownPressedArgs.Items, itemToRemoveIndex)
+      local screen = dropdown.screen
+      if dropdown.isExpanded then
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
+      end
+  end
+end
+function ZyruIncremental.Dropdown.DisableEntry(dropdown, value)
+  local itemToDisable = nil
+  local itemToDisableIndex = nil
+  local items = dropdown.dropDownPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToDisable = items[value]
+          itemToDisableIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToDisable = v
+              itemToDisableIndex = k
+              break
+          end
+      end
+  end
+  if itemToDisable ~= nil and itemToDisable ~= dropdown.currentItem then
+      items[itemToDisableIndex].IsEnabled = false
+      local screen = dropdown.screen
+      if dropdown.isExpanded then
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
+      end
+  end
+end
+function ZyruIncremental.Dropdown.EnableEntry(dropdown, value)
+  local itemToDisable = nil
+  local itemToDisableIndex = nil
+  local items = dropdown.dropDownPressedArgs.Items
+  if type(value) == "number" then
+      if value > 0 then
+          itemToDisable = items[value]
+          itemToDisableIndex = value
+      end
+  elseif type(value) == "string" then
+      for k,v in pairs(items) do
+          if v.Text == value then
+              itemToDisable = v
+              itemToDisableIndex = k
+              break
+          end
+      end
+  end
+  if itemToDisable ~= nil and itemToDisable ~= dropdown.currentItem then
+      items[itemToDisableIndex].IsEnabled = true
+      local screen = dropdown.screen
+      if dropdown.isExpanded then
+          ZyruIncremental.Dropdown.Collapse(screen, dropdown)
+          ZyruIncremental.Dropdown.Expand(screen, dropdown)
+      end
+  end
+end
+function ZyruIncremental.Dropdown.EnableDropdown(dropdown)
+  dropdown.isEnabled = false
+  ModifyTextBox({ Id = dropdown.Id, Color = {1, 1, 1, 1}})
+end
+function ZyruIncremental.Dropdown.DisableDropdown(dropdown)
+  dropdown.isEnabled = true
+  ModifyTextBox({ Id = dropdown.Id, Color = {1, 1, 1, 0.2}})
+end
+function ZyruIncremental.Dropdown.Destroy(dropdown)
+  local components = dropdown.screen.components
+  for _,v in pairs(dropdown.Children) do
+      if components[v.Id] ~= nil then
+          Destroy({Id = v.Id})
+      end
+  end
+  Destroy({Id = dropdown.Id})
+end
+--#endregion
