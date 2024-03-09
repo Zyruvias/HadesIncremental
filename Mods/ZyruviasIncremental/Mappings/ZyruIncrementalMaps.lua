@@ -1,9 +1,8 @@
 -- SAVE DATA SETUP
-ZyruIncremental.InitializeSaveData = function ()
+ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
   if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
     ZyruIncremental.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
-      -- TODO: Poms or hammer rarity?
     ZyruIncremental.Data.GodData = { 
       Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
       Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
@@ -50,9 +49,14 @@ ZyruIncremental.InitializeSaveData = function ()
       Initialized = true,
     }
   end
+
+  -- APPLY VERSION PATCHES
+  if not ZyruIncremental.Data.Flags.MostRecentVersionPlayed then
+    ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
+  end
 end
 
-ModUtil.LoadOnce(ZyruIncremental.InitializeSaveData)
+ModUtil.LoadOnce(ZyruIncremental.InitializeSaveDataAndPatchIfNecessary)
   -- SAVE DATA UPGRADE PROCESSING
 ModUtil.LoadOnce( function ( )
   if ZyruIncremental.Data.UpgradeData == nil then 
@@ -604,7 +608,7 @@ ModUtil.LoadOnce(function ( )
     }
 
     ZyruIncremental.BoonGrantExperienceOutCombat = {
-      -- TODO: does anything go here?
+      -- TODO: does anything go here? side hustle?
     }
 
 end)
@@ -812,8 +816,6 @@ ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, 
 		newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
 	end
 
-  -- TODO: damage
-
   return baseFunc(newEnemy, currentRun, args)
 end, ZyruIncremental)
 
@@ -822,7 +824,7 @@ function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property)
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
   local numRunsToExponentiate = TableLength(GameState.RunHistory) - 1
   if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
-    if GetNumsRunsCleared() < 10 then
+    if GetNumRunsCleared() < 10 then
       return 1
     elseif ZyruIncremental.Data.FreshFileRunCompletion == nil then
       -- compute the file-cached multiplier
@@ -1025,7 +1027,6 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
 		local questData = QuestData[questName]
     GameState.QuestStatus[questData.Name] = "CashedOut"
   end
-  -- TODO: starting resources?
   GameState.Resources = {
     SuperGiftPoints = 10,
     MetaPoints = 5000,

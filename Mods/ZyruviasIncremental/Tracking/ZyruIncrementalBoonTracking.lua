@@ -153,7 +153,6 @@ ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
     end
   end
 
-  -- TODO: Map upgrade names to gods?
   local god = string.sub(lootData.Name, 1, string.len(lootData.Name) - 7)
   if god == "Trial" then
     god = "Chaos" -- TrialUpgrade -> Chaos boons... I am not reusing that naming convention
@@ -182,20 +181,16 @@ ModUtil.Path.Wrap("SetTraitsOnLoot", function(baseFunc, lootData, args)
         cumulativeChance = cumulativeChance + chances[rarity]
       end
       
-      -- DebugPrint { Text = "Rolled " .. chosenRarity }
       if rarityTable[chosenRarity] ~= nil and rarityTable[chosenRarity][upgradeData.ItemName] then
--- DebugPrint { Text = "Boon has " .. chosenRarity .. " table"}
         upgradeData.Rarity = chosenRarity
       end
 		end
-    -- TODO: Pom rarity??? hamer RARITY?????????
   end
 
 end, ZyruIncremental)
 
 -- TODO: override?
 ModUtil.Path.Wrap("GetUpgradedRarity", function (base, baseRarity)
-  -- TODO: limit by seen rarities
   local rarityTable = {
       Common = "Rare",
       Rare = "Epic",
@@ -214,7 +209,7 @@ ModUtil.Path.Wrap("GetRarityValue", function (base, rarity)
 	return GetKey(rarityOrdering, rarity) or 1
 end, ZyruIncremental)
 
--- TODO: nyx levels?
+-- TODO: Nyx level tracking, ignore Charon things, aspects, and keepsakes
 local ignoreDamageSourceTraitMap = {
   HighHealthDamageMetaUpgrade = true,
   GodEnhancementMetaUpgrade = true,
@@ -368,7 +363,6 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
 
     -- OnEffectApply version???
     if victim.ActiveEffectsAtDamageStart ~= nil and victim.ActiveEffectsAtDamageStart.CritVulnerability then
-      -- HM
       -- TODO: I cannot fucking find this goddamn value in engine calls so it's just going to get the base EXP always
       critChanceMap["CritVulnerabilityTrait"] = 0.30
       critChanceTotal = critChanceTotal + 0.30
@@ -914,10 +908,6 @@ function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
     end
   end
 
-  -- TODO: get other experience factors
-  
-    
-
   return multiplier
 end
 
@@ -1379,7 +1369,6 @@ function ZyruIncremental.CalculatePropertyChangeWithGodLevels(traitName, propert
     return propertyChange
   end
   -- attempt recursive strategy e.g. AphroditeWeaponTrait.AddOutgoingDamageModifiers.ValidWeaponMultiplier
-  -- TODO: what do non-pommables do when leveling?
   if not propertyChange.IdenticalMultiplier then
     local propertyChangeKVPs = CollapseTableAsOrderedKeyValuePairs(propertyChange)
 		for i, kvp in ipairs( propertyChangeKVPs ) do

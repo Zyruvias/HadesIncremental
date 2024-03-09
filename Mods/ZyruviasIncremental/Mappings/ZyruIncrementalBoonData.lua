@@ -225,7 +225,6 @@ ModUtil.LoadOnce(function ( )
       ZeroAmmoBonusTrait = { RarityLevels = scalingTable(5, 1, 1) },
       MaximumChillBlast = { RarityLevels = scalingTable(1.5, 0.125) },
       MaximumChillBonusSlow = { RarityLevels = scalingTable(3, 0.5) },
-      -- TODO: HarvestBoonTrait rework?
       DemeterRetaliateTrait = {
         RarityLevels = scalingTable(3, 0.5),
         PropertyChanges = { { BaseMin = 40, BaseMax = 40}, },

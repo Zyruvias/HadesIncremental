@@ -1,6 +1,5 @@
 ZyruIncremental.TraitData = {
     -- Hermes Duo Boons
-    -- TODO: duo color on boon presentation
     ZeusHermesSynergyTrait = {
         Name = "ZeusHermesSynergyTrait",
         InheritFrom = { "SynergyTrait" },
@@ -1175,8 +1174,6 @@ function ResetBloodlust()
 end
 -- end ARES HERMES DUO
 
--- APHRODITE HERMES DUO
--- TODO: clean this up, generic hook is better
 function AddOnDodgeWeapons( hero, upgradeData )
 	if upgradeData.AddOnHitWeapons == nil then
 		return
@@ -1225,7 +1222,7 @@ function PoseidonHermesDamageLoot ( args, attacker, victim )
             { Name = "HealDropMinor", Chance = 0.01, },
             { Name = "RoomRewardMetaPointDrop", Chance = 0.005, },
             { Name = "GemDrop", Chance = 0.005, },
-            { Name = "SuperLockKeyDrop", Chance = 0.0025, }, -- Titan's Blood
+            { Name = "SuperLockKeyDrop", Chance = 0.00025, }, -- Titan's Blood
             { Name = "GiftDrop", Chance = 0.0005, },
             -- { Name = "SuperGemDrop", Chance = 0.0, },
             -- { Name = "SuperGiftDrop", Chance = 0.0, }, -- ambrosia 
@@ -1274,41 +1271,6 @@ function AddCritSpeedBoost(args)
     end)
 
 end
-
--- Keepsake changes
--- TODO: merge correctly in `SetupRunData` wrap
--- ModUtil.LoadOnce(function ( )
---     -- ModUtil.Table.Merge(TraitData.GiftTrait, {
---     --     ChamberThresholds = {25, 50, 100, 150, 200, 250, 500, 1000},
---     --     RarityLevels = {
---     --         Heroic =
---     --         {
---     --             Multiplier = 2.5,
---     --         },
---     --         Supreme =
---     --         {
---     --             Multiplier = 3.0,
---     --         },
---     --         Ultimate =
---     --         {
---     --             Multiplier = 3.5,
---     --         },
---     --         Transcendental =
---     --         {
---     --             Multiplier = 4.0,
---     --         },
---     --         Mythic =
---     --         {
---     --             Multiplier = 4.5,
---     --         },
---     --         Olympic =
---     --         {
---     --             Multiplier = 5,
---     --         },
---     --     }
---     -- })
--- end)
-
 
 function ZyruIncremental.SetupSeductiveVictory( hero, args )
     thread( SeductiveVictoryThread, args )

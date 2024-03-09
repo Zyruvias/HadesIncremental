@@ -177,15 +177,21 @@ function AugmentTransientState(args)
 end
 
 function ApplyTransientPatches(args)
-    if true then return end 
     local fileOptions = ModUtil.Path.Get("Data.FileOptions", ZyruIncremental)
     if fileOptions == nil then
         return
     end
 
     if fileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
+        -- attempt to disable cosmetic requirements like loungue opening at 5 runs
+        -- TODO: fix this? i don't think it works
         for itemName, itemData in pairs(ConditionalItemData) do
             itemData.GameStateRequirements = {}
+        end
+
+        -- don't allow flashback stuff, it does weird shit.
+        for i, data in ipairs(GameData.FlashbackRequirements) do
+            GameData.FlashbackRequirements[i] = {}
         end
     end
 end

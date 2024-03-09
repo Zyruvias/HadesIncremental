@@ -93,7 +93,7 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
   local lastRarity = "Common"
   for i, rarity in ipairs(rarityArray) do
     local mu = actualRarityBonus
-    local result = pNorm(i - mu, 0, 1, 1e-4)
+    local result = pNorm(i - mu, 0, 1, 1e-3)
     local boonRarityChance = result - previousValue
     previousValue = result
     if boonRarityChance < minRarityThreshold then
@@ -180,10 +180,12 @@ ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
   baseFunc()
 end, ZyruIncremental)
 -- TODO: wrapping setupRunData versus just redoing it manually
--- SetupRunData()
+SetupRunData()
 
 
 -- Dev scripts
-ModUtil.LoadOnce( function ( ) 
-  _G["k"] = ModUtil.ToString.TableKeys
+ModUtil.LoadOnce( function ( )
+  if ZyruIncremental.DEBUG_MODE then
+    _G["k"] = ModUtil.ToString.TableKeys
+  end
 end)

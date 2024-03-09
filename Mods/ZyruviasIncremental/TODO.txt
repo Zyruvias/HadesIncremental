@@ -14,20 +14,31 @@ TODO:
 [X] end screen adjustments
 [X] shop purchases not working
 
--- patch notes / roadmap
+[X] roadmap / FAQ
+[X] patch notes
 
 -- stabilize cabinet spawn location
 -- opening menu text persistence
 -- Hermes in styx rarity check
 [X] clouded judgement, Billowing Strength
--- available point text not updating
--- well items not tracking (aether net -> proud bearing)
-[X] life afffirmation is ... showing up unexpectedly
+[X] Life Afffirmation is ... showing up unexpectedly
 
 [X] rare crop rework / exclusive access rework
+
+[X] god level UI?
+[X] god/boon labels
+[X] acknowledgements UI
+-- Balance God Boon costs
+-- fix flashback!!
 
 Minor TODO:
 -- initial weapon grab dialogue
 -- epilogue: intro encounters shouldn't happen
 -- furies kill EXP drops
--- 
+-- available point text not updating
+-- well items not tracking (aether net -> proud bearing)
+-- gift bouldy?
+-- voicelines not making sense
+unnecessari arrows
+
+hades pre-fight conversaions are weird
