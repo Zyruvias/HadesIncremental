@@ -1632,6 +1632,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
             FontSize = 20,
         }
     }
+    local distributionData = ZyruIncremental.GetRarityDistributionForUI(button.PageIndex)
+    distributionData.Legendary = nil
     local rarityBarComponent = {
         Type = "Distribution",
         SubType = "Standard",
@@ -1849,8 +1851,9 @@ function GetUpgradeGostText(upgrade)
     return costText .. sourceCostTexts[1]
 end
 
-function UpdateUpgradeInfoScreen(screen, upgrade)
+function UpdateUpgradeInfoScreen(screen, upgrade, button)
     -- UPDATE ICON
+    local god = screen.PageIndex
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
@@ -1860,6 +1863,18 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
             OffsetX = ScreenWidth / 6,
             OffsetY = -100,
             Scale = 4,
+        }
+    })
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "UpgradeCurrencyText",
+            OffsetX = ScreenWidth / 3 - 50,
+            OffsetY = -450,
+            Justification = "Right",
+            FontSize = 20,
+            Text = "Available " .. god .. " Points: " .. tostring(ZyruIncremental.Data.GodData[god].CurrentPoints or 0)
         }
     })
     ZyruIncremental.CreateOrUpdateComponent(screen, {
@@ -1901,12 +1916,12 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
     })
 end
 
-function GetUpgradeListItem(screen, upgrade)
+function GetUpgradeListItem(screen, upgrade, button)
     local description = "Unlock a new Boon from " .. 
         (upgrade.Source or upgrade.Sources[1] .. " and " .. upgrade.Sources[2])
     return {
         event = function () 
-            UpdateUpgradeInfoScreen(screen, upgrade)
+            UpdateUpgradeInfoScreen(screen, upgrade, button)
         end,
         Text = upgrade.Name,
         Description = description,
@@ -1918,10 +1933,10 @@ function GetUpgradeListItem(screen, upgrade)
     }
 end
 
-function GetRarityBuffListItem(screen, upgrade)
+function GetRarityBuffListItem(screen, upgrade, button)
     return {
         event = function () 
-            UpdateUpgradeInfoScreen(screen, upgrade)
+            UpdateUpgradeInfoScreen(screen, upgrade, button)
         end,
         Text = "GodRarityBonusBuff",
         Description = "GodRarityBonusBuff_Description",
@@ -1948,12 +1963,12 @@ function ShowGodUpgradeScreen(screen, button)
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
         if upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON then
-            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade, button))
         elseif upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.AUGMENT_RARITY then
-            table.insert(upgradeItemsToDisplay, GetRarityBuffListItem(screen, upgrade))
+            table.insert(upgradeItemsToDisplay, GetRarityBuffListItem(screen, upgrade, button))
         else
             -- TODO: figure out default
-            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade, button))
         end
     end
 
