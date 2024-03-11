@@ -396,50 +396,50 @@ end, ZyruIncremental)
 
 OnAnyLoad{"RoomPreRun", function(triggerArgs)
     -- Upgrade Loading
-    local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
-    selector.UseText = "{I} View Upgrades"
-    selector.OnUsedFunctionName = "ShowZyruUpgradeScreen"
-    selector.Activate = true
-    selector.ObjectId = SpawnObstacle({
+    local upgradeCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
+    upgradeCabinet.UseText = "{I} View Upgrades"
+    upgradeCabinet.OnUsedFunctionName = "ShowZyruUpgradeScreen"
+    upgradeCabinet.Activate = true
+    upgradeCabinet.ObjectId = SpawnObstacle({
         Name = "HouseFileCabinet03",
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
-        AttachedTable = selector,
+        AttachedTable = upgradeCabinet,
         OffsetX = 2000,
         OffsetY = -750,
     })
     if not ZyruIncremental.Data.Flags.SeenUpgradeMenu then
-        ZyruIncremental.UpgradeMenuObjectId = selector.ObjectId
-        selector.BlockExitUntilUsed = true
-        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        ZyruIncremental.UpgradeMenuObjectId = upgradeCabinet.ObjectId
+        upgradeCabinet.BlockExitUntilUsed = true
+        upgradeCabinet.BlockExitText = "View upgrades!"
     end
-    SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
-    SetColor{ Id = selector.ObjectId, Color = { 120, 255, 170, 255 } }
-    SetupObstacle( selector )
-    AddToGroup({Id = selector.ObjectId, Name = "ChallengeSelector"})
+    SetScale{ Id = upgradeCabinet.ObjectId, Fraction = 0.17 }
+    SetColor{ Id = upgradeCabinet.ObjectId, Color = { 120, 255, 170, 255 } }
+    SetupObstacle( upgradeCabinet )
+    AddToGroup({Id = upgradeCabinet.ObjectId, Name = "ChallengeSelector"})
     -- Boon Data Loading
     
-    selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
-    selector.UseText = "{I} View Progress and Stats"
-    selector.OnUsedFunctionName = "ShowZyruProgressScreen"
-    selector.Activate = true
-    selector.ObjectId = SpawnObstacle({
+    local progressCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
+    progressCabinet.UseText = "{I} View Progress and Stats"
+    progressCabinet.OnUsedFunctionName = "ShowZyruProgressScreen"
+    progressCabinet.Activate = true
+    progressCabinet.ObjectId = SpawnObstacle({
         Name = "HouseFileCabinet03",
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
-        AttachedTable = selector,
+        AttachedTable = progressCabinet,
         OffsetX = 2300,
         OffsetY = -650,
     })
     
     if not ZyruIncremental.Data.Flags.SeenProgressMenu then
-        ZyruIncremental.ProgressMenuObjectId = selector.ObjectId
-        selector.BlockExitUntilUsed = true
-        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        ZyruIncremental.ProgressMenuObjectId = progressCabinet.ObjectId
+        progressCabinet.BlockExitUntilUsed = true
+        progressCabinet.BlockExitText = "View your boon level progress!"
     end
-    SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
-    SetupObstacle( selector )
-    AddToGroup({Id = selector.ObjectId, Name = "ChallengeSelector"})
+    SetScale{ Id = progressCabinet.ObjectId, Fraction = 0.17 }
+    SetupObstacle( progressCabinet )
+    AddToGroup({Id = progressCabinet.ObjectId, Name = "ChallengeSelector"})
 
 
     --------------------------
@@ -474,7 +474,6 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         AttachedTable = settingsSelector,
         ForceToValidLocation = true,
     })
-    SetupObstacle( settingsSelector )
     settingsSelector.ShrinePointReq = 0
     settingsSelector.UseText = "{I} Mod Settings"
     settingsSelector.OnUsedFunctionName = "ShowZyruSettingsMenu"
@@ -482,36 +481,37 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     if not ZyruIncremental.Data.Flags.SeenSettingsMenu then
         ZyruIncremental.SettingsMenuObjectId = settingsSelector.ObjectId
         settingsSelector.BlockExitUntilUsed = true
-        settingsSelector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        settingsSelector.BlockExitText = "Check out mod settings!"
     end
     SetScale{ Id = settingsSelector.ObjectId, Fraction = 0.666 } -- :croven:
     SetColor{ Id = settingsSelector.ObjectId, Color = { 120, 255, 170, 255 } }
     AddToGroup({Id = settingsSelector.ObjectId, Name = "ChallengeSelector"})
+    SetupObstacle( settingsSelector )
     --------------------------
     -- Acknowledgements / ramble TABLE ---
     --------------------------
-    local settingsSelector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699]  )
-    settingsSelector.ObjectId = SpawnObstacle({
+    local ramblingsScrollCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699]  )
+    ramblingsScrollCabinet.ObjectId = SpawnObstacle({
         Name = "HouseFiles01",
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
         OffsetX = 1250, OffsetY = -1150,
-        AttachedTable = settingsSelector,
+        AttachedTable = ramblingsScrollCabinet,
         ForceToValidLocation = true,
     })
-    SetupObstacle( settingsSelector )
-    settingsSelector.ShrinePointReq = 0
-    settingsSelector.UseText = "{I} Tutorial and More..."
-    settingsSelector.OnUsedFunctionName = "ShowZyruRamblingMenu"
-    settingsSelector.Activate = true
-    if not ZyruIncremental.Data.Flags.SeenSettingsMenu then
-        ZyruIncremental.SettingsMenuObjectId = settingsSelector.ObjectId
-        settingsSelector.BlockExitUntilUsed = true
-        settingsSelector.BlockExitText = "New shiny things over here!" -- TODO: ???
+    ramblingsScrollCabinet.ShrinePointReq = 0
+    ramblingsScrollCabinet.UseText = "{I} Tutorial and More..."
+    ramblingsScrollCabinet.OnUsedFunctionName = "ShowZyruRamblingMenu"
+    ramblingsScrollCabinet.Activate = true
+    if not ZyruIncremental.Data.Flags.SeenRamblingsMenu then
+        ZyruIncremental.RamblingsMenuId = ramblingsScrollCabinet.ObjectId
+        ramblingsScrollCabinet.BlockExitUntilUsed = true
+        ramblingsScrollCabinet.BlockExitText = "Read the FAQ and tutorial!"
     end
-    SetScale{ Id = settingsSelector.ObjectId, Fraction = 0.5 }
-    SetColor{ Id = settingsSelector.ObjectId, Color = { 120, 255, 170, 255 } }
-    AddToGroup({Id = settingsSelector.ObjectId, Name = "ChallengeSelector"})
+    SetScale{ Id = ramblingsScrollCabinet.ObjectId, Fraction = 0.5 }
+    SetColor{ Id = ramblingsScrollCabinet.ObjectId, Color = { 255, 120, 170, 255 } }
+    AddToGroup({Id = ramblingsScrollCabinet.ObjectId, Name = "ChallengeSelector"})
+    SetupObstacle( ramblingsScrollCabinet )
 
 
 end}
@@ -520,6 +520,9 @@ end}
 
 function ShowZyruRamblingMenu()
     ZyruIncremental.Data.Flags.SeenRamblingsMenu = true
+    if ZyruIncremental.RamblingsMenuId ~= nil then
+        ActivatedObjects[ZyruIncremental.RamblingsMenuId] = nil
+    end
     local screen = ZyruIncremental.CreateMenu("RamblingMenu", {
         PauseBlock = true,
         Components = {
@@ -558,7 +561,7 @@ function ShowZyruRamblingMenu()
 
                             "What do boon experience levels do? \\n Boon levels increase the rate at which boons benefit from pomegranates. For example," ..
                             " the first three levels of Crush Shot from Aprhodite give 90, 154, and 182 damage. The damage numbers on Experience Level 10 " ..
-                            " give 90, 208, and 284 damage, respectively. Your strength increases tremendously the more experience you muster upfor your boons"..
+                            " give 90, 208, and 284 damage, respectively. Your strength increases tremendously the more experience you muster up for your boons."..
                             " Boon levels also give God Currencies (Points) equivalent to the level acquired. You can use these points to upgrade God benefits, unlock" ..
                             " new mechanics, or unlock new Boons! This includes the new rare set of Duo boons between Hermes and the Olympians! \\n\\n " .. 
 
@@ -594,9 +597,10 @@ function ShowZyruRamblingMenu()
 
                             "What do I do if I don't like this mod? \\n Stop playing. Why are you even asking this question? \\n\\n " .. 
 
-                            "Is there any risk to my savefile by playing this mod? \\n In an ideal world, no. However, considering this " ..
+                            "Is there any risk to my savefile by playing this mod? \\n No, because I required you to start a new save file specifically for this mod. "
+                            .."However, considering this " ..
                             " mod will eventually overhaul most mechanical systems by the time it reaches its final version, it is not too "..
-                            " unlikely that different values in overlapping mechanics may cause problems once you uninstall this mod. "..
+                            " unlikely that different values in overlapping mechanics may cause problems once you uninstall this mod and use the mod savefile for other mods. "..
                             " I will do my best to note known issues for the sake of transparency and pissing off as few people as possible :)"
                             ,
                     }
@@ -629,6 +633,16 @@ function ShowZyruRamblingMenu()
                             " options per god, and more! \\n * Courtyard Extension - increase aspect levels, keepsake levels and more. \\n * Hammer Explosion - "..
                             " add rarity for hammers, hammer leveling, and ... actually that's it. No more for this one. \\n * Void Update - Chaos Trial expansion, Mirror of Night expansion."
                             ,
+                    }
+                },
+            },
+            [4] = {
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "RoadmapText2",
+                        Text = "This Page Is Intentionally Left Blank",
                     }
                 },
             }
@@ -777,6 +791,30 @@ end
 
 local cabinetId = nil
 
+function ModInitializationScreenUpdateDifficultyText(screen, text)
+    ZyruIncremental.UpdateText(screen, {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "DifficultyDropdownSelectedText",
+            Text = "Difficulty Selected: " .. text,
+        }
+    })
+end
+
+function ModInitializationScreenUpdateStartingPointText(screen, text)
+    ZyruIncremental.UpdateText(screen, {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "StartingPointDropdownSelectedText",
+            Text = "Starting Point Selected: " .. text,
+            OffsetY = - ScreenHeight / 6 -25,
+            Justification = "Left",
+        }
+    })
+end
+
 function ModInitializationScreen2()
     if not IsEmpty( GameState.RunHistory ) then
         local screen = ZyruIncremental.CreateMenu("NotFreshFile", {
@@ -904,9 +942,9 @@ function ModInitializationScreen2()
                             "EinsteinsBarber \\n " ..
                             "Ananke \\n " ..
                             "hell \\n " ..
-                            "Retr0spectre \\n " ..
+                            "Retr0spektre \\n " ..
                             "Unovarydrdake \\n " ..
-                            "violettblight \\n " ..
+                            "violetblight \\n " ..
                             "Alexca  \\n "
                     },
                 },
@@ -954,17 +992,51 @@ function ModInitializationScreen2()
                         Group = "DifficultyGroup",
                         -- X, Y, Items, Name
                         X = ScreenWidth / 6,
-                        Y = ScreenHeight / 3,
+                        Y = ScreenHeight / 3 + 75,
                         Items = {
                             Default = {
-                                Text = "Select a difficulty...",
+                                Text = "",
                                 event = function() end
                             },
-                            { Text = "Easy", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy" end },
-                            { Text = "Standard", event = function() ZyruIncremental.Data.FileOptions.DifficultySetting = "Standard" end },
-                            { Text = "Hard", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Hard" end },
-                            { Text = "Freeplay", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Freeplay" end },
+                            {
+                                Text = "Easy",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy"
+                                end
+                            },
+                            {
+                                Text = "Standard",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Standard"
+                                end
+                            },
+                            {
+                                Text = "Hard",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Hard"
+                                end
+                            },
+                            {
+                                Text = "Freeplay",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Freeplay"
+                                end
+                            },
                         }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "DifficultyDropdownSelectedText",
+                        Text = "Difficulty Selected: " .. (ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard"),
+                        OffsetY = - ScreenHeight / 6 - 25,
+                        Justification = "Left",
                     }
                 },
                 {
@@ -985,7 +1057,7 @@ function ModInitializationScreen2()
                         .."artificial difficulty gates. Please note that you will become overpowered eventually, and the mod may feel boring in this mode after a certain point."
                         ,
                         OffsetX = - ScreenWidth / 4,
-                        OffsetY = - ScreenHeight / 6 - 25,
+                        OffsetY = - ScreenHeight / 6 + 50,
                         Width = ScreenWidth * 0.65
                     }
                 }
@@ -1008,7 +1080,18 @@ function ModInitializationScreen2()
                         Text = "This mod requires you to start a fresh file since the context of game progression in normal "
                         .."Hades does not make sense in the context of this mod. However, that does not mean you have to complete "
                         .."the whole story again. You are free to start a fresh file and re-experience the story, but you may "
-                        .."also skip past the epilogue and start with a state of all base-game features unlocked if you so choose."
+                        .."also skip past the story and start with a state of all base-game features unlocked if you so choose."
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "StartingPointDropdownSelectedText",
+                        Text = "Starting Point Selected: " .. 
+                            (ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE),
+                        OffsetY = - ScreenHeight / 6 + 25,
+                        Justification = "Left",
                     }
                 },
                 {
@@ -1027,13 +1110,15 @@ function ModInitializationScreen2()
                             },
                             { 
                                 Text = ZyruIncremental.Constants.SaveFile.FRESH_FILE,
-                                event = function ()
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateStartingPointText(parent.screen, button.Text)
                                     ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.FRESH_FILE
                                 end
                             },
                             { 
-                                Text = "Epilogue",
-                                event = function ()
+                                Text = ZyruIncremental.Constants.SaveFile.EPILOGUE,
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateStartingPointText(parent.screen, button.Text)
                                     ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE
                                 end
                             },
@@ -1379,7 +1464,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             FontSize = 20,
         }
     }
-    ZyruIncremental.RenderComponent(screen, boonLevelLabel)
+    ZyruIncremental.CreateOrUpdateComponent(screen, boonLevelLabel)
     local boonData = ZyruIncremental.Data.BoonData[boonName] or {}
 
     local boonLevel = boonData.Level or 1
