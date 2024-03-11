@@ -134,6 +134,16 @@ ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)
   return baseVal
 end, ZyruIncremental)
 
+function ZyruIncremental.GetGodStringFromLootName (lootName)
+  local god = string.sub(lootName, 1, string.len(lootName) - 7)
+  if god == "Trial" then
+    god = "Chaos" -- TrialUpgrade -> Chaos boons... I am not reusing that naming convention
+  elseif god == "Stack" or god == "Weapon" then
+    god = nil
+  end
+  return god
+end
+
 ModUtil.Path.Wrap("SetupRunData", function (baseFunc)
 --[[
   Get existing merge table mappings and apply
