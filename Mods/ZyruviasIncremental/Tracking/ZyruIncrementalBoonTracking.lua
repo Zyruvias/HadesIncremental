@@ -211,6 +211,7 @@ end, ZyruIncremental)
 
 -- TODO: Nyx level tracking, ignore Charon things, aspects, and keepsakes
 local ignoreDamageSourceTraitMap = {
+  -- Mirror
   HighHealthDamageMetaUpgrade = true,
   GodEnhancementMetaUpgrade = true,
   BackstabMetaUpgrade = true,
@@ -218,7 +219,37 @@ local ignoreDamageSourceTraitMap = {
   VulnerabilityEffectBonusMetaUpgrade = true,
   FirstStrikeMetaUpgrade = true,
   PerfectDashEmpowerApplicator = true,
+  -- Aspects
+  SwordBaseUpgradeTrait = true,
+  SwordCriticalParryTrait = true,
+  DislodgeAmmoTrait = true,
+  SwordConsecrationTrait = true,
+  SpearBaseUpgradeTrait = true,
+  SpearTeleportTrait = true,
+  SpearWeaveTrait = true,
+  SpearSpinTravel = true,     
+  ShieldBaseUpgradeTrait = true,
+  ShieldRushBonusProjectileTrait = true,
+  ShieldTwoShieldTrait = true,
+  ShieldLoadAmmoTrait = true,
+  BowBaseUpgradeTrait = true,
+  BowMarkHomingTrait = true,
+  BowLoadAmmoTrait = true,
+  BowBondTrait = true,
+  FistBaseUpgradeTrait = true,
+  FistVacuumTrait = true,
+  FistWeaveTrait = true,
+  FistDetonateTrait = true,
+  GunBaseUpgradeTrait = true,
+  GunGrenadeSelfEmpowerTrait = true,
+  GunManualReloadTrait = true,
+  GunLoadedGrenadeTrait = true,
 }
+
+-- hammers
+ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(LootData.WeaponUpgrade.Traits))
+-- Well items
+ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(StoreData.RoomShop.Traits))
 
 --[[
   Outline for cleaner implementation

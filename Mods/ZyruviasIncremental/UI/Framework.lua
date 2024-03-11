@@ -1,3 +1,15 @@
+--[[
+    Author: Zyruvias
+    Originating Inspiration:
+        - SleepSoul for simple component config notation
+        - ErumiUILib as I've appropriated the Dropdown and Sliding list to minimize dependencies
+
+    TODOs:
+        - Extract out into reusable library
+        - Fix ErumiUILib.Dropdown appropriation bugs
+        - Pub/sub component update system instead of consumer-sourced functions
+]]
+
 ZyruIncremental.BaseComponents = {
 
     Text = {

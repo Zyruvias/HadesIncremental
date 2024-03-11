@@ -18,7 +18,7 @@ TODO:
 [X] patch notes
 
 -- stabilize cabinet spawn location
--- opening menu text persistence
+[X] opening menu text persistence
 -- Hermes in styx rarity check
 [X] clouded judgement, Billowing Strength
 [X] Life Afffirmation is ... showing up unexpectedly
@@ -28,8 +28,10 @@ TODO:
 [X] god level UI?
 [X] god/boon labels
 [X] acknowledgements UI
--- Balance God Boon costs
--- fix flashback!!
+[X] Balance God Boon costs
+[X] fix flashback!!
+
+[X] inspect points cleared
 
 Minor TODO:
 -- initial weapon grab dialogue
