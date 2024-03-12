@@ -1154,6 +1154,9 @@ OnEffectApply{
       if not triggerArgs.Reapplied and HeroHasTrait("AphroditeDurationTrait") then
         ZyruIncremental.TrackBoonEffect("AphroditeDurationTrait")
       end
+      if HeroHasTrait("AphroditePotencyTrait") then
+        ZyruIncremental.TrackBoonEffect("AphroditePotencyTrait")
+      end
     elseif triggerArgs.EffectName == "Charm" then
       if not triggerArgs.Reapplied and HeroHasTrait("CharmTrait") then
         ZyruIncremental.TrackBoonEffect("CharmTrait")

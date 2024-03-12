@@ -191,5 +191,18 @@ function ApplyTransientPatches(args)
 
         -- don't allow flashback stuff, it does weird shit.
         GameData.FlashbackRequirements = {}
+
+        -- fix first few run stuffs
+        for i, rewardData in ipairs(RewardStoreData.RunProgress) do
+            if rewardData.Name == "WeaponUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "HermesUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "Devotion" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+        end
     end
 end

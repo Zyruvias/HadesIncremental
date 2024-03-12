@@ -636,7 +636,8 @@ function ShowZyruRamblingMenu()
                     }
                 },
             },
-            [4] = {
+            [4] = CreateAcknowledgementsPage(),
+            [5] = {
                 {
                     Type = "Text",
                     SubType = "Paragraph",
@@ -815,6 +816,87 @@ function ModInitializationScreenUpdateStartingPointText(screen, text)
     })
 end
 
+function CreateAcknowledgementsPage()
+    return {
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            Args = {
+                FieldName = "AcknowledgementsTitle",
+                Text = "Acknowledgements"
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "ContextText",
+                Text = "A giant thanks to all the support I've gotten over the development of this mod, whether emotional or technical. I love you all."
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn1",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.4,
+                Text = 
+                    "" ..
+                    "Museus \\n " ..
+                    "CherryDad \\n " ..
+                    "Mysduck \\n " ..
+                    "nnevic \\n " ..
+                    "Wriste13 \\n " ..
+                    "EinsteinsBarber \\n " ..
+                    "Ananke \\n " ..
+                    "hell \\n " ..
+                    "Retr0spektre \\n " ..
+                    "Unovarydrdake \\n " ..
+                    "violetblight \\n " ..
+                    "Alexca  \\n "
+            },
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn3",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.17,
+                OffsetX = - ScreenWidth * 0.2,
+                Text = 
+                    "Magic_Gonads \\n " ..
+                    "PonyWarrior \\n " ..
+                    "SleepSoul \\n " ..
+                    "nbusseneau \\n " ..
+                    "physiX \\n \\n " ..
+                    "My wife and dearest friends \\n\\n " .. 
+                    "The absurd amount of coffee I drank along the way \\n \\n "
+                    ,
+            },
+        },
+        
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn2",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.4,
+                OffsetX = 0,
+                Text = 
+                    "Hades Speedrunning Community for tolerating my incessant memery about the mod \\n\\n " ..
+                    "Hades Modding Community for technical support \\n\\n " ..
+                    "Unofficial Hades Retirement Home for emotional support \\n\\n " ..
+                    "Haelfam for encouragement and anticipation when I was in a slump \\n\\n " ..
+                    "And last but not least ... players like you if you! \\n (Especially if you contribute to reporting bugs / giiving feedback / submitting pull requests :) ) " ..
+                    ""
+            },
+        },
+    }
+end
+
 function ModInitializationScreen2()
     if not IsEmpty( GameState.RunHistory ) then
         local screen = ZyruIncremental.CreateMenu("NotFreshFile", {
@@ -908,65 +990,7 @@ function ModInitializationScreen2()
                     }
                 }
             },
-            [3] = {
-                {
-                    Type = "Text",
-                    SubType = "Subtitle",
-                    Args = {
-                        FieldName = "AcknowledgementsTitle",
-                        Text = "Acknowledgements"
-                    }
-                },
-                {
-                    Type = "Text",
-                    SubType = "Paragraph",
-                    Args = {
-                        FieldName = "ContextText",
-                        Text = "A giant thanks to all the support I've gotten over the development of this mod, whether emotional or technical. I love you all."
-                    }
-                },
-                {
-                    Type = "Text",
-                    SubType = "Paragraph",
-                    Args = {
-                        FieldName = "AcknowledgementsColumn1",
-                        OffsetY = -200,
-                        Width = ScreenWidth * 0.4,
-                        Text = 
-                            "My wife and friends \\n\\n " ..
-                            "Museus \\n " ..
-                            "CherryDad \\n " ..
-                            "Mysduck \\n " ..
-                            "nnevic \\n " ..
-                            "Wriste13 \\n " ..
-                            "EinsteinsBarber \\n " ..
-                            "Ananke \\n " ..
-                            "hell \\n " ..
-                            "Retr0spektre \\n " ..
-                            "Unovarydrdake \\n " ..
-                            "violetblight \\n " ..
-                            "Alexca  \\n "
-                    },
-                },
-                
-                {
-                    Type = "Text",
-                    SubType = "Paragraph",
-                    Args = {
-                        FieldName = "AcknowledgementsColumn2",
-                        OffsetY = -200,
-                        Width = ScreenWidth * 0.4,
-                        OffsetX = 0,
-                        Text = 
-                            "Hades Speedrunning Community for tolerating my incessant memery about the mod \\n\\n " ..
-                            "Hades Modding Community for technical support \\n\\n " ..
-                            "Unofficial Hades Retirement Home for emotional support \\n\\n " ..
-                            "Haelfam for encouragement and anticipation when I was in a slump \\n\\n " ..
-                            "And last but not least ... players like you if you! \\n (Especially if you contribute to reporting bugs / giiving feedback / submitting pull requests :) ) " ..
-                            ""
-                    },
-                },
-            },
+            [3] = CreateAcknowledgementsPage(),
             [4] = {
                 {
                     Type = "Text",

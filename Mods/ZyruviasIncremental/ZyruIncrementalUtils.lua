@@ -81,6 +81,7 @@ local rarityArray = { "Common", "Rare", "Epic", "Heroic", "Supreme", "Ultimate",
 ZyruIncremental.RarityArrayMap = {}
 function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
   if ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] ~= nil then
+    DebugPrint { Text = "Rarity Distribution cache hit at " .. tostring(rarityBonus)}
     return ZyruIncremental.RarityArrayMap[tostring(rarityBonus)]
   end
 
@@ -111,6 +112,8 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
   return chances
 
 end
+
+
 function ZyruIncremental.ComputeRarityBonusForGod( god )
   local chosenGod = god or "Zeus"
   local godData = ZyruIncremental.Data.GodData[chosenGod]
@@ -120,6 +123,19 @@ end
 function ZyruIncremental.ComputeRarityArrayForGod( god )
   local rarityBonus = ZyruIncremental.ComputeRarityBonusForGod(god)
   return ZyruIncremental.ComputeRarityDistribution(rarityBonus)
+end
+
+function UpdateRarityDistributionCache(god)
+  local gods = { god }
+  -- compute one god or all of them
+  if god == nil then
+    gods = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
+  end
+  thread(function()
+    for i, godName in  ipairs(gods) do
+      ZyruIncremental.ComputeRarityArrayForGod(godName)
+    end
+  end)
 end
 
 ModUtil.Path.Wrap("RunHasOneOfTraits", function ( baseFunc, args)

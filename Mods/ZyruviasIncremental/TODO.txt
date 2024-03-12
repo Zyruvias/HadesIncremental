@@ -17,7 +17,6 @@ TODO:
 [X] roadmap / FAQ
 [X] patch notes
 
--- stabilize cabinet spawn location
 [X] opening menu text persistence
 -- Hermes in styx rarity check
 [X] clouded judgement, Billowing Strength
@@ -32,6 +31,8 @@ TODO:
 [X] fix flashback!!
 
 [X] inspect points cleared
+[X] rarity performance
+[X] run 2/3 restraints
 
 Minor TODO:
 -- initial weapon grab dialogue
@@ -41,6 +42,7 @@ Minor TODO:
 -- well items not tracking (aether net -> proud bearing)
 -- gift bouldy?
 -- voicelines not making sense
+-- stabilize cabinet spawn location
 unnecessari arrows
 
 hades pre-fight conversaions are weird

@@ -199,7 +199,6 @@ ModUtil.LoadOnce(function ( )
       TrapDamageTrait = "TrapDamageTrait",
       WinePuddleDefense = "DionysusDefenseTrait",
       LowHealthDefenseTrait = "LowHealthDefenseTrait",
-      ReduceDamageOutput = "AphroditePotencyTrait",
     }
     
     -- TODO: Generic GetHeroTraitValues Map for single use effects
@@ -389,7 +388,7 @@ ModUtil.LoadOnce(function ( )
       CollisionTouchTrait = 1,
       DodgeChanceTrait = 0,
       RapidCastTrait = 1,
-      RushSpeedBoostTrait = 1,
+      RushSpeedBoostTrait = 0, -- NA
       MoveSpeedTrait = 35,
       RushRallyTrait = 10,
       HermesShoutDodge = 0,
@@ -573,7 +572,7 @@ ModUtil.LoadOnce(function ( )
       CollisionTouchTrait = 0,
       DodgeChanceTrait = 50,
       RapidCastTrait = 25,
-      RushSpeedBoostTrait = 0,
+      RushSpeedBoostTrait = 25,
       MoveSpeedTrait = 0,
       RushRallyTrait = 10,
       HermesWeaponTrait = 50,
