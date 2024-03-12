@@ -209,7 +209,6 @@ ModUtil.Path.Wrap("GetRarityValue", function (base, rarity)
 	return GetKey(rarityOrdering, rarity) or 1
 end, ZyruIncremental)
 
--- TODO: Nyx level tracking, ignore Charon things, aspects, and keepsakes
 local ignoreDamageSourceTraitMap = {
   -- Mirror
   HighHealthDamageMetaUpgrade = true,
@@ -251,6 +250,7 @@ ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(LootData.WeaponUpgrade.
 -- Well items
 ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(StoreData.RoomShop.Traits))
 
+-- TODO: reinvestigate post crash-fixes
 --[[
   Outline for cleaner implementation
   ModUtil.Path.Context.Env ("Damage")
