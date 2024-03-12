@@ -1670,7 +1670,7 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
-            DistributionData = ZyruIncremental.GetRarityDistributionForUI(button.PageIndex)
+            DistributionData = distributionData
         }
     }
 
