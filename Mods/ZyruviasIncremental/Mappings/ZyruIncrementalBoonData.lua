@@ -79,10 +79,6 @@ ModUtil.LoadOnce(function ( )
       },
     })
   
-  end, ZyruIncremental)
-  
-  -- TraitData Setup
-  ModUtil.LoadOnce(function ( )
     ModUtil.Table.Merge(TraitData, {
       -- General %Scaling Boons
       ShopTier1Trait = { RarityLevels = T1RarityTable },
@@ -229,7 +225,6 @@ ModUtil.LoadOnce(function ( )
       ZeroAmmoBonusTrait = { RarityLevels = scalingTable(5, 1, 1) },
       MaximumChillBlast = { RarityLevels = scalingTable(1.5, 0.125) },
       MaximumChillBonusSlow = { RarityLevels = scalingTable(3, 0.5) },
-      -- TODO: HarvestBoonTrait rework?
       DemeterRetaliateTrait = {
         RarityLevels = scalingTable(3, 0.5),
         PropertyChanges = { { BaseMin = 40, BaseMax = 40}, },
@@ -273,6 +268,18 @@ ModUtil.LoadOnce(function ( )
       
       ChamberGoldTrait = { RarityLevels = scalingTable(2.2, 0.4, 1.2) },
       SpeedDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
+    })
+
+    -- Exclusive Access rewrite
+    ModUtil.Table.Replace(TraitData.RaritySuperBoost, {
+      InheritFrom = { "SynergyTrait" },
+      Icon = "Dionysus_Poseidon_01",
+      RequiredFalseTrait = "RaritySuperBoost",
+      ZyruRarityBonus = 2
+    })
+    -- TODO: Rare Crop rewrite
+    ModUtil.Table.Merge(TraitData.HarvestBoonTrait, {
+		  RoomsPerUpgrade = 5,
     })
   end, ZyruIncremental)
 

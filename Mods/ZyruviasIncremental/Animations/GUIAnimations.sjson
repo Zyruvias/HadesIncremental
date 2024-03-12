@@ -6,35 +6,35 @@
             Name = "BoonIcon_Frame_Supreme"
             InheritFrom = "BoonIcon_Frame_Duo"
             AddColor = true
-            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+            Color = { Red = 1 Green = 0.9333 Blue = 0.196 }
         }
         {
             
             Name = "BoonIcon_Frame_Ultimate"
             InheritFrom = "BoonIcon_Frame_Duo"
             AddColor = true
-            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+            Color = { Red = 0.227 Green = 0.8 Blue = 0.69  }
         }
         {
             
             Name = "BoonIcon_Frame_Transcendental"
             InheritFrom = "BoonIcon_Frame_Duo"
             AddColor = true
-            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+            Color = { Red = 1.0 Green = 0.619 Blue = 0.815 }
         }
         {
             
             Name = "BoonIcon_Frame_Mythic"
             InheritFrom = "BoonIcon_Frame_Duo"
             AddColor = true
-            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+            Color = { Red = 0.584 Green = 0.56 Blue = 1.0 }
         }
         {
             
             Name = "BoonIcon_Frame_Olympic"
             InheritFrom = "BoonIcon_Frame_Duo"
             AddColor = true
-            Color = { Red = 0.3 Green = 0.8 Blue = 0.1 }
+            Color = { Red = 0.5 Green = 1.0 Blue = 0.12 }
         }
     ]
 }

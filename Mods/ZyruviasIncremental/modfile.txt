@@ -4,6 +4,7 @@ Import "Upgrades/"
 Import "ZyruIncrementalUtils.lua"
 Import "Tracking/"
 Import "UI/"
+Import "Patches/"
 Import "stats.lua"
 
 :: Localization

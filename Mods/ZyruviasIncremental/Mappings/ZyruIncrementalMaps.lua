@@ -1,77 +1,8 @@
-ZyruIncremental.Constants = {
-  SaveFile = {
-    -- starting point
-    EPILOGUE = "Epilogue",
-    FRESH_FILE = "Fresh File",
-    -- difficulty
-    EASY = "Easy",
-    STANDARD = "Standard",
-    HARD = "Hard",
-    HELL = "Hell",
-    FREEPLAY = "Freeplay",
-  },
-  Difficulty = {
-    Keys = {
-      HEALTH_SCALIING = "HealthScaling",
-      COST_SCALING = "CostScaling",
-      INCOMING_DAMAGE_SCALING = "IncomingDamageScaling",
-    },
-    HealthScaling = {
-      Easy = 1.02,
-      Standard = 1.04,
-      Hard = 1.06,
-      Hell = 1.10
-    },
-    CostScaling = {
-      Easy = 1.00,
-      Standard = 1.01,
-      Hard = 1.02,
-      Hell = 1.05
-    },
-    IncomingDamageScaling = {
-      Easy = 1.02,
-      Standard = 1.04,
-      Hard = 1.06,
-      Hell = 1.10
-    }
-  },
-  Components = {
-    RECTANGLE_01_HEIGHT = 270,
-    RECTANGLE_01_WIDTH = 480,
-    PROGRESS_BAR_SCALE_PROPORTION_X = 1,
-    PROGRESS_BAR_SCALE_PROPORTION_Y = 0.05
-  },
-  Gods = {
-    ZEUS = "Zeus",
-    POSEIDON = "Poseidon",
-    ATHENA = "Athena",
-    ARES = "Ares",
-    APHRODITE = "Aphrodite",
-    ARTEMIS = "Artemis",
-    DIONYSUS = "Dionysus",
-    DEMETER = "Demeter",
-    HERMES = "Hermes",
-    CHAOS = "Chaos",
-  },
-  Upgrades = {
-    Types = {
-      PURCHASE_BOON = "Purchase Boon",
-      AUGMENT_RARITY = "Augment Rarity Bonus"
-    },
-  },
-  Settings = {
-    EXP_ON_HIT = "On hit",
-    EXP_ON_DEATH_BY_BOON = "On kill, aggregated by Boon",
-    EXP_ON_DEATH_BY_GOD = "On kill, aggregated by God",
-  }
-}
-
 -- SAVE DATA SETUP
-ZyruIncremental.InitializeSaveData = function ()
+ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
   if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
     ZyruIncremental.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
-      -- TODO: Poms or hammer rarity?
     ZyruIncremental.Data.GodData = { 
       Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
       Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
@@ -110,43 +41,33 @@ ZyruIncremental.InitializeSaveData = function ()
     }
     ZyruIncremental.Data.FileOptions = {
       StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
-      Difficulty = ZyruIncremental.Constants.SaveFile.STANDARD,
+      DifficultySetting = ZyruIncremental.Constants.SaveFile.STANDARD,
       ExperiencePopupBehavior = ZyruIncremental.Constants.Settings.EXP_ON_HIT,
+      LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
     }
     ZyruIncremental.Data.Flags = {
       Initialized = true,
     }
   end
+
+  -- APPLY VERSION PATCHES
+  if not ZyruIncremental.Data.Flags.MostRecentVersionPlayed then
+    ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
+  end
 end
 
-ModUtil.LoadOnce(ZyruIncremental.InitializeSaveData)
-  function ZyruTestUpgrade(args) 
-    DebugPrint { Text = "Upgrade applied with args: " .. ModUtil.ToString.Deep(args)}
-  end
-
+ModUtil.LoadOnce(ZyruIncremental.InitializeSaveDataAndPatchIfNecessary)
   -- SAVE DATA UPGRADE PROCESSING
 ModUtil.LoadOnce( function ( )
   if ZyruIncremental.Data.UpgradeData == nil then 
     return
   end
 
-  -- debug upgrade proof of concept
-  -- ZyruIncremental.AddUpgrade({
-  --   Name = "ZyruTestUpgrade",
-  --   OnApplyFunction = "ZyruTestUpgrade",
-  --   OnApplyFunctionArgs = {
-  --     Count = 1,
-  --   },
-  --   Purchased = true,
-  -- }, { 
-  --   SkipApply = true 
-  -- })
-
   -- process existing upgrades
   for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
     local upgrade = ZyruIncremental.UpgradeData[upgradeName]
     if upgrade == nil then
-      DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
+      -- DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
       ZyruIncremental.RemoveUpgrade(upgradeName)
     else
       if upgrade.OnApplyFunction ~= nil then
@@ -155,7 +76,6 @@ ModUtil.LoadOnce( function ( )
       if upgrade.OnApplyFunctions ~= nil then
           for k, functionName in ipairs(upgrade.OnApplyFunctions) do
               local functionArgs = upgrade.OnApplyFunctionArgs[k]
-              DebugPrint { Text = "Processing Savefile Upgrades: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
               _G[functionName](functionArgs)
           end
       end
@@ -165,16 +85,17 @@ ModUtil.LoadOnce( function ( )
 end)
 
 ModUtil.LoadOnce(function ( )
-    DebugPrint({ Text = "LOADING ZYRUMAP SETUP" })
+    DebugPrint({ Text = "LOADING ZyruIncremental Map Setup Data..." })
     ZyruIncremental.WhatTheFuckIsThisToBoonMap = {
       DemeterMaxChill = "MaximumChillBlast",
+      PoseidonCollisionBlast = "SlamExplosionTrait",
     }
     -- Second-to-Last runort WeaponData table -> Boon conversion
     ZyruIncremental.WeaponToBoonMap = {
+      -- Zeus
+      LightningStrikeX = "ZeusShoutTrait",
       -- Ares
       AresSurgeWeapon = "AresShoutTrait",
-      -- Poseidon
-      PoseidonSurfWeapon = "PoseidonShoutTrait",
       -- Aphrodite
       AphroditeSuperCharm = "AphroditeShoutTrait",
       AphroditeMaxSuperCharm = "AphroditeShoutTrait",
@@ -184,12 +105,14 @@ ModUtil.LoadOnce(function ( )
       -- Demeter
       ChillRetaliate = "DemeterRetaliateTrait",
       DemeterChillKill = "InstantChillKill",
+      DemeterMaxChill = "MaximumChillBlast",
+      -- Poseidon
+      PoseidonSurfWeapon = "PoseidonShoutTrait",
     }
     -- EffectData -> Boon Conversion, uses dynamic mapping below
     ZyruIncremental.EffectToBoonMap = {
       -- Poseidon
       DamageOverDistance = "SlipperyTrait",
-      PoseidonCollisionBlast = "SlamExplosionTrait",
       -- Ares
       DelayedDamage = {
         MapSource = "SourceWeapon",
@@ -206,7 +129,6 @@ ModUtil.LoadOnce(function ( )
       },
       -- Demeter
       DemeterWorldChill = "MaximumChillBonusSlow",
-      DemeterAmmoWind = "CastNovaTrait",
     }
     -- dynamic mapping for Effect Data
     for i, weaponName in ipairs(WeaponSets.HeroAllWeapons) do
@@ -241,8 +163,12 @@ ModUtil.LoadOnce(function ( )
       AreaWeakenAphrodite = "AphroditeRetaliateTrait",
       -- Artemis
       ArtemisLegendary = "ArtemisSupportingFireTrait",
+      ArtemisAmmoWeapon = "ArtemisAmmoExitTrait",
       -- Demeter
       DemeterMaxChill = "MaximumChillBlast",
+      DemeterSuper = "DemeterShoutTrait",
+      DemeterMaxSuper = "DemeterShoutTrait",
+      DemeterAmmoWind = "CastNovaTrait",
       -- Athena
       MagicShieldRetaliate = "AthenaRetaliateTrait"
     }
@@ -250,7 +176,6 @@ ModUtil.LoadOnce(function ( )
     ZyruIncremental.SuperTraitMap = {
       SuperGainMultiplier = "SuperGenerationTrait", -- zeus
       DefensiveSuperGainMultiplier = "DefensiveSuperGenerationTrait", -- Poseidon
-      AresShoutBuff = "OnWrathDamageBuffTrait", -- zeus billowing
       HermesWrathBuff = "HermesShoutDodge" -- Second Wind
     }
     
@@ -259,8 +184,13 @@ ModUtil.LoadOnce(function ( )
       -- OFFENSIVE --
       ---------------
       IncreaseDamageTaken = "AphroditeWeakenTrait",
+      LastStandDamageBonus = "LastStandDamageBonusTrait",
+      ShoutDamageBonus = "OnWrathDamageBuffTrait",
+      AresShoutBuff = "OnWrathDamageBuffTrait", -- zeus billowing
       
-      ZeroAmmoBonusTrait = "ZeroAmmoBonusTrait",
+      ZeroRangedWeaponAmmoMultiplier = "ZeroAmmoBonusTrait",
+      AthenaBackstabVulnerability = "AthenaBackstabDebuffTrait",
+      DionysusComboVulnerability = "DionysusComboVulnerability",
       ---------------
       -- DEFENSIVE --
       ---------------
@@ -303,16 +233,17 @@ ModUtil.LoadOnce(function ( )
       -- Demeter
       DemeterRangedTrait = { "DemeterRangedBonusTrait" },
       -- Dionysus
-      DamageOverTime = { "DionysusSlowTrait" }
+      DamageOverTime = { "DionysusSlowTrait" },
+      PoseidonSurfWeapon = { "PoseidonShoutDurationTrait" }
     }
 
     ZyruIncremental.BoonExperienceFactor = {
       RetaliateWeaponTrait = 1,
-      SuperGenerationTrait = 1,
-      DefensiveSuperGenerationTrait = 1,
+      SuperGenerationTrait = 20,
+      DefensiveSuperGenerationTrait = 10,
       ZeusBoltAoETrait =  1,
-      ZeusBonusBoltTrait =  1,
-      ZeusBonusBounceTrait =  1,
+      ZeusBonusBoltTrait =  0,
+      ZeusBonusBounceTrait =  0,
       ZeusWeaponTrait = 1,
       ZeusSecondaryTrait = 1,
       ZeusRangedTrait = 1,
@@ -329,21 +260,21 @@ ModUtil.LoadOnce(function ( )
       AthenaRushTrait = 1,
       AthenaShieldTrait = 1,
       AthenaBackstabDebuffTrait = 1,
-      AthenaShoutTrait = 1,
+      AthenaShoutTrait = 0, -- NA
       EnemyDamageTrait = 1,
       TrapDamageTrait = 1,
       LastStandHealTrait = 1,
       LastStandDurationTrait = 1,
       PreloadSuperGenerationTrait =  1,
       AthenaRetaliateTrait = 1,
-      ShieldHitTrait = 1,
+      ShieldHitTrait = 0, -- NA
       PoseidonWeaponTrait = 1,
       PoseidonSecondaryTrait = 1,
       PoseidonRangedTrait = 1,
       ShieldLoadAmmo_PoseidonRangedTrait =  1,
       PoseidonRushTrait = 1,
       PoseidonShoutTrait = 1,
-      PoseidonShoutDurationTrait = 1,
+      PoseidonShoutDurationTrait = 0,
       BonusCollisionTrait = 1,
       SlamStunTrait = 1,
       SlamExplosionTrait = 1,
@@ -351,14 +282,14 @@ ModUtil.LoadOnce(function ( )
       OnEnemyDeathDefenseBuffTrait = 1,
       SlipperyTrait = 1,
       BossDamageTrait = 1,
-      DoubleCollisionTrait = 1,
+      DoubleCollisionTrait = 0, -- NA
       FishingTrait = 1,
       HealthRewardBonusTrait = 1,
       RoomRewardBonusTrait = 1,
       ReducedEnemySpawnsTrait = 1,
       UnusedWeaponBonusTrait = 1,
       UnusedWeaponBonusTraitAddGems = 1,
-      HealthBonusTrait = 1,
+      HealthBonusTrait = 0,
       PoseidonPickedUpMinorLootTrait = 1,
       RoomRewardMaxHealthTrait = 1,
       RoomRewardEmptyMaxHealthTrait = 1,
@@ -366,9 +297,9 @@ ModUtil.LoadOnce(function ( )
       ArtemisSecondaryTrait = 1,
       ArtemisRangedTrait = 1,
       ArtemisRushTrait = 1,
-      ArtemisCriticalTrait = 1,
+      ArtemisCriticalTrait = 3,
       CriticalBufferMultiplierTrait = 1,
-      CriticalSuperGenerationTrait = 1,
+      CriticalSuperGenerationTrait = 10,
       CriticalStunTrait = 1,
       ArtemisShoutTrait = 1,
       ArtemisShoutBuffTrait = 1,
@@ -378,8 +309,8 @@ ModUtil.LoadOnce(function ( )
       RoomAmmoTrait = 1,
       UnstoredAmmoDamageTrait = 1,
       AmmoReloadTrait = 1,
-      AmmoReclaimTrait = 1,
-      CritBonusTrait = 1,
+      AmmoReclaimTrait = 0, -- NA
+      CritBonusTrait = 2,
       ArtemisAmmoExitTrait = 1,
       CritVulnerabilityTrait = 1,
       ArtemisSupportingFireTrait = 1,
@@ -397,7 +328,7 @@ ModUtil.LoadOnce(function ( )
       AphroditeRetaliateTrait = 1,
       AphroditeDeathTrait = 1,
       ProximityArmorTrait = 1,
-      CharmTrait = 1,
+      CharmTrait = 0, -- NA
       AresWeaponTrait = 1,
       AresSecondaryTrait = 1,
       OnSpawnSwordTrait = 1,
@@ -413,16 +344,17 @@ ModUtil.LoadOnce(function ( )
       IncreasedDamageTrait = 1,
       OnWrathDamageBuffTrait = 1,
       LastStandDamageBonusTrait = 1,
-      OnEnemyDeathDamageInstanceBuffTrait = 1,
+      OnEnemyDeathDamageInstanceBuffTrait = 0, -- NA
       DionysusSpreadTrait = 1,
-      DionysusSlowTrait = 1,
+      DionysusSlowTrait = 0,
       DionysusAoETrait = 1,
       DionysusDefenseTrait = 1,
       GiftHealthTrait = 1,
-      DionysusMaxHealthTrait = 1,
+      DionysusMaxHealthTrait = 10,
       DionysusWeaponTrait = 1,
       DionysusSecondaryTrait = 1,
       DionysusRangedTrait = 1,
+      DionysusComboVulnerability = 1,
       ShieldLoadAmmo_DionysusRangedTrait =  1,
       ShieldLoadAmmo_AthenaRangedTrait = 1,
       ShieldLoadAmmo_ArtemisRangedTrait = 1,
@@ -434,8 +366,10 @@ ModUtil.LoadOnce(function ( )
       AmmoBoltTrait = 1,
       DionysusShoutTrait = 1,
       DionysusPoisonPowerTrait = 1,
-      DoorHealTrait = 1,
+      DoorHealTrait = 10,
       DemeterWeaponTrait = 1,
+      MaximumChillBonusSlow = 1,
+      MaximumChillBlast = 1,
       DemeterSecondaryTrait = 1,
       DemeterRangedTrait = 1,
       DemeterRangedBonusTrait = 1,
@@ -447,16 +381,17 @@ ModUtil.LoadOnce(function ( )
       ZeroAmmoBonusTrait = 1,
       DemeterRetaliateTrait = 1,
       MagnetismTrait = 1,
-      BonusDashTrait = 1,
-      RapidRushTrait = 1,
+      BonusDashTrait = 0, -- NA
+      RapidRushTrait = 0, -- NA
       DeathDefianceFreezeTimeTrait = 1,
       FreezeTimeDashTrait = 1,
       CollisionTouchTrait = 1,
-      DodgeChanceTrait = 1,
+      DodgeChanceTrait = 0,
       RapidCastTrait = 1,
-      RushSpeedBoostTrait = 1,
-      MoveSpeedTrait = 1,
-      RushRallyTrait = 1,
+      RushSpeedBoostTrait = 0, -- NA
+      MoveSpeedTrait = 35,
+      RushRallyTrait = 10,
+      HermesShoutDodge = 0,
       HermesBonusProjectilesTrait = 1,
       HermesRangedTrait = 1,
       HermesPlannedRushTrait = 1,
@@ -488,188 +423,191 @@ ModUtil.LoadOnce(function ( )
     }
 
     ZyruIncremental.BoonExperiencePerUse = {
-      RetaliateWeaponTrait = 1,
-      SuperGenerationTrait = 1,
-      DefensiveSuperGenerationTrait = 1,
-      ZeusBoltAoETrait =  1,
-      ZeusBonusBoltTrait =  1,
-      ZeusBonusBounceTrait =  1,
-      ZeusWeaponTrait = 1,
-      ZeusSecondaryTrait = 1,
-      ZeusRangedTrait = 1,
-      PerfectDashBoltTrait = 1,
-      ZeusChargedBoltTrait = 1,
-      ZeusRushTrait = 1,
-      ZeusShoutTrait = 1,
-      ZeusLightningDebuff = 1,
-      WrathDamageBuffTrait = 1,
-      RetainTempHealthTrait = 1,
-      AthenaWeaponTrait = 1,
-      AthenaSecondaryTrait = 1,
-      AthenaRangedTrait = 1,
-      AthenaRushTrait = 1,
-      AthenaShieldTrait = 1,
-      AthenaBackstabDebuffTrait = 1,
-      AthenaShoutTrait = 1,
-      EnemyDamageTrait = 1,
-      TrapDamageTrait = 1,
-      LastStandHealTrait = 1,
-      LastStandDurationTrait = 1,
-      PreloadSuperGenerationTrait =  1,
-      AthenaRetaliateTrait = 1,
-      ShieldHitTrait = 1,
-      PoseidonWeaponTrait = 1,
-      PoseidonSecondaryTrait = 1,
-      PoseidonRangedTrait = 1,
+      RetaliateWeaponTrait = 0,
+      SuperGenerationTrait = 0,
+      DefensiveSuperGenerationTrait = 0,
+      ZeusBoltAoETrait = 0,
+      ZeusBonusBoltTrait = 35,
+      ZeusBonusBounceTrait = 15,
+      ZeusWeaponTrait = 0,
+      ZeusSecondaryTrait = 0,
+      ZeusRangedTrait = 0,
+      PerfectDashBoltTrait = 0,
+      ZeusChargedBoltTrait = 0,
+      ZeusRushTrait = 0,
+      ZeusShoutTrait = 0,
+      ZeusLightningDebuff = 0,
+      WrathDamageBuffTrait = 0,
+      RetainTempHealthTrait = 0,
+      AthenaWeaponTrait = 0,
+      AthenaSecondaryTrait = 0,
+      AthenaRangedTrait = 0,
+      AthenaRushTrait = 0,
+      AthenaShieldTrait = 0,
+      AthenaBackstabDebuffTrait = 0,
+      AthenaShoutTrait = 100,
+      EnemyDamageTrait = 0,
+      TrapDamageTrait = 0,
+      LastStandHealTrait = 0,
+      LastStandDurationTrait = 0,
+      PreloadSuperGenerationTrait = 0,
+      AthenaRetaliateTrait = 0,
+      ShieldHitTrait = 250,
+      PoseidonWeaponTrait = 0,
+      PoseidonSecondaryTrait = 0,
+      PoseidonRangedTrait = 0,
       ShieldLoadAmmo_PoseidonRangedTrait =  1,
-      PoseidonRushTrait = 1,
-      PoseidonShoutTrait = 1,
-      PoseidonShoutDurationTrait = 1,
-      BonusCollisionTrait = 1,
-      SlamStunTrait = 1,
-      SlamExplosionTrait = 1,
-      EncounterStartOffenseBuffTrait = 1,
-      OnEnemyDeathDefenseBuffTrait = 1,
-      SlipperyTrait = 1,
-      BossDamageTrait = 1,
-      DoubleCollisionTrait = 1,
-      FishingTrait = 1,
-      HealthRewardBonusTrait = 1,
-      RoomRewardBonusTrait = 1,
-      ReducedEnemySpawnsTrait = 1,
-      UnusedWeaponBonusTrait = 1,
-      UnusedWeaponBonusTraitAddGems = 1,
-      HealthBonusTrait = 1,
-      PoseidonPickedUpMinorLootTrait = 1,
-      RoomRewardMaxHealthTrait = 1,
-      RoomRewardEmptyMaxHealthTrait = 1,
-      ArtemisWeaponTrait = 1,
-      ArtemisSecondaryTrait = 1,
-      ArtemisRangedTrait = 1,
-      ArtemisRushTrait = 1,
-      ArtemisCriticalTrait = 1,
-      CriticalBufferMultiplierTrait = 1,
-      CriticalSuperGenerationTrait = 1,
-      CriticalStunTrait = 1,
-      ArtemisShoutTrait = 1,
-      ArtemisShoutBuffTrait = 1,
-      MarkedDropGoldTrait = 1,
-      ArtemisBonusProjectileTrait = 1,
-      MoreAmmoTrait = 1,
-      RoomAmmoTrait = 1,
-      UnstoredAmmoDamageTrait = 1,
-      AmmoReloadTrait = 1,
-      AmmoReclaimTrait = 1,
-      CritBonusTrait = 1,
-      ArtemisAmmoExitTrait = 1,
-      CritVulnerabilityTrait = 1,
-      ArtemisSupportingFireTrait = 1,
-      AphroditeDurationTrait = 1,
-      AphroditePotencyTrait = 1,
-      AphroditeWeaponTrait = 1,
-      AphroditeSecondaryTrait = 1,
-      AphroditeRangedTrait = 1,
-      ShieldLoadAmmo_AphroditeRangedTrait = 1,
-      AphroditeRangedBonusTrait = 1,
-      CastBackstabTrait = 1,
-      AphroditeRushTrait = 1,
-      AphroditeShoutTrait = 1,
-      AphroditeWeakenTrait = 1,
-      AphroditeRetaliateTrait = 1,
-      AphroditeDeathTrait = 1,
-      ProximityArmorTrait = 1,
-      CharmTrait = 1,
-      AresWeaponTrait = 1,
-      AresSecondaryTrait = 1,
-      OnSpawnSwordTrait = 1,
-      AresRangedTrait = 1,
-      AresRushTrait = 1,
-      AresShoutTrait = 1,
-      AresAoETrait = 1,
-      AresDragTrait = 1,
-      AresLoadCurseTrait = 1,
-      AresLongCurseTrait = 1,
-      AresCursedRiftTrait = 1,
-      AresRetaliateTrait = 1,
-      IncreasedDamageTrait = 1,
-      OnWrathDamageBuffTrait = 1,
-      LastStandDamageBonusTrait = 1,
-      OnEnemyDeathDamageInstanceBuffTrait = 1,
-      DionysusSpreadTrait = 1,
-      DionysusSlowTrait = 1,
-      DionysusAoETrait = 1,
-      DionysusDefenseTrait = 1,
-      GiftHealthTrait = 1,
-      DionysusMaxHealthTrait = 1,
-      DionysusWeaponTrait = 1,
-      DionysusSecondaryTrait = 1,
-      DionysusRangedTrait = 1,
+      PoseidonRushTrait = 0,
+      PoseidonShoutTrait = 100,
+      PoseidonShoutDurationTrait = 100,
+      BonusCollisionTrait = 0,
+      SlamStunTrait = 0,
+      SlamExplosionTrait = 0,
+      EncounterStartOffenseBuffTrait = 0,
+      OnEnemyDeathDefenseBuffTrait = 0,
+      SlipperyTrait = 0,
+      BossDamageTrait = 0,
+      DoubleCollisionTrait = 25,
+      FishingTrait = 0,
+      HealthRewardBonusTrait = 0,
+      RoomRewardBonusTrait = 0,
+      ReducedEnemySpawnsTrait = 0,
+      UnusedWeaponBonusTrait = 0,
+      UnusedWeaponBonusTraitAddGems = 0,
+      HealthBonusTrait = 250,
+      PoseidonPickedUpMinorLootTrait = 0,
+      RoomRewardMaxHealthTrait = 0,
+      RoomRewardEmptyMaxHealthTrait = 0,
+      ArtemisWeaponTrait = 0,
+      ArtemisSecondaryTrait = 0,
+      ArtemisRangedTrait = 0,
+      ArtemisRushTrait = 0,
+      ArtemisCriticalTrait = 0,
+      CriticalBufferMultiplierTrait = 0,
+      CriticalSuperGenerationTrait = 5,
+      CriticalStunTrait = 0,
+      ArtemisShoutTrait = 0,
+      ArtemisShoutBuffTrait = 0,
+      MarkedDropGoldTrait = 0,
+      ArtemisBonusProjectileTrait = 0,
+      MoreAmmoTrait = 0,
+      RoomAmmoTrait = 0,
+      UnstoredAmmoDamageTrait = 0,
+      AmmoReloadTrait = 0,
+      AmmoReclaimTrait = 0,
+      CritBonusTrait = 5,
+      ArtemisAmmoExitTrait = 0,
+      CritVulnerabilityTrait = 25,
+      ArtemisSupportingFireTrait = 0,
+      AphroditeDurationTrait = 100,
+      AphroditePotencyTrait = 0,
+      AphroditeWeaponTrait = 0,
+      AphroditeSecondaryTrait = 0,
+      AphroditeRangedTrait = 0,
+      ShieldLoadAmmo_AphroditeRangedTrait = 0,
+      AphroditeRangedBonusTrait = 0,
+      CastBackstabTrait = 0,
+      AphroditeRushTrait = 0,
+      AphroditeShoutTrait = 100,
+      AphroditeWeakenTrait = 0,
+      AphroditeRetaliateTrait = 0,
+      AphroditeDeathTrait = 0,
+      ProximityArmorTrait = 0,
+      CharmTrait = 75,
+      AresWeaponTrait = 0,
+      AresSecondaryTrait = 0,
+      OnSpawnSwordTrait = 0,
+      AresRangedTrait = 0,
+      AresRushTrait = 0,
+      AresShoutTrait = 0,
+      AresAoETrait = 0,
+      AresDragTrait = 0,
+      AresLoadCurseTrait = 25,
+      AresLongCurseTrait = 0,
+      AresCursedRiftTrait = 50,
+      AresRetaliateTrait = 0,
+      IncreasedDamageTrait = 0,
+      OnWrathDamageBuffTrait = 0,
+      LastStandDamageBonusTrait = 0,
+      OnEnemyDeathDamageInstanceBuffTrait = 125,
+      DionysusSpreadTrait = 0,
+      DionysusSlowTrait = 10,
+      DionysusAoETrait = 0,
+      DionysusDefenseTrait = 0,
+      GiftHealthTrait = 0,
+      DionysusMaxHealthTrait = 100,
+      DionysusWeaponTrait = 0,
+      DionysusSecondaryTrait = 0,
+      DionysusRangedTrait = 0,
+      DionysusComboVulnerability = 0,
       ShieldLoadAmmo_DionysusRangedTrait =  1,
-      ShieldLoadAmmo_AthenaRangedTrait = 1,
-      ShieldLoadAmmo_ArtemisRangedTrait = 1,
-      ShieldLoadAmmo_DemeterRangedTrait = 1,
-      ShieldLoadAmmo_ZeusRangedTrait = 1,
-      ShieldLoadAmmo_AresRangedTrait = 1,
-      DionysusRushTrait = 1,
-      AmmoFieldTrait = 1,
-      AmmoBoltTrait = 1,
-      DionysusShoutTrait = 1,
-      DionysusPoisonPowerTrait = 1,
-      DoorHealTrait = 1,
-      DemeterWeaponTrait = 1,
-      DemeterSecondaryTrait = 1,
-      DemeterRangedTrait = 1,
-      DemeterRangedBonusTrait = 1,
-      DemeterRushTrait = 1,
-      DemeterShoutTrait = 1,
-      HealingPotencyTrait = 1,
-      CastNovaTrait = 1,
-      HarvestBoonTrait = 1,
-      ZeroAmmoBonusTrait = 1,
-      DemeterRetaliateTrait = 1,
-      MagnetismTrait = 1,
-      BonusDashTrait = 1,
-      RapidRushTrait = 1,
-      DeathDefianceFreezeTimeTrait = 1,
-      FreezeTimeDashTrait = 1,
-      CollisionTouchTrait = 1,
-      DodgeChanceTrait = 1,
-      RapidCastTrait = 1,
-      RushSpeedBoostTrait = 1,
-      MoveSpeedTrait = 1,
-      RushRallyTrait = 1,
-      HermesBonusProjectilesTrait = 1,
-      HermesRangedTrait = 1,
-      HermesPlannedRushTrait = 1,
-      HermesPlannedRushTrait2 = 1,
-      HermesWeaponTrait = 1,
-      HermesSecondaryTrait = 1,
-      RegeneratingSuperTrait = 1,
-      ChamberGoldTrait = 1,
-      SpeedDamageTrait = 1,
-      MoneyMultiplierTrait = 1,
-      ChaosBlessingMeleeTrait = 1,
-      ChaosBlessingRangedTrait = 1,
-      ChaosBlessingAlphaStrikeTrait = 1,
-      ChaosBlessingBackstabTrait = 1,
-      ChaosBlessingAmmoTrait = 1,
-      ChaosBlessingMaxHealthTrait = 1,
-      ChaosBlessingBoonRarityTrait = 1,
-      ChaosBlessingTroveTrait = 1,
-      ChaosBlessingMoneyTrait = 1,
-      ChaosBlessingGemTrait = 1,
-      ChaosBlessingMetapointTrait =  1,
-      ChaosBlessingTrapDamageTrait = 1,
-      ChaosBlessingSecretTrait = 1,
-      ChaosBlessingHealTrait = 1,
-      ChaosBlessingExtraChanceTrait = 1,
-      ChaosBlessingSecondaryTrait = 1,
-      ChaosBlessingDashAttackTrait = 1,
-      FountainDamageBonusTrait = 1,
+      ShieldLoadAmmo_AthenaRangedTrait = 0,
+      ShieldLoadAmmo_ArtemisRangedTrait = 0,
+      ShieldLoadAmmo_DemeterRangedTrait = 0,
+      ShieldLoadAmmo_ZeusRangedTrait = 0,
+      ShieldLoadAmmo_AresRangedTrait = 0,
+      DionysusRushTrait = 0,
+      AmmoFieldTrait = 0,
+      AmmoBoltTrait = 0,
+      DionysusShoutTrait = 0,
+      DionysusPoisonPowerTrait = 0,
+      DoorHealTrait = 50,
+      DemeterWeaponTrait = 0,
+      MaximumChillBlast = 0,
+      DemeterSecondaryTrait = 0,
+      DemeterRangedTrait = 0,
+      DemeterRangedBonusTrait = 0,
+      DemeterRushTrait = 0,
+      DemeterShoutTrait = 0,
+      HealingPotencyTrait = 0,
+      CastNovaTrait = 0,
+      HarvestBoonTrait = 0,
+      ZeroAmmoBonusTrait = 0,
+      DemeterRetaliateTrait = 0,
+      MagnetismTrait = 100,
+      BonusDashTrait = 25,
+      RapidRushTrait = 25,
+      DeathDefianceFreezeTimeTrait = 0,
+      FreezeTimeDashTrait = 0,
+      CollisionTouchTrait = 0,
+      DodgeChanceTrait = 50,
+      RapidCastTrait = 25,
+      RushSpeedBoostTrait = 25,
+      MoveSpeedTrait = 0,
+      RushRallyTrait = 10,
+      HermesWeaponTrait = 50,
+      HermesSecondaryTrait = 50,
+      HermesShoutDodge = 100,
+      RegeneratingSuperTrait = 15,
+      ChamberGoldTrait = 100,
+      SpeedDamageTrait = 0,
+      MoneyMultiplierTrait = 0,
+      ChaosBlessingMeleeTrait = 0,
+      ChaosBlessingRangedTrait = 0,
+      ChaosBlessingAlphaStrikeTrait = 0,
+      ChaosBlessingBackstabTrait = 0,
+      ChaosBlessingAmmoTrait = 0,
+      ChaosBlessingMaxHealthTrait = 0,
+      ChaosBlessingBoonRarityTrait = 0,
+      ChaosBlessingTroveTrait = 0,
+      ChaosBlessingMoneyTrait = 0,
+      ChaosBlessingGemTrait = 0,
+      ChaosBlessingMetapointTrait = 0,
+      ChaosBlessingTrapDamageTrait = 0,
+      ChaosBlessingSecretTrait = 0,
+      ChaosBlessingHealTrait = 0,
+      ChaosBlessingExtraChanceTrait = 0,
+      ChaosBlessingSecondaryTrait = 0,
+      ChaosBlessingDashAttackTrait = 0,
+      FountainDamageBonusTrait = 0,
     }
 
     ZyruIncremental.BoonsToIgnore = {
       AresHermesSynergyTrait = true
+    }
+
+    ZyruIncremental.BoonGrantExperienceOutCombat = {
+      -- TODO: does anything go here? side hustle?
     }
 
 end)
@@ -877,18 +815,35 @@ ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, 
 		newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
 	end
 
-  -- TODO: damage
-
   return baseFunc(newEnemy, currentRun, args)
 end, ZyruIncremental)
 
-local function ComputeDifficultyModifier (fileDifficulty, property) 
+function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
   local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
   local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
-  -- if property == "Cost" then
-  --   difficultyScalar = 1 + (difficultyScalar - 1) / 2
-  -- end
-  return math.pow(difficultyScalar, TableLength(GameState.RunHistory) - 1)
+  local numRunsToExponentiate = TableLength(GameState.RunHistory) - 1
+  if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
+    if GetNumRunsCleared() < 10 then
+      return 1
+    elseif ZyruIncremental.Data.FreshFileRunCompletion == nil then
+      -- compute the file-cached multiplier
+      local runIndex = 0
+      local attemptIndex = 1
+      for k, run in pairs( GameState.RunHistory ) do
+        if run.Cleared then
+          runIndex = runIndex + 1
+        end
+        if runIndex == 10 then
+          ZyruIncremental.Data.FreshFileRunCompletion = attemptIndex
+          break
+        end
+      end
+    end
+    -- return the cached value
+    -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
+    numRunsToExponentiate = numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
+  end
+  return math.pow(difficultyScalar, numRunsToExponentiate)
 end
 
 ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
@@ -897,7 +852,7 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   if not ZyruIncremental.Data.Flags or not ZyruIncremental.Data.Flags.Initialized then
     return run
   end 
-  ZyruIncremental.DifficultyModifier = ComputeDifficultyModifier(
+  ZyruIncremental.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
     ZyruIncremental.Data.FileOptions.DifficultySetting,
     ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
   )
@@ -1066,14 +1021,20 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     VulnerabilityEffectBonusMetaUpgrade = true,
     TrapDamageShrineUpgrade = true
   }
-  -- Quest Data -- complete, allow players to cash them in whenever
-  -- Cosmetics.QuestLog = true for unlock below
+  -- Quest completion
   for k, questName in ipairs( QuestOrderData ) do
 		local questData = QuestData[questName]
-    -- GameState.QuestStatus[questData.Name] = "Complete"
-    ModUtil.Table.Replace(QuestData[questData.Name].UnlockGameStateRequirements, {})
-    ModUtil.Table.Replace(QuestData[questData.Name].CompleteGameStateRequirements, {})
+    GameState.QuestStatus[questData.Name] = "CashedOut"
   end
+  GameState.Resources = {
+    SuperGiftPoints = 10,
+    MetaPoints = 5000,
+    LockKeys = 50,
+    SuperLockKeys = 50,
+    Gems = 2500,
+    SuperGems = 20,
+    GiftPoints = 100
+  }
   -- Cosmetic Items
   GameState.Cosmetics = {
     -- House Items
@@ -1088,30 +1049,44 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     ElysiumReprieve = true,
     UnusedWeaponBonusAddGems = true,
     GiftDropRunProgress = true,
+    HadesEMFight = true,
 
 
   }
   GameState.CosmeticsAdded = {
     CodexBoonList = true,
   }
+  UseRecord = {}
+  UseRecord["DeathArea"] = {}
+  UseRecord["DeathAreaBedroom"] = {}
   for cosmeticName, cosmeticData in pairs( ConditionalItemData ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
+
+        -- I can't check for where its used and I just want to be done with this task
+        if cosmeticData.InspectPoint ~= nil then
+          UseRecord["DeathArea"][cosmeticData.InspectPoint] = true
+          UseRecord["DeathAreaBedroom"][cosmeticData.InspectPoint] = true
+        end
 			end
 	end
   for cosmeticName, cosmeticData in pairs( GameData.MiscCosmetics ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
 			end
 	end
   for cosmeticName, cosmeticData in pairs( GameData.LoungeCosmetics ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
+        GameState.Cosmetics[cosmeticName] = true
 			end
 	end
   for trackName, trackData in pairs( MusicPlayerTrackData ) do
 		if not trackData.DebugOnly and trackData.ResourceCost ~= nil then
 			GameState.CosmeticsAdded[trackData.Name] = true
+      GameState.Cosmetics[trackData.Name] = true
 		end
 	end
   -- QoL to disable the tutorials
@@ -1149,27 +1124,14 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
     BowTutorialLoad = true,
     Fishing = true
   }
-  -- TODO: starting resources?
-  GameState.Resources = {
-    SuperGiftPoints = 0,
-    MetaPoints = 0,
-    LockKeys = 0,
-    SuperLockKeys = 0,
-    Gems = 0,
-    SuperGems = 0,
-    GiftPoints = 0
-  }
   -- Inspect Points?
   -- TextSpeechRecord?
   for npcKey, npcObj in pairs(UnitSetData.NPCs) do
-DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
     for propKey, propValue in pairs(npcObj) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1179,20 +1141,102 @@ DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
 
   -- LootData Text Lines
   for lootKey, lootValue in pairs(LootData) do
-DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
     for propKey, propValue in pairs(lootValue) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
-DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
-DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
       end
     end
   end
+
+  -- initialize sex scenes
+  TextLinesRecord["BecameCloseWithMegaera01"] = true
+  TextLinesRecord["BecameCloseWithThanatos01"] = true
+  TextLinesRecord["BecameCloseWithDusa01"] = true
+  -- inititalize EM4 availability
+  TextLinesRecord["Fury2FirstAppearance"] = true
+  TextLinesRecord["Fury3FirstAppearance"] = true
+  -- allow keepsakes in Hades immediately
+  TextLinesRecord["HadesAllowsLegendaryKeepsakes01"] = true
+
+  -- INSPECT POINTS
+  UseRecord = UseRecord or {}
+
+  local inspectTables = {
+    DeathLoopData = {
+      "DeathArea",
+      "DeathAreaBedroom",
+      "DeathAreaBedroomHades",
+      "DeathAreaBedroomHades",
+      "DeathAreaOffice",
+      "RoomPreRun",
+    },
+    ["RoomSetData.Base"] = {
+      "RoomChallenge01",
+      "RoomChallenge02",
+      "RoomChallenge03",
+      "RoomChallenge04",
+      "CharonFight01",
+    },
+    ["RoomSetData.Asphodel"] = {
+      "B_PreBoss01",
+      "B_PostBoss01",
+      "B_MiniBoss02",
+      "B_Shop01",
+      "B_Reprieve01",
+      "B_Intro",
+      "B_Story01"
+    },
+    ["RoomSetData.Elysium"] = {
+      "C_PreBoss01",
+      "C_Shop01",
+      "C_Reprieve01",
+      "C_Story01",
+      "C_Intro",
+    },
+    ["RoomSetData.Secrets"] = {
+      "RoomSecret01",
+      "RoomSecret02",
+      "RoomSecret03",
+    },
+    ["RoomSetData.Styx"] = {
+      "D_MiniBoss02",
+      "D_Reprieve01",
+      "D_Intro",
+      "D_Hub",
+    },
+    -- Surface doesn't really matter but for thoroughness
+    ["RoomSetData.Surface"] = {
+      "E_Intro",
+      "E_Story01",
+    },
+    ["RoomSetData.Tartarus"] = {
+      "A_PreBoss01",
+      "A_Boss01",
+      "A_PostBoss01",
+      "A_MiniBoss03",
+      "A_MiniBoss04",
+      "A_Reprieve01",
+      "A_Shop01",
+      "RoomOpening",
+      "A_Story01",
+    }
+
+  }
+
+  for tableName, tableMapNames in pairs(inspectTables) do 
+    for i, mapName in ipairs(tableMapNames) do
+      for id, itemData in ipairs(_G[tableName][mapName].InspectPoints) do
+        UseRecord[mapName] = UseRecord[mapName] or {}
+        UseRecord[mapName][id] = true
+      end
+    end
+  end
+
   
   -- Codex -- enable and fill out progress by threshold and unlock amounts
   CodexStatus.Enabled = true
@@ -1234,6 +1278,7 @@ DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
 		end
 	end
   UnlockExistingEntries()
-
+  -- gotta do this after file state change
+  ApplyTransientPatches({})
 
 end

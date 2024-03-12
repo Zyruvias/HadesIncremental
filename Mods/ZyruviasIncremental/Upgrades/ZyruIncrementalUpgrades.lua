@@ -10,7 +10,6 @@ function ZyruIncremental.AddUpgrade(upgradeName, args)
     end
 
     local upgrade = ZyruIncremental.UpgradeData[upgradeName]
-    -- DebugPrint { Text = ModUtil.ToString.Deep(upgrade) }
     if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
     end
@@ -18,7 +17,6 @@ function ZyruIncremental.AddUpgrade(upgradeName, args)
     if upgrade.OnApplyFunctions ~= nil then
         for k, functionName in ipairs(upgrade.OnApplyFunctions) do
             local functionArgs = upgrade.OnApplyFunctionArgs[k]
-            -- DebugPrint { Text = "AddUpgrade: Calling " .. functionName .. " with " .. ModUtil.ToString.Deep(functionArgs)}
             _G[functionName](functionArgs)
         end
     end
@@ -112,6 +110,13 @@ function IsUpgradeAffordable(upgrade)
     return true
 end
 
+function ZyruIncremental.IsUpgradeRepeatable(upgrade)
+    if upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.AUGMENT_RARITY then
+        return true
+    end
+    return false
+end
+
 function SubtractUpgradeCosts(upgrade)
     for source, cost in pairs(GetUpgradeCost(upgrade)) do
         local currentCurrency = ZyruIncremental.Data.GodData[source].CurrentPoints or 0
@@ -136,26 +141,27 @@ end
 
 function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
     local upgrade = button.Upgrade
-    if ZyruIncremental.HasUpgrade(upgrade.Name) then
+    DebugPrint { Text = ModUtil.ToString.Shallow(upgrade) }
+    if ZyruIncremental.HasUpgrade(upgrade.Name) and not ZyruIncremental.IsUpgradeRepeatable(upgrade) then
         -- TODO: CannotPurchaseVoiceLines all but last?
-        -- DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
+        DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
 		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
         return
     end
     if IsUpgradeAffordable(upgrade) then
-        -- add upgrade to save
-        ZyruIncremental.AddUpgrade(upgrade.Name)
         -- subtract Cost
         SubtractUpgradeCosts(upgrade)
+        -- add upgrade to save
+        ZyruIncremental.AddUpgrade(upgrade.Name)
         -- exhibit signs of self awareness
 		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
-        -- DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
+        DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
     else
 		thread( PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true )
-        -- DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
+        DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
     end
     -- reupdate the info screen in case of changing costs or whatever
-    UpdateUpgradeInfoScreen(screen, upgrade)
+    UpdateUpgradeInfoScreen(screen, upgrade, button)
 end
 
 function AugmentTransientState(args)
@@ -167,5 +173,36 @@ function AugmentTransientState(args)
             ZyruIncremental.TransientState[name] = val
         end
 
+    end
+end
+
+function ApplyTransientPatches(args)
+    local fileOptions = ModUtil.Path.Get("ZyruIncremental.Data.FileOptions")
+    if fileOptions == nil then
+        return
+    end
+
+    if fileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
+        -- attempt to disable cosmetic requirements like loungue opening at 5 runs
+        -- TODO: fix this? i don't think it works
+        for itemName, itemData in pairs(ConditionalItemData) do
+            itemData.GameStateRequirements = {}
+        end
+
+        -- don't allow flashback stuff, it does weird shit.
+        GameData.FlashbackRequirements = {}
+
+        -- fix first few run stuffs
+        for i, rewardData in ipairs(RewardStoreData.RunProgress) do
+            if rewardData.Name == "WeaponUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "HermesUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "Devotion" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+        end
     end
 end

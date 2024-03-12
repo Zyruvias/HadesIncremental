@@ -1,203 +1,48 @@
-FRESH FILE PLAYTHROUGH:
-X Fix Upgrade UI memory leaks
-- crit tracking?
-X EXP drops, colors, grouping? noise reduction / size
+TODO:
+[X] initial menu dropdown texts
+[X] progress bar dialogue fixing
+[X] Don't fuck meg or than immediately
+[X] solve quests, give starting resources
+[X] fresh file start doesn't scale difficulty
+[X] enable pact immediately
+[X] companions for hades
+[X] cosmetics are broken?
+-- lounge opening 5 runs first? idk bruv
+[X] God's pride description
+[X] EXP boundaries -- encounter / survival
+[X] Greater Haste balancing
+[X] end screen adjustments
+[X] shop purchases not working
 
-X all boons need rarityScaling table, not just tier 2s
+[X] roadmap / FAQ
+[X] patch notes
 
+[X] opening menu text persistence
+-- Hermes in styx rarity check
+[X] clouded judgement, Billowing Strength
+[X] Life Afffirmation is ... showing up unexpectedly
 
-X block exit with upgrades / progress
-X enforce new file -- TODO: get text to show up
-- survivals / than encounters with limited EXP gains
-X chaos tracking screen -- TODO: track curses or other boons
-X start with call
-X replaces should be increasing in rarity, not just common
-X respect base rarity of boon offerings
-    X Force Common
-    X Miniboss rarity buffs
+[X] rare crop rework / exclusive access rework
 
+[X] god level UI?
+[X] god/boon labels
+[X] acknowledgements UI
+[X] Balance God Boon costs
+[X] fix flashback!!
 
+[X] inspect points cleared
+[X] rarity performance
+[X] run 2/3 restraints
 
-EPILOGUE START:
-X codex should be unlocked
-X codex progress
-- Quest progress is reset if you leave the bedroom
-- 10th run fight at start is WEIRD
+Minor TODO:
+-- initial weapon grab dialogue
+-- epilogue: intro encounters shouldn't happen
+-- furies kill EXP drops
+-- available point text not updating
+-- well items not tracking (aether net -> proud bearing)
+-- gift bouldy?
+-- voicelines not making sense
+-- stabilize cabinet spawn location
+unnecessari arrows
 
-BETA PREP:
-- initial balancing
-- settings menu
-
-
-
--- SJSONS for boon rarity texts and other texts
----- - God Pride Label
-
-X WeaponSetData for boon mappings for  Trait.AddOutgoingDamageMultiplier.ValidWeapons
--- Add Post-Game Stats on boons
-    -- paging
-
--- Add post-encounter level up dialogues
-    -- boons too, gods especially
-    -- god-specific dialogue
-
--- Beaver Icon
-
--- Boon mappings
-    -- Poseidon:
-        X Wall Slam / Typhoon's Fury edge case
-        -- Hydraulic might
-
-    -- Dionysus
-        X  After Party
-        X? Positive Outlook
-        X Numbing Sensation -- ENGINE ONLY
-        -- Bad Influence (???)
-        X  High Tolerance
-        X  Premium Vintage
-        -- Black Out
-        -- Strong Drink
-
-    -- Ares
-        X Impending Doom
-        Battle Rage
-        X Dire Misfortune
-        X - Engulfing Vortex - -- ENGINE ONLY
-        X - Black Metal - -- ENGINE ONLY
-        X - Vicious Cycle - -- ENGINE ONLY
-        Blood Frenzy
-
-    X Zeus
-        X Storm Lightning
-        X High Voltage
-
-    -- Athena
-        -- TODO: ProjectileDeflected prop
-        X Aid
-        X? Sure Footing
-        X  Bronze Skin
-        X  Proud Bearing
-        -- Brilliant Reposte
-        X Deathless Stand
-        X Last Stand
-        -- Divine Protection (not sure if I care enough, ShieldHitTrait)
-
-    -- Aphrodite
-        X? Different League
-        X? Life Affirmation
-        X Empty Inside
-        -- Sweet Surrender
-        X Broken Resolve
-        -- Unhealthy Fixation
-        X - Blown Kiss -- ENGINE ONLY
-    
-    -- Artemis
-        -- TODO: distribute tracking EXP across crit sources
-        X Pressure Points -- crit when the thing doesn't have innate crit???
-        X Hunter's Mark -- args.OnDamageBeginHits or whatever
-        X Clean Kill -- GetHeroTraitValues
-        X Hide Breaker -- GetHeroTRaitValues
-        X Hunter's Instinct -- 
-        -- Fully Loaded -- check ammo count on cast if at all
-
-    -- Hermes
-        X AutoReload -- on ammo restore
-        X SecondWind
-        X SwiftStrike -- on attack
-        X SwiftFlourish -- on special
-        X QuickRecovery -- on health gain
-        X GreaterHaste -- ????
-        X HyperSprint -- on dash?
-        X FlurryCast -- on cast?
-        X GreatestReflex -- on dash
-        X GreaterEvasion -- on dodge
-        X - QuickReload -- 
-        GreaterRecall -- idk
-        BadNews -- recalculate?
-        X QuickFavor -- idk man
-        X SideHustle -- start encounter effects
-        Rush Delivery -- addDamageMultiplier local override....
-
-    -- Demeter
-        X - Nourished Soul
-        Ravenous Will
-        X - Glacial Glare -- ENGINE ONLY
-
--- Group End Screen Boon Levels together
-    -- Add Boon Name
-    -- Add new rarity pips for new rarities
-    -- Add level text after consuming SGG spaghetti
-
-X Create EXP Functions
-
-X rework God Rarity
-    X Make Keepsakes rarity work with new system (+ X percent and legacy bonus?)
-    X Make mirror rarity (Pride) work with new system
-
-X Add Mirror Olympian Favor upgrade Change
--- Add mirror scaling
-
-X Add Boon rarity mappings for all boons
-    -- rework some boons to scale better? See TODOS
-
--- God Upgrades
-    -- Chaos Upgrades
-        -- 
-    -- Generic Upgrades
-        -- Toggle pommability for boons
-        -- Toggle boons in pool or diminish weights
-        -- Expand Duo boon pre-req pools
-            -- Sea Storm
-            -- Deadly Reversal
-            -- Merciful End
-            -- Mirage Shot
-            -- Heart Rend?
-        -- Alternate Duos?
-        -- Spend points for rarity Increase?
-
-    -- Specific Upgrades
-        -- Universal
-            -- new boons
-        -- Zeus
-            -- reduce cooldown for lightning effects
-        -- Artemis
-            -- Add revenge boon (mark)
-            -- increase critical multiplier by X??
-        -- Dionysus
-            -- Add revenge boon (max hangover stacks)
-            -- Increase max stacks by default
-        -- Poseidon
-            -- Lower shoals cooldown
-            -- Increase Wall damage?
-            -- Revenge Shoals? knockback boon
-        -- Demeter
-            -- Increase max chill limit?
-        -- Ares
-            -- Change Beowulf Cast tto Doom
-            -- Decrease doom time by default (including impending)
-        -- Athena
-        -- Hermes
-            -- Hermes Duo boons
-        
-
-Hammer Upgrades
--- Allow Hammer rerolls
--- Anvil can be +1 and not +2, -1
--- Anvil can be erebus gate reward
--- Anvil can be a menu / boon to choose +2, -1, or +2???
-
--- God Progress UI (codex equivalent, store? idk)
--- Increase max keepsake levels
-
-Later releases:
--- Modify AI data
--- Change encounter data
-
-File metadifficulty changes:
-    -- increase MaxHitShield by enemy
-    -- add "blob" dividing spawns
-    -- 4/5/6 waves of a room?
-    -- increase biome depth scaling multiplier
-    
-
-Connect Upgrade UI to stat screen object obstacle thing
+hades pre-fight conversaions are weird
