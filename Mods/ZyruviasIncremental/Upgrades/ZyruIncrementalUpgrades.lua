@@ -161,7 +161,7 @@ function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
         DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
     end
     -- reupdate the info screen in case of changing costs or whatever
-    UpdateUpgradeInfoScreen(screen, upgrade)
+    UpdateUpgradeInfoScreen(screen, upgrade, button)
 end
 
 function AugmentTransientState(args)
@@ -177,7 +177,7 @@ function AugmentTransientState(args)
 end
 
 function ApplyTransientPatches(args)
-    local fileOptions = ModUtil.Path.Get("Data.FileOptions", ZyruIncremental)
+    local fileOptions = ModUtil.Path.Get("ZyruIncremental.Data.FileOptions")
     if fileOptions == nil then
         return
     end
@@ -190,8 +190,19 @@ function ApplyTransientPatches(args)
         end
 
         -- don't allow flashback stuff, it does weird shit.
-        for i, data in ipairs(GameData.FlashbackRequirements) do
-            GameData.FlashbackRequirements[i] = {}
+        GameData.FlashbackRequirements = {}
+
+        -- fix first few run stuffs
+        for i, rewardData in ipairs(RewardStoreData.RunProgress) do
+            if rewardData.Name == "WeaponUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "HermesUpgrade" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
+            if rewardData.Name == "Devotion" then
+                rewardData.GameStateRequirements.RequiredMinCompletedRuns = 0
+            end
         end
     end
 end

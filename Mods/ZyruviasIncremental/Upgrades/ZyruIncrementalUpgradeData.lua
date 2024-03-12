@@ -532,7 +532,7 @@ ZyruIncremental.UpgradeData = {
         Sources = { ZyruIncremental.Constants.Gods.ZEUS, ZyruIncremental.Constants.Gods.HERMES },
         Costs = {
             [ZyruIncremental.Constants.Gods.ZEUS] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -553,7 +553,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -575,7 +575,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.ARTEMIS] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -596,7 +596,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.DIONYSUS] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -618,7 +618,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.ARES] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -640,7 +640,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.APHRODITE] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -662,7 +662,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.DEMETER] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -685,7 +685,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
             [ZyruIncremental.Constants.Gods.ATHENA] = 100,
-            [ZyruIncremental.Constants.Gods.HERMES] = 100,
+            [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 

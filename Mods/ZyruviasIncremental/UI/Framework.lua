@@ -1,3 +1,15 @@
+--[[
+    Author: Zyruvias
+    Originating Inspiration:
+        - SleepSoul for simple component config notation
+        - ErumiUILib as I've appropriated the Dropdown and Sliding list to minimize dependencies
+
+    TODOs:
+        - Extract out into reusable library
+        - Fix ErumiUILib.Dropdown appropriation bugs
+        - Pub/sub component update system instead of consumer-sourced functions
+]]
+
 ZyruIncremental.BaseComponents = {
 
     Text = {
@@ -107,6 +119,7 @@ ZyruIncremental.BaseComponents = {
     },
     Dropdown = {
         Standard = {
+            Name = "MyDropdown",
             Scale = {X = .25, Y = .5},
             Padding = {X = 0, Y = 2},
             GeneralFontSize = 16,
@@ -155,11 +168,11 @@ ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
-	-- for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
-	-- 	if ActiveScreens[name] then
-	-- 		return true
-	-- 	end
-	-- end
+	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
+		if ActiveScreens[name] then
+			return true
+		end
+	end
     return base()
 end, ZyruIncremental)
 
@@ -186,6 +199,7 @@ end
 -- Handles non-linear paging
 function RenderScreenPage(screen, button, index)
     -- Get Non-permanent components and DESTROY them
+    screen.PageIndex = index
     Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
 
     -- then render it

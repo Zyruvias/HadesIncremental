@@ -199,7 +199,6 @@ ModUtil.LoadOnce(function ( )
       TrapDamageTrait = "TrapDamageTrait",
       WinePuddleDefense = "DionysusDefenseTrait",
       LowHealthDefenseTrait = "LowHealthDefenseTrait",
-      ReduceDamageOutput = "AphroditePotencyTrait",
     }
     
     -- TODO: Generic GetHeroTraitValues Map for single use effects
@@ -389,7 +388,7 @@ ModUtil.LoadOnce(function ( )
       CollisionTouchTrait = 1,
       DodgeChanceTrait = 0,
       RapidCastTrait = 1,
-      RushSpeedBoostTrait = 1,
+      RushSpeedBoostTrait = 0, -- NA
       MoveSpeedTrait = 35,
       RushRallyTrait = 10,
       HermesShoutDodge = 0,
@@ -573,7 +572,7 @@ ModUtil.LoadOnce(function ( )
       CollisionTouchTrait = 0,
       DodgeChanceTrait = 50,
       RapidCastTrait = 25,
-      RushSpeedBoostTrait = 0,
+      RushSpeedBoostTrait = 25,
       MoveSpeedTrait = 0,
       RushRallyTrait = 10,
       HermesWeaponTrait = 50,
@@ -1057,11 +1056,19 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
   GameState.CosmeticsAdded = {
     CodexBoonList = true,
   }
-  
+  UseRecord = {}
+  UseRecord["DeathArea"] = {}
+  UseRecord["DeathAreaBedroom"] = {}
   for cosmeticName, cosmeticData in pairs( ConditionalItemData ) do
 		if not cosmeticData.DebugOnly and cosmeticData.ResourceCost ~= nil and not cosmeticData.Disabled then
 				GameState.CosmeticsAdded[cosmeticName] = true
         GameState.Cosmetics[cosmeticName] = true
+
+        -- I can't check for where its used and I just want to be done with this task
+        if cosmeticData.InspectPoint ~= nil then
+          UseRecord["DeathArea"][cosmeticData.InspectPoint] = true
+          UseRecord["DeathAreaBedroom"][cosmeticData.InspectPoint] = true
+        end
 			end
 	end
   for cosmeticName, cosmeticData in pairs( GameData.MiscCosmetics ) do
@@ -1120,14 +1127,11 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
   -- Inspect Points?
   -- TextSpeechRecord?
   for npcKey, npcObj in pairs(UnitSetData.NPCs) do
--- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) }
     for propKey, propValue in pairs(npcObj) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
--- DebugPrint { Text = "Checking TextLines for " .. tostring(npcKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
--- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1137,14 +1141,11 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
 
   -- LootData Text Lines
   for lootKey, lootValue in pairs(LootData) do
--- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) }
     for propKey, propValue in pairs(lootValue) do
       if type(propValue) == "table" then
         -- InteractTextSetLines
--- DebugPrint { Text = "Checking TextLines for " .. tostring(lootKey) .. ": " .. propKey }
         for textKey, textObj in pairs(propValue) do
           if type(textObj) == "table" and textObj.PlayOnce == true then
--- DebugPrint { Text = "Setting TextLinesRecord[\"".. tostring(textKey) .."\"] " }
             TextLinesRecord[textKey] = true
           end
         end
@@ -1161,6 +1162,80 @@ function ZyruIncremental.InitializeEpilogueStartSaveData()
   TextLinesRecord["Fury3FirstAppearance"] = true
   -- allow keepsakes in Hades immediately
   TextLinesRecord["HadesAllowsLegendaryKeepsakes01"] = true
+
+  -- INSPECT POINTS
+  UseRecord = UseRecord or {}
+
+  local inspectTables = {
+    DeathLoopData = {
+      "DeathArea",
+      "DeathAreaBedroom",
+      "DeathAreaBedroomHades",
+      "DeathAreaBedroomHades",
+      "DeathAreaOffice",
+      "RoomPreRun",
+    },
+    ["RoomSetData.Base"] = {
+      "RoomChallenge01",
+      "RoomChallenge02",
+      "RoomChallenge03",
+      "RoomChallenge04",
+      "CharonFight01",
+    },
+    ["RoomSetData.Asphodel"] = {
+      "B_PreBoss01",
+      "B_PostBoss01",
+      "B_MiniBoss02",
+      "B_Shop01",
+      "B_Reprieve01",
+      "B_Intro",
+      "B_Story01"
+    },
+    ["RoomSetData.Elysium"] = {
+      "C_PreBoss01",
+      "C_Shop01",
+      "C_Reprieve01",
+      "C_Story01",
+      "C_Intro",
+    },
+    ["RoomSetData.Secrets"] = {
+      "RoomSecret01",
+      "RoomSecret02",
+      "RoomSecret03",
+    },
+    ["RoomSetData.Styx"] = {
+      "D_MiniBoss02",
+      "D_Reprieve01",
+      "D_Intro",
+      "D_Hub",
+    },
+    -- Surface doesn't really matter but for thoroughness
+    ["RoomSetData.Surface"] = {
+      "E_Intro",
+      "E_Story01",
+    },
+    ["RoomSetData.Tartarus"] = {
+      "A_PreBoss01",
+      "A_Boss01",
+      "A_PostBoss01",
+      "A_MiniBoss03",
+      "A_MiniBoss04",
+      "A_Reprieve01",
+      "A_Shop01",
+      "RoomOpening",
+      "A_Story01",
+    }
+
+  }
+
+  for tableName, tableMapNames in pairs(inspectTables) do 
+    for i, mapName in ipairs(tableMapNames) do
+      for id, itemData in ipairs(_G[tableName][mapName].InspectPoints) do
+        UseRecord[mapName] = UseRecord[mapName] or {}
+        UseRecord[mapName][id] = true
+      end
+    end
+  end
 
   
   -- Codex -- enable and fill out progress by threshold and unlock amounts

@@ -209,8 +209,8 @@ ModUtil.Path.Wrap("GetRarityValue", function (base, rarity)
 	return GetKey(rarityOrdering, rarity) or 1
 end, ZyruIncremental)
 
--- TODO: Nyx level tracking, ignore Charon things, aspects, and keepsakes
 local ignoreDamageSourceTraitMap = {
+  -- Mirror
   HighHealthDamageMetaUpgrade = true,
   GodEnhancementMetaUpgrade = true,
   BackstabMetaUpgrade = true,
@@ -218,8 +218,39 @@ local ignoreDamageSourceTraitMap = {
   VulnerabilityEffectBonusMetaUpgrade = true,
   FirstStrikeMetaUpgrade = true,
   PerfectDashEmpowerApplicator = true,
+  -- Aspects
+  SwordBaseUpgradeTrait = true,
+  SwordCriticalParryTrait = true,
+  DislodgeAmmoTrait = true,
+  SwordConsecrationTrait = true,
+  SpearBaseUpgradeTrait = true,
+  SpearTeleportTrait = true,
+  SpearWeaveTrait = true,
+  SpearSpinTravel = true,     
+  ShieldBaseUpgradeTrait = true,
+  ShieldRushBonusProjectileTrait = true,
+  ShieldTwoShieldTrait = true,
+  ShieldLoadAmmoTrait = true,
+  BowBaseUpgradeTrait = true,
+  BowMarkHomingTrait = true,
+  BowLoadAmmoTrait = true,
+  BowBondTrait = true,
+  FistBaseUpgradeTrait = true,
+  FistVacuumTrait = true,
+  FistWeaveTrait = true,
+  FistDetonateTrait = true,
+  GunBaseUpgradeTrait = true,
+  GunGrenadeSelfEmpowerTrait = true,
+  GunManualReloadTrait = true,
+  GunLoadedGrenadeTrait = true,
 }
 
+-- hammers
+ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(LootData.WeaponUpgrade.Traits))
+-- Well items
+ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(StoreData.RoomShop.Traits))
+
+-- TODO: reinvestigate post crash-fixes
 --[[
   Outline for cleaner implementation
   ModUtil.Path.Context.Env ("Damage")
@@ -1122,6 +1153,9 @@ OnEffectApply{
     elseif triggerArgs.EffectName == "ReduceDamageOutput" then
       if not triggerArgs.Reapplied and HeroHasTrait("AphroditeDurationTrait") then
         ZyruIncremental.TrackBoonEffect("AphroditeDurationTrait")
+      end
+      if HeroHasTrait("AphroditePotencyTrait") then
+        ZyruIncremental.TrackBoonEffect("AphroditePotencyTrait")
       end
     elseif triggerArgs.EffectName == "Charm" then
       if not triggerArgs.Reapplied and HeroHasTrait("CharmTrait") then
