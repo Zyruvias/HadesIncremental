@@ -1,7 +1,8 @@
 local CreateBoonPresentation = function (screen, traitName, x, y)
 
     -- fetchInfo
-    local zyruBoonData = ZyruIncremental.Data.BoonData[traitName]
+    local originalData = ZyruIncremental.Data.BoonData[traitName]
+    local zyruBoonData = CurrentRun.ZyruBoonData[traitName]
     local trait = TraitData[traitName]
 
     --setup UI info
@@ -21,10 +22,12 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
     if GetTraitFrame(trait) ~= nil then
         local traitFrame = GetTraitFrame( trait )
         local rarityValue = GetRarityValue( trait )
-        for i, existingTrait in pairs( CurrentRun.Hero.TraitDictionary[trait.Name]) do
-            if (AreTraitsIdentical(trait, existingTrait) and rarityValue < GetRarityValue( existingTrait.Rarity )) then
-                rarityValue = GetRarityValue( existingTrait.Rarity )
-                traitFrame = GetTraitFrame( existingTrait )
+        if CurrentRun.Hero.TraitDictionary[trait.Name] ~= nil then
+            for i, existingTrait in pairs( CurrentRun.Hero.TraitDictionary[trait.Name]) do
+                if (AreTraitsIdentical(trait, existingTrait) and rarityValue < GetRarityValue( existingTrait.Rarity )) then
+                    rarityValue = GetRarityValue( existingTrait.Rarity )
+                    traitFrame = GetTraitFrame( existingTrait )
+                end
             end
         end
         SetAnimation({ Name = traitFrame, DestinationId = traitFrameId })
@@ -109,7 +112,7 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
     traitTextOffsetY = traitTextOffsetY + TraitUI.SpacerY / 4
     CreateTextBox({
         Id = traitIcon.Id,
-        Text = "Boon Level: " .. tostring(round(zyruBoonData.Level or 0)),
+        Text = "Boon Level: " .. tostring(round(originalData.Level) or 0),
         FontSize = 14,
         OffsetX = 60,
         OffsetY = traitTextOffsetY,
@@ -124,73 +127,74 @@ local CreateBoonPresentation = function (screen, traitName, x, y)
 
 end
 
-ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...) 
-    -- TODO: use new framework
-    local value = baseFunc( ... )
+function CreateAnalyticsScreen (screen)
 
-    ScreenAnchors.ZyruBoonProgress = { Components = {} }
-	local screen = ScreenAnchors.ZyruBoonProgress
-	screen.Name = "ZyruBoonProgress"
+    local pageToDisplay = screen.PageIndex
+    local boonsPerPage = 20
 
     local components = screen.Components
 
-    if IsScreenOpen( screen.Name ) then
-		return
-	end
-	OnScreenOpened({ Flag = screen.Name, PersistCombatUI = false })
-	HideCombatUI("BoonProgressMenu")
-	FreezePlayerUnit()
-	EnableShopGamepadCursor()
-
-	PlaySound({ Name = "/SFX/Menu Sounds/DialoguePanelIn" })
-
-    components.Blackout = CreateScreenComponent({ Name = "rectangle01", X = ScreenCenterX, Y = ScreenCenterY })
-	SetScale({ Id = components.Blackout.Id, Fraction = 10 })
-	SetColor({ Id = components.Blackout.Id, Color = Color.Black })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0 })
-	SetAlpha({ Id = components.Blackout.Id, Fraction = 0.85, Duration = 0.5 })
-
-    components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7 })
-	Attach({ Id = components.CloseButton.Id, DestinationId = components.Blackout.Id, OffsetX = 3, OffsetY = 480 })
-	components.CloseButton.OnPressedFunctionName = "CloseZyruBoonProgressScreen"
-	components.CloseButton.ControlHotkey = "Cancel"
-
-    CreateTextBox({ Id = components.Blackout.Id,
-		Text = "Boon Progression",
-		FontSize = 32,
-		X = ScreenCenterX, OffsetY = -480,
-		Color = { 255, 255, 255, 255 },
-		Font = "AlegreyaSansSCRegular",
-		ShadowBlur = 0, ShadowColor = {0,0,0,0}, ShadowOffset={0, 3},
-		Justification = "Center" 
-    })
-
-    -- TODO: sort boons by zyruData
     local boonsToDisplay = {}
 
-    for k, trait in pairs(CurrentRun.Hero.Traits) do
-        if ZyruIncremental.Data.BoonData[trait.Name] ~= nil and not Contains(boonsToDisplay, trait.Name) then
-            table.insert(boonsToDisplay, trait.Name)
+    for name, data in pairs(CurrentRun.ZyruBoonData) do
+        if TraitData[name] ~= nil and ZyruIncremental.Data.BoonData[name] ~= nil and not Contains(boonsToDisplay, name) then
+            table.insert(boonsToDisplay, name)
         end
     end
 
     local startX = TraitUI.SpacerX + 100
-    local startY = TraitUI.SpacerY + 100
+    local startY = TraitUI.SpacerY + 250
     local xGap = ScreenWidth / 5
-    local yGap = ScreenHeight / 6
+    local yGap = ScreenHeight / 7
     for i, traitName in ipairs(boonsToDisplay) do
-        local x = startX + xGap * math.floor((i - 1) / 5)
-        local y = startY + yGap * ((i - 1) % 5)
-        CreateBoonPresentation(screen, traitName, x, y)
+        if i <= pageToDisplay * boonsPerPage and i >= (pageToDisplay - 1) * boonsPerPage then
+            local x = startX + xGap * math.floor((i - 1) / 5)
+            local y = startY + yGap * ((i - 1) % 5)
+            CreateBoonPresentation(screen, traitName, x, y)
+        end
     end
-    
-	HandleScreenInput( screen )
+end
 
-    return value
+ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
+    baseFunc( ... )
+    -- note: threading to not force players to give up in case of crash, sorry beta users.
+    thread(function()
+        local screen = ZyruIncremental.CreateMenu("RunAnalyticsScreen", {
+            PauseBlock = true,
+            Pages = {
+                [1] = "CreateAnalyticsScreen",
+                [2] = "CreateAnalyticsScreen",
+                [3] = "CreateAnalyticsScreen",
+            },
+            Components = {
+                {
+                    Type = "Button",
+                    SubType = "Close"
+                },
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    Args = {
+                        FieldName = "BoonProgressionTitle",
+                        Text = "Boon Progression"
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        FieldName = "BoonProgressionSubtitle",
+                        Text = "Wow, you sure used some boons today Zagreus."
+                    }
+                }
+            },
+        })
+    end)
 end, ZyruIncremental)
 
 function ZyruIncremental.HandleExperiencePresentationBehavior(traitName, godName, expGained, victim)
     local behavior = ZyruIncremental.Data.FileOptions.ExperiencePopupBehavior
+    godName = godName or "Unknown"
     if behavior == ZyruIncremental.Constants.Settings.EXP_ON_HIT or victim == nil or victim == CurrentRun.Hero then
         color = ZyruIncremental.BoonToGod[traitName] and Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"] or Color.Gray
         thread( DisplayExperiencePopup, expGained, { Color = color })
@@ -213,7 +217,8 @@ function ZyruIncremental.HandleKillEnemyExperiencePresentation(victim)
     end
     if  behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_BOON then
         for traitName, expGained in pairs(victim.ZyruExperienceMap or {}) do
-            thread( DisplayExperiencePopup, expGained, { Color = Color[ZyruIncremental.BoonToGod[traitName] .. "DamageLight"], DestinationId = victim.ObjectId })
+            local color = Color[tostring(ZyruIncremental.BoonToGod[traitName]) .. "DamageLight"] or Color.White
+            thread( DisplayExperiencePopup, expGained, { Color = color, DestinationId = victim.ObjectId })
             wait(0.1)
         end
     elseif behavior == ZyruIncremental.Constants.Settings.EXP_ON_DEATH_BY_GOD then
@@ -267,28 +272,67 @@ function DisplayExperiencePopup (amount, args)
 					
 end
 
-function DisplayBoonLevelupPopup( traitNamesImproved, level )
-	local offsetY = 0
-	for i, traitName in ipairs( traitNamesImproved ) do
-		local traitTitle = traitName
-		if TraitData[traitName] then 
-			traitTitle = GetTraitTooltipTitle(TraitData[traitName])
-		end
-		CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-		thread( InCombatTextArgs, {
-            TargetId = CurrentRun.Hero.ObjectId,
-            Text = traitTitle .. " level " .. tostring(level) .. "!",
-            SkipRise = false,
-            SkipFlash = true,
-            ShadowScale = 0.66,
-            Duration = 1.5,
-            OffsetY = -100 + offsetY,
-            LuaKey = "TempTextData",
-            LuaValue = { Name = traitTitle, Amount = level }})
-		PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
-		offsetY = offsetY - 60
-		wait(0.75)
-	end
+function ZyruIncremental.HandleBoonLevelupBehavior (traitName, level, god)
+
+    local showOverhead = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    local playVoiceline = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    local showPortrait = 
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT or
+        ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior == ZyruIncremental.Constants.Settings.LEVEL_ALL
+
+    if showOverhead then
+        thread(DisplayBoonLevelupPopup, traitName, level)
+    end
+
+    if playVoiceline and god ~= nil then
+        local voiceLine = GetRandomValue(ZyruIncremental.BoonLevelUpVoiceLines[god])
+        if voiceline ~= nil then
+            thread(PlayVoiceLine, voiceLine)
+        end
+    end
+
+    if showPortrait and god ~= nil then
+        thread(ShowBoonLevelupPortrait, god)
+    end
+end
+
+function DisplayBoonLevelupPopup( traitName, level )
+    local traitTitle = traitName
+    if TraitData[traitName] then 
+        traitTitle = GetTraitTooltipTitle(TraitData[traitName])
+    end
+    PlaySound({ Name = "/SFX/PomegranateLevelUpSFX", DestinationId = CurrentRun.Hero.ObjectId })
+    InCombatTextArgs({
+        TargetId = CurrentRun.Hero.ObjectId,
+        Text = "ZyruBoonLevelUp",
+        SkipRise = false,
+        SkipFlash = true,
+        ShadowScale = 1.1,
+        ShadowScaleX = 1.2,
+        Duration = 1.5,
+        OffsetY = -150,
+        LuaKey = "TempTextData",
+        LuaValue = { Name = tostring(traitTitle), Level = tostring(level) }
+    })
+end
+
+function ShowBoonLevelupPortrait (god)
+    local screen = {} 
+    screen.PortraitId = CreateScreenObstacle({ Name = "BlankObstacle", X = ScreenCenterX - 490, Y = ScreenCenterY + 105, Group = "Combat_Menu" })
+    SetAnimation({ DestinationId = screen.PortraitId, Name = "Portrait_" .. god .. "_Default_01"})
+    wait(1.5)
+    SetAnimation({ DestinationId = screen.PortraitId, Name = "Portrait_" .. god .. "_Default_01_Exit"})
+    wait(0.3)
+    Destroy { Id = screen.PortraitId }
 end
 
 function CloseScreenByName ( name )
@@ -299,13 +343,19 @@ function CloseScreenByName ( name )
 	UnfreezePlayerUnit()
 	ToggleControl({ Names = { "AdvancedTooltip" }, Enabled = true })
 	ShowCombatUI(name)
+    screen.AllowInput = false
+	SetConfigOption({ Name = "ExclusiveInteractGroup", Value = nil })
+	-- SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.0 })
+	-- SetConfigOption({ Name = "GamepadCursorFreeFormSelect", Value = true })
+	-- SetConfigOption({ Name = "FreeFormSelectGridLock", Value = false })
+	-- SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8 })
+	-- SetConfigOption({ Name = "FreeFormSelecSearchFromId", Value = 0 })
 	screen.KeepOpen = false
 	OnScreenClosed({ Flag = screen.Name })
 end
 
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    -- TODO: implement this in new framework
     CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
     thread( InCombatTextArgs, {
         TargetId = CurrentRun.Hero.ObjectId,
@@ -321,68 +371,75 @@ end
 
 -- Courtyard Interface
 
-function LolLmao()
+function LolLmao(button)
     local voiceline = GetRandomValue(ZyruIncremental.DropLevelUpVoiceLines.RoomRewardMaxHealthDrop)
     
     thread( PlayVoiceLines, voiceline )
 end
 
 ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
-    -- TODO: generalize?
-    if not ZyruIncremental.Data.Flags.SeenProgressMenu or not ZyruIncremental.Data.Flags.SeenUpgradeMenu then
-        thread( CannotUseDoorPresentation, {} )
-    else
-        base(usee, args)
+    -- courtyard flags to force users to Check Shit Out
+    if (
+        not ZyruIncremental.Data.Flags.SeenProgressMenu
+        or not ZyruIncremental.Data.Flags.SeenUpgradeMenu
+        or not ZyruIncremental.Data.Flags.SeenSettingsMenu
+        or not ZyruIncremental.Data.Flags.SeenRamblingsMenu
+    ) then
+        return thread( CannotUseDoorPresentation, {} )
     end
+    
+    if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
+        return UseShrineObject(usee, args)
+    end
+    return base(usee, args)
 end, ZyruIncremental)
 
 OnAnyLoad{"RoomPreRun", function(triggerArgs)
-    -- TODO: selector.BlockExitUntilUsed, selector.BlockExitText
     -- Upgrade Loading
-    local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
-    selector.UseText = "{I} View Upgrades"
-    selector.OnUsedFunctionName = "ShowZyruUpgradeScreen"
-    selector.Activate = true
-    selector.ObjectId = SpawnObstacle({
+    local upgradeCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
+    upgradeCabinet.UseText = "{I} View Upgrades"
+    upgradeCabinet.OnUsedFunctionName = "ShowZyruUpgradeScreen"
+    upgradeCabinet.Activate = true
+    upgradeCabinet.ObjectId = SpawnObstacle({
         Name = "HouseFileCabinet03",
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
-        AttachedTable = selector,
+        AttachedTable = upgradeCabinet,
         OffsetX = 2000,
         OffsetY = -750,
     })
     if not ZyruIncremental.Data.Flags.SeenUpgradeMenu then
-        ZyruIncremental.UpgradeMenuObjectId = selector.ObjectId
-        selector.BlockExitUntilUsed = true
-        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        ZyruIncremental.UpgradeMenuObjectId = upgradeCabinet.ObjectId
+        upgradeCabinet.BlockExitUntilUsed = true
+        upgradeCabinet.BlockExitText = "View upgrades!"
     end
-    SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
-    SetColor{ Id = selector.ObjectId, Color = { 120, 255, 170, 255 } }
-    SetupObstacle( selector )
-    AddToGroup({Id = selector.ObjectId, Name = "ChallengeSelector"})
+    SetScale{ Id = upgradeCabinet.ObjectId, Fraction = 0.17 }
+    SetColor{ Id = upgradeCabinet.ObjectId, Color = { 120, 255, 170, 255 } }
+    SetupObstacle( upgradeCabinet )
+    AddToGroup({Id = upgradeCabinet.ObjectId, Name = "ChallengeSelector"})
     -- Boon Data Loading
     
-    selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
-    selector.UseText = "{I} View Progress"
-    selector.OnUsedFunctionName = "ShowZyruProgressScreen"
-    selector.Activate = true
-    selector.ObjectId = SpawnObstacle({
+    local progressCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
+    progressCabinet.UseText = "{I} View Progress and Stats"
+    progressCabinet.OnUsedFunctionName = "ShowZyruProgressScreen"
+    progressCabinet.Activate = true
+    progressCabinet.ObjectId = SpawnObstacle({
         Name = "HouseFileCabinet03",
         Group = "Standing",
         DestinationId = CurrentRun.Hero.ObjectId,
-        AttachedTable = selector,
+        AttachedTable = progressCabinet,
         OffsetX = 2300,
         OffsetY = -650,
     })
     
     if not ZyruIncremental.Data.Flags.SeenProgressMenu then
-        ZyruIncremental.ProgressMenuObjectId = selector.ObjectId
-        selector.BlockExitUntilUsed = true
-        selector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        ZyruIncremental.ProgressMenuObjectId = progressCabinet.ObjectId
+        progressCabinet.BlockExitUntilUsed = true
+        progressCabinet.BlockExitText = "View your boon level progress!"
     end
-    SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
-    SetupObstacle( selector )
-    AddToGroup({Id = selector.ObjectId, Name = "ChallengeSelector"})
+    SetScale{ Id = progressCabinet.ObjectId, Fraction = 0.17 }
+    SetupObstacle( progressCabinet )
+    AddToGroup({Id = progressCabinet.ObjectId, Name = "ChallengeSelector"})
 
 
     --------------------------
@@ -417,7 +474,6 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
         AttachedTable = settingsSelector,
         ForceToValidLocation = true,
     })
-    SetupObstacle( settingsSelector )
     settingsSelector.ShrinePointReq = 0
     settingsSelector.UseText = "{I} Mod Settings"
     settingsSelector.OnUsedFunctionName = "ShowZyruSettingsMenu"
@@ -425,18 +481,180 @@ OnAnyLoad{"RoomPreRun", function(triggerArgs)
     if not ZyruIncremental.Data.Flags.SeenSettingsMenu then
         ZyruIncremental.SettingsMenuObjectId = settingsSelector.ObjectId
         settingsSelector.BlockExitUntilUsed = true
-        settingsSelector.BlockExitText = "New shiny things over here!" -- TODO: ???
+        settingsSelector.BlockExitText = "Check out mod settings!"
     end
     SetScale{ Id = settingsSelector.ObjectId, Fraction = 0.666 } -- :croven:
     SetColor{ Id = settingsSelector.ObjectId, Color = { 120, 255, 170, 255 } }
     AddToGroup({Id = settingsSelector.ObjectId, Name = "ChallengeSelector"})
+    SetupObstacle( settingsSelector )
+    --------------------------
+    -- Acknowledgements / ramble TABLE ---
+    --------------------------
+    local ramblingsScrollCabinet = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699]  )
+    ramblingsScrollCabinet.ObjectId = SpawnObstacle({
+        Name = "HouseFiles01",
+        Group = "Standing",
+        DestinationId = CurrentRun.Hero.ObjectId,
+        OffsetX = 1250, OffsetY = -1150,
+        AttachedTable = ramblingsScrollCabinet,
+        ForceToValidLocation = true,
+    })
+    ramblingsScrollCabinet.ShrinePointReq = 0
+    ramblingsScrollCabinet.UseText = "{I} Tutorial and More..."
+    ramblingsScrollCabinet.OnUsedFunctionName = "ShowZyruRamblingMenu"
+    ramblingsScrollCabinet.Activate = true
+    if not ZyruIncremental.Data.Flags.SeenRamblingsMenu then
+        ZyruIncremental.RamblingsMenuId = ramblingsScrollCabinet.ObjectId
+        ramblingsScrollCabinet.BlockExitUntilUsed = true
+        ramblingsScrollCabinet.BlockExitText = "Read the FAQ and tutorial!"
+    end
+    SetScale{ Id = ramblingsScrollCabinet.ObjectId, Fraction = 0.5 }
+    SetColor{ Id = ramblingsScrollCabinet.ObjectId, Color = { 255, 120, 170, 255 } }
+    AddToGroup({Id = ramblingsScrollCabinet.ObjectId, Name = "ChallengeSelector"})
+    SetupObstacle( ramblingsScrollCabinet )
+
+
 end}
 
 -- START SCREEN UPDATE
 
+function ShowZyruRamblingMenu()
+    ZyruIncremental.Data.Flags.SeenRamblingsMenu = true
+    if ZyruIncremental.RamblingsMenuId ~= nil then
+        ActivatedObjects[ZyruIncremental.RamblingsMenuId] = nil
+    end
+    local screen = ZyruIncremental.CreateMenu("RamblingMenu", {
+        PauseBlock = true,
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                Args = {
+                    FieldName = "MenuTitle",
+                    Text = "FAQ / Tutorial / Roadmap",
+                },
+            },
+            {
+                Type = "Button",
+                SubType = "Close",
+            }
+        },
+        Pages = {
+            [1] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
+                        FieldName = "TutorialRamblingsText",
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "TutorialText",
+                        Text = 
+                            "How do I gain experience for my booons? \\n Use your boons! It's that easy. If a boon does damage, deal damage with it equipped" ..
+                            " to gain experience. If it applies an extra effect to enemies, apply that effect to enemies to get some activation experience! " .. 
+                            " With enough experience, you can increase your boons' experience level, which is a permanent long-term bonus that gives meaningful bonuses. \\n \\n " ..
+
+                            "What do boon experience levels do? \\n Boon levels increase the rate at which boons benefit from pomegranates. For example," ..
+                            " the first three levels of Crush Shot from Aprhodite give 90, 154, and 182 damage. The damage numbers on Experience Level 10 " ..
+                            " give 90, 208, and 284 damage, respectively. Your strength increases tremendously the more experience you muster up for your boons."..
+                            " Boon levels also give God Currencies (Points) equivalent to the level acquired. You can use these points to upgrade God benefits, unlock" ..
+                            " new mechanics, or unlock new Boons! This includes the new rare set of Duo boons between Hermes and the Olympians! \\n\\n " .. 
+
+                            "Why does boon rarity seem a little bit different? \\n The rarity system has been reworked to act as a rolling distribution across "..
+                            " 10 tiers of rarity, instead of 4 discrete categories. Some rarity bonuses no longer grant guaranteed rarity tiers, but rather shift the "..
+                            " proability distribution significantly towards the higher end of rarity. For example, Minibosses may grant more common boons overall than the vanilla game, but also "..
+                            "have the chance to naturally offer Heroic boons from the start of your mod experience (and even higher tiers later on!!!)."
+                            
+                            ,
+                    }
+                },
+            },
+            [2] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
+                        FieldName = "TutorialRamblingsText2",
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "TutorialText2",
+                        Text = 
+                            "What's the point? \\n It's an incremental game, honey. Numbers go up, pump dopamine straight into the veins. Simple as. \\n\\n "..
+
+                            "What do I do if I find a bug? \\n This mod cannot possibly have bugs, but in case you do find one (or two, or ten), please feel free"..
+                            " to DM me in the Hades Modding discord (discoverable server). My discord username is \"zyruvias\". All bug and feedback reports are" .. 
+                            " greatly appreciated, and help improve the mod experience for you and your fellow incremental overhaul mod gamer :) \\n\\n " .. 
+
+                            "What do I do if I don't like this mod? \\n Stop playing. Why are you even asking this question? \\n\\n " .. 
+
+                            "Is there any risk to my savefile by playing this mod? \\n No, because I required you to start a new save file specifically for this mod. "
+                            .."However, considering this " ..
+                            " mod will eventually overhaul most mechanical systems by the time it reaches its final version, it is not too "..
+                            " unlikely that different values in overlapping mechanics may cause problems once you uninstall this mod and use the mod savefile for other mods. "..
+                            " I will do my best to note known issues for the sake of transparency and pissing off as few people as possible :)"
+                            ,
+                    }
+                },
+            },
+            
+            [3] = {
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    Args = {
+                        Text = "Roadmap",
+                        FieldName = "RoadmapText",
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "RoadmapText1",
+                        Text = 
+                            "1.0.0 - Initial Release \\n Primary changes: 5 new tiers of boon rarity added, with a new rarity distribution system. "..
+                            " New set of unlockable Duo Boons between Olympians and Hermes. New Olympian Legendary Boons. Boon Experience system that "..
+                            " tracks how effectively you use your boons over the course of your runs. Boon Point system that lets you unlock various upgrades"..
+                            " for the different Olympians to power up your play as you go. \\n\\n " .. 
+                            "1.1.0 - TBD / Heat and Prestige balancing \\n Primary ambitions: properly incentivize climbing heat while playing this mod "..
+                            ", finish the \"Prestige System\" mechanics for dealing with mod scaling getting too difficult. Mod feedback and boon balancing "..
+                            " from YOUR feedback. \\n \\n "..
+                            "1.2.0+ - Future content expansions - In no particular order: \\n * Pomegranate Overhaul - enable rarity in Pom menus, control your pom "..
+                            " options per god, and more! \\n * Courtyard Extension - increase aspect levels, keepsake levels and more. \\n * Hammer Explosion - "..
+                            " add rarity for hammers, hammer leveling, and ... actually that's it. No more for this one. \\n * Void Update - Chaos Trial expansion, Mirror of Night expansion."
+                            ,
+                    }
+                },
+            },
+            [4] = CreateAcknowledgementsPage(),
+            [5] = {
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "RoadmapText2",
+                        Text = "This Page Is Intentionally Left Blank",
+                    }
+                },
+            }
+        }
+    })
+end
+
 function ShowZyruSettingsMenu()
     ZyruIncremental.Data.Flags.SeenSettingsMenu = true
     local screen = ZyruIncremental.CreateMenu("SettingsMenu", {
+        PauseBlock = true,
         Components = {
             {
                 Type = "Text",
@@ -453,7 +671,8 @@ function ShowZyruSettingsMenu()
                     Text = "Change mod configurations according to your heart's desires.",
                     FieldName = "WelcomeTitle",
                 }
-            },{
+            },
+            {
                 Type = "Dropdown",
                 SubType = "Standard",
                 Args = {
@@ -496,15 +715,70 @@ function ShowZyruSettingsMenu()
                 SubType = "Paragraph",
                 Args = {
                     FieldName = "ExpDropText",
-                    Text = "On hit - every instance of damage or benefits from a boon will show an experience popup."
-                    .. " Please note that this is very visually noisy compared to the other options.\\n\\n"
-                    .." On kill, aggregated by Boon - each boon that contributes to an enemy kill will show an experience popup."
-                    .. " Mild visual noise with many boons. (Default Setting)\\n\\n"
-                    .." On kill, aggregated by God - each God that contributes to an enemy kill will show an experience popup."
-                    .. " Least visual noise."
-                    ,
+                    Text = "Configure EXP popup behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - ScreenHeight / 6 - 25,
+                    Width = ScreenWidth * 0.60
+                }
+            },
+            {
+                Type = "Dropdown",
+                SubType = "Standard",
+                Args = {
+                    FieldName = "LevelUpSettingDropdown",
+                    Group = "LevelupGroup",
+                    -- X, Y, Items, Name
+                    X = ScreenWidth / 6,
+                    Y = ScreenHeight / 2 - 125,
+                    Scale = {
+                        X = 0.5
+                    },
+                    Items = {
+                        Default = {
+                            Text = ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior or ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
+                            event = function() end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_POPUP,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_VOICELINE,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_VOICELINE
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_POPUP_VOICELINE
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_PORTRAIT
+                            end
+                        },
+                        {
+                            Text = ZyruIncremental.Constants.Settings.LEVEL_ALL,
+                            event = function ()
+                                ZyruIncremental.Data.FileOptions.LevelUpPopupBehavior = ZyruIncremental.Constants.Settings.LEVEL_ALL
+                            end
+                        },
+                    }
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                Args = {
+                    FieldName = "LevelupText",
+                    Text = "Configure Level-up notification behavior",
+                    OffsetX = - ScreenWidth / 4 + 100,
+                    OffsetY = - 145,
                     Width = ScreenWidth * 0.60
                 }
             },
@@ -517,6 +791,111 @@ function ShowZyruSettingsMenu()
 end
 
 local cabinetId = nil
+
+function ModInitializationScreenUpdateDifficultyText(screen, text)
+    ZyruIncremental.UpdateText(screen, {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "DifficultyDropdownSelectedText",
+            Text = "Difficulty Selected: " .. text,
+        }
+    })
+end
+
+function ModInitializationScreenUpdateStartingPointText(screen, text)
+    ZyruIncremental.UpdateText(screen, {
+        Type = "Text",
+        SubType = "Paragraph",
+        Args = {
+            FieldName = "StartingPointDropdownSelectedText",
+            Text = "Starting Point Selected: " .. text,
+            OffsetY = - ScreenHeight / 6 -25,
+            Justification = "Left",
+        }
+    })
+end
+
+function CreateAcknowledgementsPage()
+    return {
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            Args = {
+                FieldName = "AcknowledgementsTitle",
+                Text = "Acknowledgements"
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "ContextText",
+                Text = "A giant thanks to all the support I've gotten over the development of this mod, whether emotional or technical. I love you all."
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn1",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.4,
+                Text = 
+                    "" ..
+                    "Museus \\n " ..
+                    "CherryDad \\n " ..
+                    "Mysduck \\n " ..
+                    "nnevic \\n " ..
+                    "Wriste13 \\n " ..
+                    "EinsteinsBarber \\n " ..
+                    "Ananke \\n " ..
+                    "hell \\n " ..
+                    "Retr0spektre \\n " ..
+                    "Unovarydrdake \\n " ..
+                    "violetblight \\n " ..
+                    "Alexca  \\n "
+            },
+        },
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn3",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.17,
+                OffsetX = - ScreenWidth * 0.2,
+                Text = 
+                    "Magic_Gonads \\n " ..
+                    "PonyWarrior \\n " ..
+                    "SleepSoul \\n " ..
+                    "nbusseneau \\n " ..
+                    "physiX \\n \\n " ..
+                    "My wife and dearest friends \\n\\n " .. 
+                    "The absurd amount of coffee I drank along the way \\n \\n "
+                    ,
+            },
+        },
+        
+        {
+            Type = "Text",
+            SubType = "Paragraph",
+            Args = {
+                FieldName = "AcknowledgementsColumn2",
+                OffsetY = -200,
+                Width = ScreenWidth * 0.4,
+                OffsetX = 0,
+                Text = 
+                    "Hades Speedrunning Community for tolerating my incessant memery about the mod \\n\\n " ..
+                    "Hades Modding Community for technical support \\n\\n " ..
+                    "Unofficial Hades Retirement Home for emotional support \\n\\n " ..
+                    "Haelfam for encouragement and anticipation when I was in a slump \\n\\n " ..
+                    "And last but not least ... players like you if you! \\n (Especially if you contribute to reporting bugs / giiving feedback / submitting pull requests :) ) " ..
+                    ""
+            },
+        },
+    }
+end
 
 function ModInitializationScreen2()
     if not IsEmpty( GameState.RunHistory ) then
@@ -554,6 +933,7 @@ function ModInitializationScreen2()
         return
     end
     local screen = ZyruIncremental.CreateMenu("ModInitialization", {
+        PauseBlock = true,
         Pages = {
             [1] = {
                 {
@@ -610,25 +990,7 @@ function ModInitializationScreen2()
                     }
                 }
             },
-            [3] = {
-                {
-                    Type = "Text",
-                    SubType = "Subtitle",
-                    Args = {
-                        FieldName = "AcknowledgementsTitle",
-                        Text = "Acknowledgements"
-                    }
-                },
-                {
-                    Type = "Text",
-                    SubType = "Paragraph",
-                    Args = {
-                        FieldName = "ContextText",
-                        Text = "A giant thanks to all the support I've gotten over the development of this mod."
-                        .." I will list you by name later. I love you all."
-                    }
-                }
-            },
+            [3] = CreateAcknowledgementsPage(),
             [4] = {
                 {
                     Type = "Text",
@@ -654,17 +1016,51 @@ function ModInitializationScreen2()
                         Group = "DifficultyGroup",
                         -- X, Y, Items, Name
                         X = ScreenWidth / 6,
-                        Y = ScreenHeight / 3,
+                        Y = ScreenHeight / 3 + 75,
                         Items = {
                             Default = {
-                                Text = ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard",
+                                Text = "",
                                 event = function() end
                             },
-                            { Text = "Easy", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy" end },
-                            { Text = "Standard", event = function() ZyruIncremental.Data.FileOptions.DifficultySetting = "Standard" end },
-                            { Text = "Hard", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Hard" end },
-                            { Text = "Freeplay", event = function () ZyruIncremental.Data.FileOptions.DifficultySetting = "Freeplay" end },
+                            {
+                                Text = "Easy",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Easy"
+                                end
+                            },
+                            {
+                                Text = "Standard",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Standard"
+                                end
+                            },
+                            {
+                                Text = "Hard",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Hard"
+                                end
+                            },
+                            {
+                                Text = "Freeplay",
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateDifficultyText(parent.screen, button.Text)
+                                    ZyruIncremental.Data.FileOptions.DifficultySetting = "Freeplay"
+                                end
+                            },
                         }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "DifficultyDropdownSelectedText",
+                        Text = "Difficulty Selected: " .. (ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard"),
+                        OffsetY = - ScreenHeight / 6 - 25,
+                        Justification = "Left",
                     }
                 },
                 {
@@ -685,7 +1081,7 @@ function ModInitializationScreen2()
                         .."artificial difficulty gates. Please note that you will become overpowered eventually, and the mod may feel boring in this mode after a certain point."
                         ,
                         OffsetX = - ScreenWidth / 4,
-                        OffsetY = - ScreenHeight / 6 - 25,
+                        OffsetY = - ScreenHeight / 6 + 50,
                         Width = ScreenWidth * 0.65
                     }
                 }
@@ -708,7 +1104,18 @@ function ModInitializationScreen2()
                         Text = "This mod requires you to start a fresh file since the context of game progression in normal "
                         .."Hades does not make sense in the context of this mod. However, that does not mean you have to complete "
                         .."the whole story again. You are free to start a fresh file and re-experience the story, but you may "
-                        .."also skip past the epilogue and start with a state of all base-game features unlocked if you so choose."
+                        .."also skip past the story and start with a state of all base-game features unlocked if you so choose."
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    Args = {
+                        FieldName = "StartingPointDropdownSelectedText",
+                        Text = "Starting Point Selected: " .. 
+                            (ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE),
+                        OffsetY = - ScreenHeight / 6 + 25,
+                        Justification = "Left",
                     }
                 },
                 {
@@ -722,18 +1129,20 @@ function ModInitializationScreen2()
                         Scale = { X = 1.0, Y = 1.0 },
                         Items = {
                             Default = {
-                                Text = ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE,
+                                Text = "Select a starting point...",
                                 event = function() end
                             },
                             { 
                                 Text = ZyruIncremental.Constants.SaveFile.FRESH_FILE,
-                                event = function ()
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateStartingPointText(parent.screen, button.Text)
                                     ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.FRESH_FILE
                                 end
                             },
                             { 
-                                Text = "Epilogue",
-                                event = function ()
+                                Text = ZyruIncremental.Constants.SaveFile.EPILOGUE,
+                                event = function (parent, button)
+                                    ModInitializationScreenUpdateStartingPointText(parent.screen, button.Text)
                                     ZyruIncremental.Data.FileOptions.StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE
                                 end
                             },
@@ -758,7 +1167,7 @@ function ModInitializationScreen2()
                         FieldName = "FinishedText",
                         Text = "Click the button below to finish your file configuration. Please note that if you are "
                         .."starting from the Epilogue file setting, it will take a minute to process save file changes. "
-                        .."Additionally, there are extra miscellaneos settings in the Courtyard when you get there."
+                        .."Additionally, there are extra miscellaneous settings in the Courtyard when you get there."
 
                         .. "\\n\\n Thank you for playing <3"
                     }
@@ -846,9 +1255,9 @@ function CloseInitializationScreen(screen, button)
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-			Proportion = 1, UpdateDuration = 8, Text = "Settling familial disputes ...",
+			Proportion = 1, UpdateDuration = 17, Text = "Settling familial disputes ...",
+            CascadeVoicelines = true,
             Voicelines = {
-                AllowTalkOverTextLines = true,
                 -- "That oaf Poseidon spoke to you already, didn't he? All bluster, muscles, and bravado, that one. I'm glad you're not the type."
 				{ 
                     Cue = "/VO/Aphrodite_0045",
@@ -856,16 +1265,25 @@ function CloseInitializationScreen(screen, button)
                 -- "You've come to know your Uncle Zeus, by now, correct? Just want to let you know, good Zeus gets very busy on the regular, so you just stick with me, I've always time for you, Nephew!"
                 {
                     Cue = "/VO/Poseidon_0049",
+                    PreLineWait = 1.0
                 },
                 -- "I suppose even down in the Underworld, you would have heard such tales of me, young man. They're all untrue, hahaha! Except the tales of my bravery. Those are completely accurate, though all too modest, in most cases, I must say."
-                { Cue = "/VO/Zeus_0218", },
+                {
+                    Cue = "/VO/Zeus_0218",
+                    PreLineWait = 2.0
+                },
+                -- I said, shut up, old man!
+                {
+                    Cue =  "/VO/ZagreusHome_0177",
+                    PreLineWait = 16
+                },
             }
         },
         { Proportion = 0, UpdateDuration = 0},
         {
-            Proportion = 1, UpdateDuration = 12, Text = "Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...",
-            -- "No... Zagreus, what have you done? You've led them *here*? TODO: one more - boat line rides?
-            Voicelines = {{ Cue = "/VO/Persephone_0060", PreLineWait = 1.5}, }
+            Proportion = 1, UpdateDuration = 9, Text = "Informants seeking out Persephone and telling her the truth quickly and not over a series of dozens of painful excursions...",
+            -- "No... Zagreus, what have you done? You've led them *here*?
+            Voicelines = {{ Cue = "/VO/Persephone_0060", PreLineWait = 2.0}, }
         },
         { Proportion = 0, UpdateDuration = 0},
         {
@@ -936,7 +1354,17 @@ function CloseInitializationScreen(screen, button)
 
     for _, stage in ipairs(stages) do
         if stage.Voicelines then
-            thread( PlayVoiceLines, stage.Voicelines )
+            if stage.CascadeVoicelines then
+                for i, line in ipairs(stage.Voicelines) do
+                    -- hack to get things to overlap...
+                    thread( function(line, k)
+                        wait (line.PreLineWait)
+                        PlaySpeech { Name = line.Cue, Id = k, UseSubtitles = false,  } 
+                    end, line, i)
+                end
+            else
+                thread( PlayVoiceLines, stage.Voicelines, false, {})
+            end
         end
 
         if stage.Text then
@@ -957,22 +1385,25 @@ function CloseInitializationScreen(screen, button)
     Kill(CurrentRun.Hero)
 end
 
+ModUtil.Path.Wrap("SetupMap", function(base)
+    LoadPackages({Name = "DeathArea"})
+    base()
+end, ZyruIncremental)
+
 ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
 
     if ZyruIncremental.Data.Flags.SeenInitialMenuScreen then
         return base(currentRun, currentRoom)
     end
-    
-    LoadPackages({Name = "DeathArea"})
+
     base(currentRun, currentRoom)
 
     local selector = DeepCopyTable( DeathLoopData.DeathAreaOffice.ObstacleData[488699] )
     selector.BlockExitUntilUsed = true
-    selector.BlockExitText = "Mod Setup Not Completed..."
+    selector.BlockExitText = TableLength(GameState.RunHistory) > 0 and "Create a new file to continue..." or "Mod Setup Not Completed..."
     selector.UseText = "{I} Begin Incremental Journey"
     selector.OnUsedFunctionName = "ModInitializationScreen2"
     selector.Activate = true
-
     
 	local targetId = SpawnObstacle({ Name = "BlankObstacle", Group = "Standing", DestinationId = CurrentRun.Hero.ObjectId, OffsetX = 0, OffsetY = 0 })
 
@@ -982,8 +1413,8 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
         DestinationId = targetId,
         ForceToValidLocation = true,
         AttachedTable = selector,
-        OffsetX = 500,
-        OffsetY = -0,
+        OffsetX = 2500,
+        OffsetY = -1000,
     })
     cabinetId = selector.ObjectId
     SetScale{ Id = selector.ObjectId, Fraction = 0.17 }
@@ -993,30 +1424,30 @@ ModUtil.Path.Wrap("StartRoom", function (base, currentRun, currentRoom)
     
 end, ZyruIncremental)
 
-function ZyruIncremental.TestFrameworkMenu()
-    local screen = ZyruIncremental.CreateMenu("Test", {
-        Components = {
-            {
-                Type = "Button",
-                SubType = "Icon",
-                Args = {
-                    FieldName = "IconTest",
-                    Group = "Combat_Menu_TraitTray",
-                    Animation = "Codex_Portrait_Zagreus",
-                    OffsetX = 0,
-                    OffsetY = 0,
-                    ComponentArgs = {
-                        OnPressedFunctionName = "LolLmao"
-                    }
-                },
-            },
-            {
-                Type = "Button",
-                SubType = "Close",
-            }
-        }
-    })
-end
+-- function ZyruIncremental.TestFrameworkMenu()
+--     local screen = ZyruIncremental.CreateMenu("Test", {
+--         Components = {
+--             {
+--                 Type = "Button",
+--                 SubType = "Icon",
+--                 Args = {
+--                     FieldName = "IconTest",
+--                     Group = "Combat_Menu_TraitTray",
+--                     Animation = "Codex_Portrait_Zagreus",
+--                     OffsetX = 0,
+--                     OffsetY = 0,
+--                     ComponentArgs = {
+--                         OnPressedFunctionName = "LolLmao"
+--                     }
+--                 },
+--             },
+--             {
+--                 Type = "Button",
+--                 SubType = "Close",
+--             }
+--         }
+--     })
+-- end
 
 
 
@@ -1041,11 +1472,23 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
         Args = {
             FieldName = "BoonProgressBoonIcon",
             Animation = GetTraitIcon( TraitData[boonName] or {} ),
-            Scale = 4.0
+            Scale = 2.0
         }
     })
     -- UPDATE PROGRESS BAR
     -- show boon level in top right corner
+    local boonLevelLabel = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "BoonLevelUniqueLabel",
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY - 120,
+            Text = "Boon Level",
+            FontSize = 20,
+        }
+    }
+    ZyruIncremental.CreateOrUpdateComponent(screen, boonLevelLabel)
     local boonData = ZyruIncremental.Data.BoonData[boonName] or {}
 
     local boonLevel = boonData.Level or 1
@@ -1066,7 +1509,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             Proportion = 0,
             UpdateDuration = 0,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-            Y = ScreenCenterY + ScreenHeight / 5,
+            Y = ScreenCenterY - 90,
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
@@ -1083,7 +1526,7 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
             Proportion = expProportion,
             UpdateDuration = 1,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-            Y = ScreenCenterY + ScreenHeight / 5,
+            Y = ScreenCenterY - 90,
             -- BackgroundColor = {0, 0, 0, 0},
             ScaleX = 1.5,
             ScaleY = 1.5,
@@ -1154,9 +1597,9 @@ function ShowGodProgressScreen(screen, button)
             SubType = "Standard",
             Args = {
                 FieldName = "BoonProgressBoonIcon",
-                OffsetX = ScreenWidth / 6,
-                OffsetY = -100,
-                Scale = 4,
+                OffsetX = ScreenWidth / 3,
+                OffsetY = -250,
+                Scale = 2,
             }
         },
         -- progress bar
@@ -1166,7 +1609,7 @@ function ShowGodProgressScreen(screen, button)
             Args = {
                 FieldName = "BoonProgressBar",
                 X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
-                Y = ScreenCenterY + ScreenHeight / 5,
+                Y = ScreenCenterY - 90,
                 -- BackgroundColor = {0, 0, 0, 0},
                 ScaleX = 1.5,
                 ScaleY = 1.5,
@@ -1176,15 +1619,125 @@ function ShowGodProgressScreen(screen, button)
             -- TODO: fix this shit
             Type = "Button",
             SubType = "Close",
-            Args = {
-                -- OnPressedFunctionName = "GoToPageFromSource",
-            },
             ComponentArgs = {
                 PageIndex = 1,
+                OnPressedFunctionName = "GoToPageFromSource",
             }
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
+    ZyruIncremental.RenderComponents(screen, "ZyruIncremental.ShowGodProgressUI", { Source = button })
+end
+
+function ZyruIncremental.GetRarityDistributionForUI(god)
+    local chanceArray = ZyruIncremental.ComputeRarityArrayForGod( god )
+    local distributionData = {}
+    for rarityName, rarityValue in pairs(chanceArray) do
+        distributionData[GetRarityValue(rarityName)] = {
+            Name = rarityName,
+            Value = rarityValue,
+            Color = Color["BoonPatch" .. rarityName]
+        }
+    end
+    DebugPrint { Text = ModUtil.ToString.Deep(chanceArray)}
+    return distributionData
+end
+
+function ZyruIncremental.ShowGodProgressUI(screen, button)
+
+    local rarityBarLabel = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "DistributionLabel",
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 - 150,
+            Text = "Rarity Bonus: " .. (100 + ZyruIncremental.ComputeRarityBonusForGod(button.PageIndex)) .. "% \\n Boons' Offered Rarity Distribution",
+            FontSize = 20,
+        }
+    }
+    local distributionData = ZyruIncremental.GetRarityDistributionForUI(button.PageIndex)
+    distributionData.Legendary = nil
+    local rarityBarComponent = {
+        Type = "Distribution",
+        SubType = "Standard",
+        Args = {
+            FieldName = "RarityDistributionBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 - 70,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            DistributionData = distributionData
+        }
+    }
+
+    ZyruIncremental.RenderComponent(screen, rarityBarLabel)
+    ZyruIncremental.RenderComponent(screen, rarityBarComponent)
+
+    -- UPDATE EXP PROGRESS BAR
+    local godLevelLabel = {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "GodLevelLabel",
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 + 100,
+            Text = button.PageIndex .. "'s God Level",
+            FontSize = 20,
+        }
+    }
+    ZyruIncremental.RenderComponent(screen, godLevelLabel)
+    local data = ZyruIncremental.Data.GodData[button.PageIndex]
+
+    local level = data.Level or 1
+    -- show exp to next level, bar in bottom
+
+    local exp = data.Experience or 0
+    local expBaseline = exp - ZyruIncremental.GetExperienceForNextGodLevel(level - 1)
+    local expTNL = ZyruIncremental.GetExperienceForNextGodLevel ( level ) - ZyruIncremental.GetExperienceForNextGodLevel(level - 1)
+    local expProportion = expBaseline / expTNL
+    local expProportionLabel = tostring(math.floor((1000 * expBaseline) / expTNL) / 10) .. "%"
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "GodProgressBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            Proportion = 0,
+            UpdateDuration = 0,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 + 130,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            BarText = tostring(math.floor(expBaseline)) .. " / " .. tostring(expTNL) .. " = " .. expProportionLabel,
+            LeftText = "Level " .. tostring(level),
+            RightText = "Level " .. tostring(level + 1)
+        }
+    })
+    ZyruIncremental.UpdateProgressBar(screen, {
+        Type = "ProgressBar",
+        SubType = "Standard",
+        Args = {
+            FieldName = "GodProgressBar",
+            BackgroundColor = {96, 96, 96, 255}, -- Default color.
+            ForegroundColor = {255, 255, 255, 255},
+            Proportion = expProportion,
+            UpdateDuration = 1,
+            X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
+            Y = ScreenCenterY + ScreenHeight / 6 + 130,
+            -- BackgroundColor = {0, 0, 0, 0},
+            ScaleX = 1.5,
+            ScaleY = 1.5,
+            BarText = tostring(math.floor(expBaseline)) .. " / " .. tostring(expTNL) .. " = " .. expProportionLabel,
+            LeftText = "Level " .. tostring(level),
+            RightText = "Level " .. tostring(level + 1)
+        }
+    })
 end
 
 function ShowZyruProgressScreen()
@@ -1239,6 +1792,7 @@ function ShowZyruProgressScreen()
     end
 
     local screen = ZyruIncremental.CreateMenu("ProgressScreen", {
+        PauseBlock = true,
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
@@ -1297,6 +1851,7 @@ function ShowZyruUpgradeScreen()
     end
 
     local screen = ZyruIncremental.CreateMenu("UpgradeScreen", {
+        PauseBlock = true,
         PaginationStyle = "Keyed",
         Pages = pages,
         Components = {}
@@ -1311,14 +1866,18 @@ function GetUpgradeGostText(upgrade)
         table.insert(sourceCostTexts, tostring(cost or 0) .. " " .. source .. " Points")
     end
     if upgrade.Sources ~= nil then
+        DebugPrint { Text = ModUtil.ToString.Deep(upgrade.Sources) .. " " .. ModUtil.ToString.Deep(sourceCostTexts)}
         -- TODO: generalize
-        return costText .. sourceCostTexts[1] .. " and " .. sourceCostTexts[2]
+        if sourceCostTexts[1] and sourceCostTexts[2] then 
+            return costText .. tostring(sourceCostTexts[1]) .. " and " .. (sourceCostTexts[2])
+        end
     end
     return costText .. sourceCostTexts[1]
 end
 
-function UpdateUpgradeInfoScreen(screen, upgrade)
+function UpdateUpgradeInfoScreen(screen, upgrade, button)
     -- UPDATE ICON
+    local god = screen.PageIndex
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
@@ -1328,6 +1887,18 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
             OffsetX = ScreenWidth / 6,
             OffsetY = -100,
             Scale = 4,
+        }
+    })
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Note",
+        Args = {
+            FieldName = "UpgradeCurrencyText",
+            OffsetX = ScreenWidth / 3 - 50,
+            OffsetY = -450,
+            Justification = "Right",
+            FontSize = 20,
+            Text = "Available " .. god .. " Points: " .. tostring(ZyruIncremental.Data.GodData[god].CurrentPoints or 0)
         }
     })
     ZyruIncremental.CreateOrUpdateComponent(screen, {
@@ -1369,15 +1940,37 @@ function UpdateUpgradeInfoScreen(screen, upgrade)
     })
 end
 
-function GetUpgradeListItem(screen, upgrade)
+function GetUpgradeListItem(screen, upgrade, button)
     local description = "Unlock a new Boon from " .. 
         (upgrade.Source or upgrade.Sources[1] .. " and " .. upgrade.Sources[2])
     return {
         event = function () 
-            UpdateUpgradeInfoScreen(screen, upgrade)
+            UpdateUpgradeInfoScreen(screen, upgrade, button)
         end,
         Text = upgrade.Name,
         Description = description,
+        ImageStyle = {
+            Image = GetTraitIcon( TraitData[upgrade.Name] or {} ),
+            Offset = {X = -225, Y = 0},
+            Scale = 0.7, 
+        },
+    }
+end
+
+function GetRarityBuffListItem(screen, upgrade, button)
+    return {
+        event = function () 
+            UpdateUpgradeInfoScreen(screen, upgrade, button)
+        end,
+        Text = "GodRarityBonusBuff",
+        Description = "GodRarityBonusBuff_Description",
+        DescriptionArgs = {
+            LuaKey = "TempTextData",
+            LuaValue = {
+                Bonus = upgrade.Value,
+                God = upgrade.Source, -- TODO: upgrade source is hardcoded english, can I recursively translate?
+            }
+        },
         ImageStyle = {
             Image = GetTraitIcon( TraitData[upgrade.Name] or {} ),
             Offset = {X = -225, Y = 0},
@@ -1393,7 +1986,14 @@ function ShowGodUpgradeScreen(screen, button)
     -- create scrolling list
     local upgradeItemsToDisplay = {}
     for i, upgrade in ipairs(upgradesToDisplay) do
-        table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade))
+        if upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON then
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade, button))
+        elseif upgrade.Type == ZyruIncremental.Constants.Upgrades.Types.AUGMENT_RARITY then
+            table.insert(upgradeItemsToDisplay, GetRarityBuffListItem(screen, upgrade, button))
+        else
+            -- TODO: figure out default
+            table.insert(upgradeItemsToDisplay, GetUpgradeListItem(screen, upgrade, button))
+        end
     end
 
 
@@ -1440,15 +2040,9 @@ function ShowGodUpgradeScreen(screen, button)
             }
         },
         {
-            -- TODO: fix this shit
+            -- TODO: Generalize for a "back" button instead of just close
             Type = "Button",
             SubType = "Close",
-            Args = {
-                -- OnPressedFunctionName = "GoToPageFromSource",
-            },
-            -- ComponentArgs = {
-            --     PageIndex = 1,
-            -- }
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)

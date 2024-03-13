@@ -1,4 +1,9 @@
 --[[
+  Author/Source: https://github.com/rgertenbach/Lua-Stats
+
+]]
+
+--[[
 TODO: Type checking
 TODO: Sample Size
 TODO: Chi-Square test

@@ -79,10 +79,6 @@ ModUtil.LoadOnce(function ( )
       },
     })
   
-  end, ZyruIncremental)
-  
-  -- TraitData Setup
-  ModUtil.LoadOnce(function ( )
     ModUtil.Table.Merge(TraitData, {
       -- General %Scaling Boons
       ShopTier1Trait = { RarityLevels = T1RarityTable },
@@ -229,7 +225,6 @@ ModUtil.LoadOnce(function ( )
       ZeroAmmoBonusTrait = { RarityLevels = scalingTable(5, 1, 1) },
       MaximumChillBlast = { RarityLevels = scalingTable(1.5, 0.125) },
       MaximumChillBonusSlow = { RarityLevels = scalingTable(3, 0.5) },
-      -- TODO: HarvestBoonTrait rework?
       DemeterRetaliateTrait = {
         RarityLevels = scalingTable(3, 0.5),
         PropertyChanges = { { BaseMin = 40, BaseMax = 40}, },
@@ -272,7 +267,37 @@ ModUtil.LoadOnce(function ( )
       -- TODO: RegeneratingSuperTrait should not be better than smoldering air
       
       ChamberGoldTrait = { RarityLevels = scalingTable(2.2, 0.4, 1.2) },
-      SpeedDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
+      SpeedDamageTrait = {
+        RarityLevels = {
+          Common = { Multiplier = 1.0 },
+          Rare = { Multiplier = 1.4 },
+          Epic = { Multiplier = 1.8 },
+          Heroic = { Multiplier = 2.2 },
+          Supreme = { Multiplier = 2.6 },
+          Ultimate = { Multiplier = 3 },
+          Transcendental = { Multiplier = 4 },
+          Mythic = { Multiplier = 6 },
+          Olympic = { Multiplier = 8 },
+        },
+        AddOutgoingDamageModifiers = {
+          SpeedDamageMultiplier =
+          {
+            BaseValue = 0.25,
+          },
+        }
+      },
+    })
+
+    -- Exclusive Access rewrite
+    ModUtil.Table.Replace(TraitData.RaritySuperBoost, {
+      InheritFrom = { "SynergyTrait" },
+      Icon = "Dionysus_Poseidon_01",
+      RequiredFalseTrait = "RaritySuperBoost",
+      ZyruRarityBonus = 2
+    })
+    -- TODO: Rare Crop rewrite
+    ModUtil.Table.Merge(TraitData.HarvestBoonTrait, {
+		  RoomsPerUpgrade = 5,
     })
   end, ZyruIncremental)
 
