@@ -416,7 +416,7 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
 
     -- CleanKill
     if HeroHasTrait("ArtemisCriticalTrait") then
-      local critDamage = GetUnitDataValue{ Id = 40000, WeaponName = GetEquippedWeapon(), Property = "CritMultiplierAddition" }
+      local critDamage = GetUnitDataValue{ Id = 40000, WeaponName = GetEquippedWeapon(), Property = "CritMultiplierAddition" } or 0
       critDamageMap["ArtemisCriticalTrait"] = critDamage
       critDamageTotal = critDamageTotal + critDamage
     end
