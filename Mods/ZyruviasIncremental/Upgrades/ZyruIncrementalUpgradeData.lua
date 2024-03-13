@@ -610,7 +610,8 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
-        Sources = { ZyruIncremental.Constants.Gods.DIONYSUS, ZyruIncremental.Constants.Gods.HERMES },
+        Source = "NULL" -- todo: fix, add, release, etc.
+        -- Sources = { ZyruIncremental.Constants.Gods.DIONYSUS, ZyruIncremental.Constants.Gods.HERMES },
     },
 
     AresHermesSynergyTrait = {

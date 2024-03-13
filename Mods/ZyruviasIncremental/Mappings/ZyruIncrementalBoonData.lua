@@ -267,7 +267,25 @@ ModUtil.LoadOnce(function ( )
       -- TODO: RegeneratingSuperTrait should not be better than smoldering air
       
       ChamberGoldTrait = { RarityLevels = scalingTable(2.2, 0.4, 1.2) },
-      SpeedDamageTrait = { RarityLevels = scalingTable(3, 0.5) },
+      SpeedDamageTrait = {
+        RarityLevels = {
+          Common = { Multiplier = 1.0 },
+          Rare = { Multiplier = 1.4 },
+          Epic = { Multiplier = 1.8 },
+          Heroic = { Multiplier = 2.2 },
+          Supreme = { Multiplier = 2.6 },
+          Ultimate = { Multiplier = 3 },
+          Transcendental = { Multiplier = 4 },
+          Mythic = { Multiplier = 6 },
+          Olympic = { Multiplier = 8 },
+        },
+        AddOutgoingDamageModifiers = {
+          SpeedDamageMultiplier =
+          {
+            BaseValue = 0.25,
+          },
+        }
+      },
     })
 
     -- Exclusive Access rewrite

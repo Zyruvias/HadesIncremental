@@ -99,7 +99,7 @@
         }
         {
             Id = "ArtemisHermesSynergyTrait"
-            DisplayName = "Found the Critorus"
+            DisplayName = "Rapid Exploitation"
             Description = "Critically striking a foe grants bonus movespeed for a short duration."
         }
         {
@@ -109,11 +109,11 @@
         }
         {
             Id = "ArtemisHermesSynergyTrait"
-            DisplayName = "Unlock Found the Critorus"
+            DisplayName = "Unlock Rapid Exploitation"
         }
         {
             Id = "DionysusHermesSynergyTrait"
-            DisplayName = "TODO: name me fix me whatever me"
+            DisplayName = "what do i do"
             Description = "Critically striking a foe grants bonus movespeed for a short duration."
         }
         {
@@ -123,7 +123,7 @@
         }
         {
             Id = "DionysusHermesSynergyTraitUpgrade"
-            DisplayName = "Unlock ODO: name me fix me whatever me"
+            DisplayName = "Unlock DionysusHermesSynergyTrait"
         }
         {
             Id = "DemeterHermesSynergyTrait"
