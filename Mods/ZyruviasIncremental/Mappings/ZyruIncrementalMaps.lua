@@ -191,6 +191,7 @@ ModUtil.LoadOnce(function ( )
       ZeroRangedWeaponAmmoMultiplier = "ZeroAmmoBonusTrait",
       AthenaBackstabVulnerability = "AthenaBackstabDebuffTrait",
       DionysusComboVulnerability = "DionysusComboVulnerability",
+      ProjectileDeflectedMultiplier = "AthenaShieldTrait",
       ---------------
       -- DEFENSIVE --
       ---------------

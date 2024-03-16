@@ -275,7 +275,31 @@ ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(StoreData.RoomShop.Trai
 
 ]]
 
-ZyruIncremental.DamageCacheMap = {}
+--[[
+  It was not determined to be possible to track down source of deflect for any
+  particular projectile, so similar to crit mappings, we apply experience across all
+  boons can deflect.
+]]
+local deflectBoons = {
+  "AthenaWeaponTrait", "AthenaSecondaryTrait", "AthenaRushTrait", "AthenaRangedTrait",
+  "AthenaShoutTrait", "AthenaRetaliateTrait"
+}
+function ZyruIncremental.ComputeDeflectExp(damageResult, boonsUsed)
+  local boonsWithDeflect = 0
+  local deflectBoonsUsed = {}
+  -- gather all deflect sources
+  for i, boon in ipairs(deflectBoons) do
+    if HeroHasTrait(boon) then
+      boonsWithDeflect = boonsWithDeflect + 1
+      deflectBoonsUsed[boon] = damageResult.ResultingDamage
+    end
+  end
+  
+  -- reflect their use in experience map, share damage
+  for boonName, exp in pairs(deflectBoonsUsed) do
+      boonsUsed[boonName] = exp / boonsWithDeflect
+  end
+end
 
 function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
   local victim = args.Victim
@@ -296,7 +320,7 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
   local sourceName = nil
   local boonsUsed = {}
 
-  ZyruIncremental.Debug = args
+  -- ZyruIncremental.Debug = args
 
   if triggerArgs.EffectName ~= nil then
     local traitUsed = ZyruIncremental.EffectToBoonMap[triggerArgs.EffectName]
@@ -355,10 +379,10 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
     if HeroHasTrait("BonusCollisionTrait") then
       boonsUsed["BonusCollisionTrait"] = damageResult.BaseDamage
     end
-  elseif triggerArgs.ProjectileDeflected then
-    if HeroHasTrait("AthenaShieldTrait") then
-      boonsUsed["AthenaShieldTrait"] = damageResult.BaseDamage
-    end
+  end
+
+  if triggerArgs.ProjectileDeflected then
+    ZyruIncremental.ComputeDeflectExp(damageResult, boonsUsed)
   end
   
   -- { Base Damage: int, Multipliers: {}, ResultingDamage}
@@ -806,6 +830,14 @@ ModUtil.Path.Context.Wrap("Damage", function ()
         IsCrit = triggerArgs.IsCrit,
       }
     }
+    
+    ZyruIncremental.Debug = DeepCopyTable(triggerArgs)
+
+    if triggerArgs.ProjectileDeflected then
+      if HeroHasTrait("AthenaShieldTrait") then
+        boonsUsed["AthenaShieldTrait"] = damageResult.BaseDamage
+      end
+    end
 
     thread( ZyruIncremental.ProcessDamageEnemyValues, damageResult, args)
 
