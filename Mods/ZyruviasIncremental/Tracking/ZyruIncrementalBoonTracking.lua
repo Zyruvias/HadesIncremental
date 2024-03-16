@@ -249,6 +249,13 @@ local ignoreDamageSourceTraitMap = {
 ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(LootData.WeaponUpgrade.Traits))
 -- Well items
 ModUtil.Table.Merge(ignoreDamageSourceTraitMap, ToLookup(StoreData.RoomShop.Traits))
+-- keepsakes
+ModUtil.Table.Merge(
+  ignoreDamageSourceTraitMap,
+  ToLookup(
+    GameData.AchievementData.AchLeveledKeepsakes.CompleteGameStateRequirements.RequiresMaxKeepsakes
+  )
+)
 
 -- TODO: reinvestigate post crash-fixes
 --[[
