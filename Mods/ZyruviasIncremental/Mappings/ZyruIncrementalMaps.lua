@@ -101,6 +101,7 @@ ModUtil.LoadOnce(function ( )
       AphroditeMaxSuperCharm = "AphroditeShoutTrait",
       -- Artemis
       ArtemisShoutWeapon = "ArtemisShoutTrait",
+      ArtemisMaxShoutWeapon = "ArtemisShoutTrait",
       ArtemisAmmoWeapon = "ArtemisAmmoExitTrait",
       -- Demeter
       ChillRetaliate = "DemeterRetaliateTrait",
