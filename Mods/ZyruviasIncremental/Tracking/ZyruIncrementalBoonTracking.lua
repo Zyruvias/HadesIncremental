@@ -442,14 +442,14 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
     -- TODO: GetEffectTimeRemaining
     -- if HeroHasTrait("ArtemisReflectBuffTrait") and GetEffectTimeRemaining{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "Duration" } then
     if HeroHasTrait("ArtemisReflectBuffTrait") and GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "Duration" } then
-      local critChance = GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "CritAddition" }
+      local critChance = GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "CritAddition" } or 0
       critChanceMap["ArtemisReflectBuffTrait"] = critChance
       critChanceTotal = critChanceTotal + critChance
     end
 
     -- CleanKill
     if HeroHasTrait("ArtemisCriticalTrait") then
-      local critDamage = GetUnitDataValue{ Id = 40000, WeaponName = GetEquippedWeapon(), Property = "CritMultiplierAddition" }
+      local critDamage = GetUnitDataValue{ Id = 40000, WeaponName = GetEquippedWeapon(), Property = "CritMultiplierAddition" } or 0
       critDamageMap["ArtemisCriticalTrait"] = critDamage
       critDamageTotal = critDamageTotal + critDamage
     end
@@ -824,8 +824,11 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     local armorBeforeAttack = victim.HealthBuffer or 0
     local res = baseFunc( victim, triggerArgs )
     triggerArgs = triggerArgs or {}
+
     -- go away, than
-    if triggerArgs.triggeredById ~= CurrentRun.Hero.ObjectId then
+    local attackerIsHero = triggerArgs.AttackerId == CurrentRun.Hero.ObjectId
+    local selfDeflectDamage =  triggerArgs.ProjectileDeflected
+    if not attackerIsHero and not selfDeflectDamage then
       return res
     end
 
