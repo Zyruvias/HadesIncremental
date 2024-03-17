@@ -439,6 +439,8 @@ function ZyruIncremental.ProcessDamageEnemyValues (damageResult, args)
       critChanceTotal = critChanceTotal + critChance
     end
     -- Has Deadly Reversal AND its active
+    -- TODO: GetEffectTimeRemaining
+    -- if HeroHasTrait("ArtemisReflectBuffTrait") and GetEffectTimeRemaining{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "Duration" } then
     if HeroHasTrait("ArtemisReflectBuffTrait") and GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "Duration" } then
       local critChance = GetEffectDataValue{ WeaponName = "ArtemisReflectBuff", EffectName = "ReflectCritChance", Property = "CritAddition" }
       critChanceMap["ArtemisReflectBuffTrait"] = critChance
