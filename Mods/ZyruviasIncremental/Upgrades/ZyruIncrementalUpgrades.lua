@@ -1,15 +1,19 @@
-function ZyruIncremental.AddUpgrade(upgradeName, args)
-    args = args or {}
+function ZyruIncremental.AddUpgrade(upgrade, args)
     if ZyruIncremental.Data == nil or ZyruIncremental.Data.UpgradeData == nil then
         -- DebugPrint { Text = "GameState not properly defined"}
         return false
     end
+    if upgrade == nil then
+        DebugPrint { Text = "Passed nil upgrade"}
+        return false
+    end
+    local upgradeName = upgrade.Name
+    args = args or {}
     table.insert(ZyruIncremental.Data.UpgradeData, upgradeName)
     if args.SkipApply then
         return true
     end
 
-    local upgrade = ZyruIncremental.UpgradeData[upgradeName]
     if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
     end
@@ -79,8 +83,8 @@ function ZyruIncremental.MergeDataArrays(args)
     end
 end
 
-function ZyruIncremental.HasUpgrade(upgradeName, args)
-    return Contains(ZyruIncremental.Data.UpgradeData, upgradeName)
+function ZyruIncremental.HasUpgrade(upgrade, args)
+    return Contains(ZyruIncremental.Data.UpgradeData, upgrade.Name)
 end
 
 function ZyruIncremental.GetAllUpgradesBySource(source)
@@ -142,7 +146,7 @@ end
 function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
     local upgrade = button.Upgrade
     DebugPrint { Text = ModUtil.ToString.Shallow(upgrade) }
-    if ZyruIncremental.HasUpgrade(upgrade.Name) and not ZyruIncremental.IsUpgradeRepeatable(upgrade) then
+    if ZyruIncremental.HasUpgrade(upgrade) and not ZyruIncremental.IsUpgradeRepeatable(upgrade) then
         -- TODO: CannotPurchaseVoiceLines all but last?
         DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
 		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
@@ -152,7 +156,7 @@ function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
         -- subtract Cost
         SubtractUpgradeCosts(upgrade)
         -- add upgrade to save
-        ZyruIncremental.AddUpgrade(upgrade.Name)
+        ZyruIncremental.AddUpgrade(upgrade)
         -- exhibit signs of self awareness
 		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
         DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
