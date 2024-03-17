@@ -824,6 +824,12 @@ ModUtil.Path.Context.Wrap("Damage", function ()
     local armorBeforeAttack = victim.HealthBuffer or 0
     local res = baseFunc( victim, triggerArgs )
     triggerArgs = triggerArgs or {}
+    -- go away, than
+    if triggerArgs.triggeredById ~= CurrentRun.Hero.ObjectId then
+      return res
+    end
+
+
     local args = {
       Victim = victim,
       TriggerArgs = {
@@ -839,14 +845,6 @@ ModUtil.Path.Context.Wrap("Damage", function ()
         IsCrit = triggerArgs.IsCrit,
       }
     }
-    
-    ZyruIncremental.Debug = DeepCopyTable(triggerArgs)
-
-    if triggerArgs.ProjectileDeflected then
-      if HeroHasTrait("AthenaShieldTrait") then
-        boonsUsed["AthenaShieldTrait"] = damageResult.BaseDamage
-      end
-    end
 
     thread( ZyruIncremental.ProcessDamageEnemyValues, damageResult, args)
 
