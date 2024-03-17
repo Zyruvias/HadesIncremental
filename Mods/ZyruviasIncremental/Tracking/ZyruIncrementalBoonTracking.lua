@@ -243,6 +243,8 @@ local ignoreDamageSourceTraitMap = {
   GunGrenadeSelfEmpowerTrait = true,
   GunManualReloadTrait = true,
   GunLoadedGrenadeTrait = true,
+  -- Patty cyclops jerky (for now)
+  TemporaryImprovedWeaponTrait_Patroclus = true,
 }
 
 -- hammers
