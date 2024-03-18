@@ -531,7 +531,7 @@ ZyruIncremental.UpgradeData = {
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Sources = { ZyruIncremental.Constants.Gods.ZEUS, ZyruIncremental.Constants.Gods.HERMES },
         Costs = {
-            [ZyruIncremental.Constants.Gods.ZEUS] = 100,
+            [ZyruIncremental.Constants.Gods.ZEUS] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -552,7 +552,7 @@ ZyruIncremental.UpgradeData = {
         Name = "PoseidonHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
+            [ZyruIncremental.Constants.Gods.POSEIDON] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -574,7 +574,7 @@ ZyruIncremental.UpgradeData = {
         Name = "ArtemisHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ARTEMIS] = 100,
+            [ZyruIncremental.Constants.Gods.ARTEMIS] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -595,7 +595,7 @@ ZyruIncremental.UpgradeData = {
         Name = "DionysusHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.DIONYSUS] = 100,
+            [ZyruIncremental.Constants.Gods.DIONYSUS] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -618,7 +618,7 @@ ZyruIncremental.UpgradeData = {
         Name = "AresHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ARES] = 100,
+            [ZyruIncremental.Constants.Gods.ARES] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -640,7 +640,7 @@ ZyruIncremental.UpgradeData = {
         Name = "AphroditeHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.APHRODITE] = 100,
+            [ZyruIncremental.Constants.Gods.APHRODITE] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -662,7 +662,7 @@ ZyruIncremental.UpgradeData = {
         Name = "DemeterHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.DEMETER] = 100,
+            [ZyruIncremental.Constants.Gods.DEMETER] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -685,7 +685,7 @@ ZyruIncremental.UpgradeData = {
         Name = "AthenaHermesSynergyTrait",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ATHENA] = 100,
+            [ZyruIncremental.Constants.Gods.ATHENA] = 50,
             [ZyruIncremental.Constants.Gods.HERMES] = 10,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -733,7 +733,7 @@ ZyruIncremental.UpgradeData = {
         Name = "ChangingTidesLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.POSEIDON] = 100,
+            [ZyruIncremental.Constants.Gods.POSEIDON] = 75,
         },
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
         OnApplyFunctionArgs = { 
@@ -759,7 +759,7 @@ ZyruIncremental.UpgradeData = {
         Name = "SeductiveVictoryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.APHRODITE] = 100,
+            [ZyruIncremental.Constants.Gods.APHRODITE] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.APHRODITE,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -781,7 +781,7 @@ ZyruIncremental.UpgradeData = {
         Name = "PermanentVulnerabilityLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ARTEMIS] = 100,
+            [ZyruIncremental.Constants.Gods.ARTEMIS] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.ARTEMIS,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -800,7 +800,7 @@ ZyruIncremental.UpgradeData = {
         Name = "UnendingHangoverLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.DIONYSUS] = 100,
+            [ZyruIncremental.Constants.Gods.DIONYSUS] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.DIONYSUS,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -822,7 +822,7 @@ ZyruIncremental.UpgradeData = {
         Name = "StrategicCooperationBlessingLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ATHENA] = 100,
+            [ZyruIncremental.Constants.Gods.ATHENA] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.ATHENA,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -863,7 +863,7 @@ ZyruIncremental.UpgradeData = {
         Name = "ChaosRandomStatusLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.CHAOS] = 100,
+            [ZyruIncremental.Constants.Gods.CHAOS] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.CHAOS,
         OnApplyFunctions =  { "ZyruIncremental.AddTraitToTraitData", "ZyruIncremental.MergeDataArrays"},
@@ -884,7 +884,7 @@ ZyruIncremental.UpgradeData = {
         Name = "DemeterFamineLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.DEMETER] = 100,
+            [ZyruIncremental.Constants.Gods.DEMETER] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.DEMETER,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -969,7 +969,7 @@ ZyruIncremental.UpgradeData = {
         Name = "AresMurderousEfficacyLegendaryUpgrade",
         Type = ZyruIncremental.Constants.Upgrades.Types.PURCHASE_BOON,
         Costs = {
-            [ZyruIncremental.Constants.Gods.ARES] = 100,
+            [ZyruIncremental.Constants.Gods.ARES] = 75,
         },
         Source = ZyruIncremental.Constants.Gods.ARES,
         OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
@@ -991,7 +991,7 @@ ZyruIncremental.UpgradeData = {
     -- ZeusChainRangeLegendaryUpgrade = {
     --     Name = "ZeusChainRangeLegendaryUpgrade",
         -- Costs = {
-        --     [ZyruIncremental.Constants.Gods.ZEUS] = 100,
+        --     [ZyruIncremental.Constants.Gods.ZEUS] = 75,
         -- },
     --     Source = ZyruIncremental.Constants.Gods.ZEUS,
     --     OnApplyFunction = "ZyruIncremental.AddTraitToTraitData",
