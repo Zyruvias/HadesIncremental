@@ -1188,6 +1188,7 @@ function ModInitializationScreen2()
                                 OffsetY = 0,
                                 OffsetX = 0,
                                 Justification = "Center",
+                                VerticalJustification = "Center"
                             }
                         },
                         ComponentArgs = {

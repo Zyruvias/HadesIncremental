@@ -101,6 +101,7 @@ ModUtil.LoadOnce(function ( )
       AphroditeMaxSuperCharm = "AphroditeShoutTrait",
       -- Artemis
       ArtemisShoutWeapon = "ArtemisShoutTrait",
+      ArtemisMaxShoutWeapon = "ArtemisShoutTrait",
       ArtemisAmmoWeapon = "ArtemisAmmoExitTrait",
       -- Demeter
       ChillRetaliate = "DemeterRetaliateTrait",
@@ -191,6 +192,7 @@ ModUtil.LoadOnce(function ( )
       ZeroRangedWeaponAmmoMultiplier = "ZeroAmmoBonusTrait",
       AthenaBackstabVulnerability = "AthenaBackstabDebuffTrait",
       DionysusComboVulnerability = "DionysusComboVulnerability",
+      ProjectileDeflectedMultiplier = "AthenaShieldTrait",
       ---------------
       -- DEFENSIVE --
       ---------------
@@ -263,8 +265,8 @@ ModUtil.LoadOnce(function ( )
       AthenaShoutTrait = 0, -- NA
       EnemyDamageTrait = 1,
       TrapDamageTrait = 1,
-      LastStandHealTrait = 1,
-      LastStandDurationTrait = 1,
+      LastStandHealTrait = 0,
+      LastStandDurationTrait = 0,
       PreloadSuperGenerationTrait =  1,
       AthenaRetaliateTrait = 1,
       ShieldHitTrait = 0, -- NA
@@ -448,8 +450,8 @@ ModUtil.LoadOnce(function ( )
       AthenaShoutTrait = 100,
       EnemyDamageTrait = 0,
       TrapDamageTrait = 0,
-      LastStandHealTrait = 0,
-      LastStandDurationTrait = 0,
+      LastStandHealTrait = 500,
+      LastStandDurationTrait = 500,
       PreloadSuperGenerationTrait = 0,
       AthenaRetaliateTrait = 0,
       ShieldHitTrait = 250,
