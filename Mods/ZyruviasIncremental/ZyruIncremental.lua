@@ -2,8 +2,8 @@ ModUtil.Mod.Register("ZyruIncremental")
 
 local config = {}
 ZyruIncremental.Config = config
-ZyruIncremental.CurrentVersion = 1
-ZyruIncremental.CurrentVersionString = "1.0.0"
+ZyruIncremental.CurrentVersion = 3
+ZyruIncremental.CurrentVersionString = "1.0.2"
 ZyruIncremental.TransientState = {}
 
 ZyruIncremental.Constants = {
