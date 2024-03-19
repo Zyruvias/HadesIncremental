@@ -697,6 +697,9 @@ end
 
 function ShowZyruSettingsMenu()
     ZyruIncremental.Data.Flags.SeenSettingsMenu = true
+    if ZyruIncremental.SettingsMenuObjectId ~= nil then
+        ActivatedObjects[ZyruIncremental.SettingsMenuObjectId] = nil
+    end
     local screen = ZyruIncremental.CreateMenu("SettingsMenu", {
         PauseBlock = true,
         Components = {
