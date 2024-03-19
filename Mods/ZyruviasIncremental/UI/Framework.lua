@@ -791,28 +791,6 @@ function ZyruIncremental.RenderButton(screen, component)
     if buttonDefinition.Angle ~= nil then
         SetAngle({ Id = components[buttonName].Id, Angle = buttonDefinition.Angle})
     end
-    
-    -- components[buttonName].OnMouseOverFunctionName = "LolLmao"
-    -- components[buttonName].OnMouseOffFunctionName = "LolLmao"
-    -- HardCoded, not sure how to get around this
-    if buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Close" then
-        local name = screen.Name
-        components[buttonName].OnPressedFunctionName = "Close" .. name .. "Screen"
-        if _G["Close" .. name .. "Screen"] == nil then
-    
-            _G["Close" .. name .. "Screen"] = function()
-                CloseScreenByName ( name )
-                if buttonDefinition.CloseScreenFunction then
-                    buttonDefinition.CloseScreenFunction(buttonDefinition.CloseScreenFunctionArgs)
-                elseif buttonDefinition.CloseScreenFunctionName ~= nil then
-                    _G[buttonDefinition.CloseScreenFunctionName](buttonDefinition.CloseScreenFunctionArgs)
-                end
-                _G["Close" .. name .. "Screen"] = nil
-            end
-        end
-    elseif buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Back" then
-        components[buttonName].OnPressedFunctionName = "ScreenPageBack"
-    end
 
     -- LABELLED BUTTONS
     if buttonDefinition.Label then
