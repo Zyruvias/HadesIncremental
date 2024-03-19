@@ -251,6 +251,26 @@
             DisplayName = "Unlock Murderous Efficacy"
         }
         // END LEGENDARY HELPTEXTS
-
+        // BEGIN GENERAL HELPTEXTS
+        {
+            Id = "Boon_Supreme"
+            DisplayName = "Supreme"
+        }
+        {
+            Id = "Boon_Transcendental"
+            DisplayName = "Transcendental"
+        }
+        {
+            Id = "Boon_Ultimate"
+            DisplayName = "Ultimate"
+        }
+        {
+            Id = "Boon_Mythic"
+            DisplayName = "Mythic"
+        }
+        {
+            Id = "Boon_Olympic"
+            DisplayName = "Olympic"
+        }
     ]
 }
