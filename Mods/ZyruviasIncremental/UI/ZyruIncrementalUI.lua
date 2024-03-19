@@ -1666,11 +1666,7 @@ function ShowGodProgressScreen(screen, button)
         {
             -- TODO: fix this shit
             Type = "Button",
-            SubType = "Close",
-            ComponentArgs = {
-                PageIndex = 1,
-                OnPressedFunctionName = "GoToPageFromSource",
-            }
+            SubType = "Back",
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
@@ -1812,7 +1808,7 @@ function ShowZyruProgressScreen()
         },
         {
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
@@ -1871,7 +1867,7 @@ function ShowZyruUpgradeScreen()
         },
         {
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
@@ -2088,9 +2084,8 @@ function ShowGodUpgradeScreen(screen, button)
             }
         },
         {
-            -- TODO: Generalize for a "back" button instead of just close
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)

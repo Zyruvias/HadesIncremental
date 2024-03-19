@@ -57,6 +57,16 @@ ZyruIncremental.BaseComponents = {
             OffsetY = 480,
             ComponentArgs = {
                 ControlHotkey = "Cancel",
+                OnPressedFunctionName = "CloseScreenFully",
+            }
+        },
+        Back = {
+            Name = "ButtonClose",
+            Scale = 0.7,
+            OffsetY = 480,
+            ComponentArgs = {
+                ControlHotkey = "Cancel",
+                OnPressedFunctionName = "ScreenPageBack",
             }
         },
         MenuLeft = {
@@ -189,9 +199,14 @@ function GetScreenIdsToDestroy(screen)
     return idsToDestroy
 end
 
-function GoToPageFromSource(screen, button)
+function GoToPageFromSource(screen, button, args)
+    args = args or {}
     if button.PageIndex == nil then
         DebugPrint { Text = "You need to set PageIndex on the button, you doofus."}
+    end
+    if not args.Back then
+        -- insert current Page into history context before it's erased
+        table.insert(screen.PageStack, screen.PageIndex)
     end
     RenderScreenPage(screen, button, button.PageIndex)
 end
@@ -208,6 +223,7 @@ function RenderScreenPage(screen, button, index)
 end
 
 function ScreenPageRight(screen, button)
+    -- todo PageStack makes sense here?
     if screen.PageIndex == screen.PageCount then
         return
     end
@@ -218,11 +234,50 @@ function ScreenPageRight(screen, button)
 end
 
 function ScreenPageLeft(screen, button)
+    -- todo PageStack makes sense here?
     if screen.PageIndex == 1 then
         return
     end
     screen.PageIndex = screen.PageIndex - 1
     RenderScreenPage(screen, button, screen.PageIndex)
+end
+
+function ScreenPageBack(screen, button)
+    if screen.PageStack == nil then
+        return
+    end
+    if #screen.PageStack == 0 then
+        -- close function??
+        CloseScreenFully(screen, button)
+        return
+    end
+    local previousScreenContext = table.remove(screen.PageStack)
+    GoToPageFromSource(screen, { PageIndex = previousScreenContext }, { Back = true })
+
+end
+
+function CloseScreenFully(screen, button)
+	DisableShopGamepadCursor()
+	CloseScreen( GetAllIds( screen.Components ) )
+	PlaySound({ Name = "/SFX/Menu Sounds/GeneralWhooshMENU" })
+	UnfreezePlayerUnit()
+	ToggleControl({ Names = { "AdvancedTooltip" }, Enabled = true })
+	ShowCombatUI(name)
+    screen.AllowInput = false
+	SetConfigOption({ Name = "ExclusiveInteractGroup", Value = nil })
+	-- SetConfigOption({ Name = "FreeFormSelectRepeatDelay", Value = 0.0 })
+	-- SetConfigOption({ Name = "GamepadCursorFreeFormSelect", Value = true })
+	-- SetConfigOption({ Name = "FreeFormSelectGridLock", Value = false })
+	-- SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8 })
+	-- SetConfigOption({ Name = "FreeFormSelecSearchFromId", Value = 0 })
+	screen.KeepOpen = false
+	OnScreenClosed({ Flag = screen.Name })
+    -- todo: screen args??
+    if button.CloseScreenFunction then
+        button.CloseScreenFunction(button.CloseScreenFunctionArgs)
+    elseif button.CloseScreenFunctionName ~= nil then
+        _G[button.CloseScreenFunctionName](button.CloseScreenFunctionArgs)
+    end
 end
 
 -- Generates a component definition from either an existing screen component or the base definition
@@ -275,16 +330,19 @@ function ZyruIncremental.CreateMenu(name, args)
 
     local components = screen.Components
 
+    -- initialize group if provided
     screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
+    -- initialize screen page history
+    screen.PageStack = { }
 
     if IsScreenOpen( screen.Name ) then
 		return
 	end
     OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true })
     if args.SkipMeta == nil then
-    HideCombatUI(name)
-    FreezePlayerUnit()
-    EnableShopGamepadCursor()
+        HideCombatUI(name)
+        FreezePlayerUnit()
+        EnableShopGamepadCursor()
     end
 
     -- Lets users use escape / cancel to exit the menu
@@ -752,6 +810,8 @@ function ZyruIncremental.RenderButton(screen, component)
                 _G["Close" .. name .. "Screen"] = nil
             end
         end
+    elseif buttonDefinition.OnPressedFunctionName == nil and component.SubType == "Back" then
+        components[buttonName].OnPressedFunctionName = "ScreenPageBack"
     end
 
     -- LABELLED BUTTONS
