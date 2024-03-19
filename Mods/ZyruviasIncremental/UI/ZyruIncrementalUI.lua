@@ -376,6 +376,50 @@ function LolLmao(button)
     
     thread( PlayVoiceLines, voiceline )
 end
+function ZyruIncremental.DirectionHint(goal)
+    local indicatorId = SpawnObstacle({ Name = "DirectionHintArrow", Group = "FX_Standing_Add", DestinationId = CurrentRun.Hero.ObjectId, OffsetX = 0, OffsetZ = 0 })
+    AdjustZLocation({ Id = indicatorId, Distance = 100 })
+    SetScale({ Id = indicatorId, Fraction = 2.0 })
+    SetAngle({
+        Id = indicatorId,
+        Angle = GetAngleBetween({
+            Id = CurrentRun.Hero.ObjectId,
+            DestinationId = goal.ObjectId
+        })
+    })
+    Move({ Id = indicatorId, DestinationId = goal.ObjectId, Duration = 1, SmoothStep = true })
+    PlaySound({ Name = "/Leftovers/SFX/PowerUpFwoosh", id = indicatorId })
+
+    wait (1, RoomThreadName)
+
+    Destroy({ Id = indicatorId })
+end
+-- EventPresentation.lua:1246
+function ZyruIncremental.DirectionHintPresentationRework()
+    local voicelines = HeroVoiceLines.InteractionBlockedVoiceLines
+    local text  = "ExitNotActive"
+    if CheckCooldown( "DirectionHint", 3 ) then
+        -- iterate over active objects and simulate the direction hint
+        local i = 0
+        for objectId, goal in pairs( ActivatedObjects ) do
+			if goal.BlockExitText ~= nil then
+				text = goal.BlockExitText
+			end
+            wait( 0.75, RoomThreadName )
+            if not IsAlive({ Id = goal.ObjectId }) then
+                return
+            end
+
+            thread(ZyruIncremental.DirectionHint, goal)
+
+            thread( PlayVoiceLines, voiceLines, true )
+            thread( InCombatText, CurrentRun.Hero.ObjectId, text, 1.5, { ShadowScale = 0.66, OffsetY = 55 - 60 * i } )
+            i = i + 1
+		end
+		
+
+	end
+end
 
 ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
     -- courtyard flags to force users to Check Shit Out
@@ -385,7 +429,7 @@ ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
         or not ZyruIncremental.Data.Flags.SeenSettingsMenu
         or not ZyruIncremental.Data.Flags.SeenRamblingsMenu
     ) then
-        return thread( CannotUseDoorPresentation, {} )
+        return thread( ZyruIncremental.DirectionHintPresentationRework )
     end
     
     if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
@@ -653,6 +697,9 @@ end
 
 function ShowZyruSettingsMenu()
     ZyruIncremental.Data.Flags.SeenSettingsMenu = true
+    if ZyruIncremental.SettingsMenuObjectId ~= nil then
+        ActivatedObjects[ZyruIncremental.SettingsMenuObjectId] = nil
+    end
     local screen = ZyruIncremental.CreateMenu("SettingsMenu", {
         PauseBlock = true,
         Components = {
@@ -1619,11 +1666,7 @@ function ShowGodProgressScreen(screen, button)
         {
             -- TODO: fix this shit
             Type = "Button",
-            SubType = "Close",
-            ComponentArgs = {
-                PageIndex = 1,
-                OnPressedFunctionName = "GoToPageFromSource",
-            }
+            SubType = "Back",
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
@@ -1765,7 +1808,7 @@ function ShowZyruProgressScreen()
         },
         {
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
@@ -1824,7 +1867,7 @@ function ShowZyruUpgradeScreen()
         },
         {
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     for i, name in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter" }) do
@@ -2041,9 +2084,8 @@ function ShowGodUpgradeScreen(screen, button)
             }
         },
         {
-            -- TODO: Generalize for a "back" button instead of just close
             Type = "Button",
-            SubType = "Close",
+            SubType = "Back",
         },
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
