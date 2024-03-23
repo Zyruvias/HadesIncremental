@@ -511,6 +511,8 @@ ZyruIncremental.TraitData = {
 
 }
 
+ModUtil.Table.Merge(TraitData, ZyruIncremental.TraitData)
+
 --[[
     Upgrade shape: {
         Name
