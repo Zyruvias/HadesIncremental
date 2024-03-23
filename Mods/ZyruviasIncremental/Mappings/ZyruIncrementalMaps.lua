@@ -67,18 +67,26 @@ ModUtil.LoadOnce( function ( )
   for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
     local upgrade = ZyruIncremental.UpgradeData[upgradeName]
     if upgrade == nil then
-      -- DebugPrint { Text = "Upgrade " .. upgradeName .. " not found in UpgradeData, removing ..."}
-      ZyruIncremental.RemoveUpgrade(upgradeName)
-    else
-      if upgrade.OnApplyFunction ~= nil then
-        _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
+      -- check upgrades themselves for a name match, reworked names recently
+      for u, uData in pairs(ZyruIncremental.UpgradeData) do
+        if uData.Name == upgradeName then
+          upgrade = uData
+        end
       end
-      if upgrade.OnApplyFunctions ~= nil then
-          for k, functionName in ipairs(upgrade.OnApplyFunctions) do
-              local functionArgs = upgrade.OnApplyFunctionArgs[k]
-              _G[functionName](functionArgs)
-          end
+      -- still not found? remove it 
+      if upgrade == nil then
+        return ZyruIncremental.RemoveUpgrade(upgradeName)
       end
+
+    end
+    if upgrade.OnApplyFunction ~= nil then
+      _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
+    end
+    if upgrade.OnApplyFunctions ~= nil then
+        for k, functionName in ipairs(upgrade.OnApplyFunctions) do
+            local functionArgs = upgrade.OnApplyFunctionArgs[k]
+            _G[functionName](functionArgs)
+        end
     end
   end
 
