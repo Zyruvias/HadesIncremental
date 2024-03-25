@@ -1497,7 +1497,16 @@ end, ZyruIncremental)
 --     })
 -- end
 
-
+-- Codex Updates
+ModUtil.Path.Wrap("GetTraitTooltip", function (base, trait, args)
+    local res = base(trait, args)
+    if res == nil or ZyruIncremental.UpgradeData[trait.Name] ~= nil then
+        DebugPrint { Text = ModUtil.ToString.TableKeys(trait)}
+        DebugPrint { Text = ModUtil.ToString.Shallow(trait)}
+        DebugPrint { Text = ModUtil.ToString.Shallow(args)}
+    end
+    return res
+end, ZyruIncremental)
 
 ModUtil.Path.Wrap("ShowRunIntro", function() end, ZyruIncremental)
 
