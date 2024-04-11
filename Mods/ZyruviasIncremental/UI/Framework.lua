@@ -339,12 +339,16 @@ function ZyruIncremental.CreateOrUpdateComponent(screen, component)
     end
 end
 
-function ZyruIncremental.UpdateComponentCache(screen, component, definition)
+function ZyruIncremental.UpdateComponentCache(screen, component)
+    if not component then
+        DebugPrint { Text = "component found to be nil for " .. ModUtil.ToString.Shallow(screen.Name)}
+        return
+    end
     -- establish definition on screen object for later access
     local fieldName = component.FieldName
     if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.DefinitionCache) ~= nil then
         -- update component definition cache -- TODO: determine update strategy
-        screen.DefinitionCache[component.Id] = definition
+        screen.DefinitionCache[component.Id] = component
         -- update fieldname / id mappings
         screen.FieldNameToIdCache[fieldName] = component.Id
     end
@@ -479,14 +483,8 @@ function ZyruIncremental.RenderComponent(screen, component)
 
         -- establish definition on screen object for later access
         local fieldName = component.FieldName
-        local cache = screen.DefinitionCache
-        if fieldName ~= nil and ModUtil.Path.Get(fieldName, cache) ~= nil then
-            -- update component definition cache -- TODO: determine update strategy
-            cache[renderedComponent.Id].Args = definition
-            -- update fieldname / id mappings
-            screen.FieldNameToIdCache[fieldName] = renderedComponent.Id
-            ZyruIncremental.UpdateComponentCache(screen, renderedComponent, componentDefinition)
-        end
+        ZyruIncremental.UpdateComponentCache(screen, renderedComponent, componentDefinition)
+
     end
 end
 
@@ -499,7 +497,7 @@ function ZyruIncremental.UpdateComponent(screen, component, args)
         DebugPrint { Text = "calling " .. "Update" .. tostring(component.Type)}
         
         local definition = GetComponentDefinition(screen, component)
-        local renderedComponent = ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
+        local renderedComponent = ZyruIncremental["Update" .. tostring(definition.Type)](screen, component, args)
         ZyruIncremental.UpdateComponentCache(screen, renderedComponent, definition)
     end
 end
@@ -518,7 +516,9 @@ function ZyruIncremental.RenderIcon(screen, component)
         OffsetX = iconDefinition.OffsetX,
         OffsetY = iconDefinition.OffsetY,
     })
-    ZyruIncremental.UpdateComponent(screen, component)
+    iconDefinition.Id = components[iconName].Id
+    ZyruIncremental.UpdateIcon(screen, component)
+    return iconDefinition
 end
 
 function ZyruIncremental.UpdateIcon(screen, component)
@@ -531,8 +531,7 @@ function ZyruIncremental.UpdateIcon(screen, component)
         SetScale({ Id = components[iconDefinition.FieldName].Id, Fraction = iconDefinition.Scale })
     end
 
-    
-    
+    return iconDefinition
 end
 
 local CHUNK_MIN_WIDTH = 5
@@ -737,6 +736,8 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     }
     ZyruIncremental.RenderText(screen, rightText)
     ZyruIncremental.UpdateProgressBar(screen, component, args)
+
+    return barDefinition
 end
 
 function ZyruIncremental.UpdateProgressBar(screen, component, args)
@@ -792,6 +793,7 @@ function ZyruIncremental.UpdateProgressBar(screen, component, args)
     }
     ZyruIncremental.UpdateComponent(screen, rightText)
     
+    return barDefinition
 end
 
 function ZyruIncremental.RenderDropdown(screen, component)
@@ -840,7 +842,7 @@ function ZyruIncremental.RenderButton(screen, component)
     if buttonDefinition.Label then
         if type(buttonDefinition.Label) == "table" then
             buttonDefinition.Label.Parent = buttonName
-            ZyruIncremental.RenderText(screen, buttonDefinition.Label)
+            ZyruIncremental.CreateOrUpdateComponent(screen, buttonDefinition.Label)
         else
             local buttonLabel = {
                 Type = "Text",
@@ -854,7 +856,7 @@ function ZyruIncremental.RenderButton(screen, component)
                 },
                 Parent = buttonName
             }
-            ZyruIncremental.RenderText(screen, buttonLabel)
+            ZyruIncremental.CreateOrUpdateComponent(screen, buttonLabel)
         end
     end
 
@@ -877,6 +879,8 @@ function ZyruIncremental.UpdateButton(screen, component)
 		button[setKey] = setVal
 	end
 
+    return buttonDefinition
+
 end
 
 -- Create Text Box
@@ -890,7 +894,8 @@ function ZyruIncremental.RenderText(screen, component)
     local component = CreateScreenComponent(textDefinition)
     screen.Components[component.Id] = component
     textDefinition.Id = component.Id
-    return CreateTextBox(textDefinition)
+    CreateTextBox(textDefinition)
+    return textDefinition
 
 end
 
@@ -902,6 +907,7 @@ function ZyruIncremental.UpdateText(screen, component)
         Id = components[textDefinition.FieldName].Id, Text = textDefinition.Text
     })
 
+    return textDefinition
 end
 
 function ZyruIncremental.RenderBackground(screen, component)
