@@ -1397,8 +1397,8 @@ function CloseInitializationScreen(screen, button)
             
         }
     }
-    ZyruIncremental.RenderComponent(screen, progressBar)
-    ZyruIncremental.RenderComponent(screen, progressText)
+    ZyruIncremental.CreateOrUpdateComponent(screen, progressBar)
+    ZyruIncremental.CreateOrUpdateComponent(screen, progressText)
 
     for _, stage in ipairs(stages) do
         if stage.Voicelines then

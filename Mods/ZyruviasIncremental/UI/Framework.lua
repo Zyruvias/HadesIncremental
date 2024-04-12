@@ -190,9 +190,13 @@ function GetScreenIdsToDestroy(screen)
     local idsToKeep = screen.PermanentComponents or {}
     local allIds = GetAllIds(screen.Components)
     local idsToDestroy = {}
-    for _, id in ipairs(allIds) do
+    for componentName, component in pairs(screen.Components) do
+        local id = component.Id
         if not Contains(idsToKeep, id) then
-            table.insert(idsToDestroy, id)
+            table.insert(idsToDestroy, component.Id)
+            -- remove the definition from the screen -- normally this is done
+            -- by just deleting the whole screen on close
+            screen.Components[componentName] = nil
         end
     end
     
@@ -211,11 +215,16 @@ function GoToPageFromSource(screen, button, args)
     RenderScreenPage(screen, button, button.PageIndex)
 end
 
+function DestroyTemporaryScreenComponents(screen)
+
+    Destroy({Ids = GetScreenIdsToDestroy(screen)})
+end
+
 -- Handles non-linear paging
 function RenderScreenPage(screen, button, index)
     -- Get Non-permanent components and DESTROY them
     screen.PageIndex = index
-    Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
+    DestroyTemporaryScreenComponents(screen)
 
     -- then render it
     ZyruIncremental.RenderComponents(screen, screen.Pages[index], { Source = button })
