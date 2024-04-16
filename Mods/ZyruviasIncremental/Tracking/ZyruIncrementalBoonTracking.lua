@@ -967,19 +967,23 @@ function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
   local encounter = ModUtil.Path.Get("CurrentRun.CurrentRoom.Encounter")
     or ModUtil.Path.Get("CurrentRun.CurrentRoom.ChallengeEncounter")
 
+  -- multiplier increases
+  local heatMultiplier = ZyruIncremental.ComputeShrinePactExperienceMultiplier({ Cached = true })
+  multiplier = multiplier * heatMultiplier
+
   -- shrink multiplier by kill amount in survival rooms
   if encounter.EncounterType == "SurvivalChallenge" then
     local currentRoom = CurrentRun.CurrentRoom
     -- TODO: figure out correct caching of this
     if currentRoom.ZyruExpMult ~= nil then
-      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
+      multiplier = multiplier * math.max(0, 1 - 0.02 * currentKillCount)
     else
-      local currentKillMap = currentRoom.Kills
+      local currentKillMap = currentRoom.Kills or {}
       local currentKillCount = 0
       for name, count in pairs(currentKillMap) do
         currentKillCount = currentKillCount + count
       end
-      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
+      multiplier = multiplier * math.max(0, 1 - 0.02 * currentKillCount)
     end
   end
 
