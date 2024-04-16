@@ -174,16 +174,16 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
                 {
                     Type = "Text",
                     SubType = "Title",
+                    FieldName = "BoonProgressionTitle",
                     Args = {
-                        FieldName = "BoonProgressionTitle",
                         Text = "Boon Progression"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "BoonProgressionSubtitle",
                     Args = {
-                        FieldName = "BoonProgressionSubtitle",
                         Text = "Wow, you sure used some boons today Zagreus."
                     }
                 }
@@ -573,8 +573,8 @@ function ShowZyruRamblingMenu()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "FAQ / Tutorial / Roadmap",
                 },
             },
@@ -588,16 +588,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "TutorialRamblingsText",
                     Args = {
                         Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
-                        FieldName = "TutorialRamblingsText",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "TutorialText",
                     Args = {
-                        FieldName = "TutorialText",
                         Text = 
                             "How do I gain experience for my booons? \\n Use your boons! It's that easy. If a boon does damage, deal damage with it equipped" ..
                             " to gain experience. If it applies an extra effect to enemies, apply that effect to enemies to get some activation experience! " .. 
@@ -622,16 +622,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "TutorialRamblingsText2",
                     Args = {
                         Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
-                        FieldName = "TutorialRamblingsText2",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "TutorialText2",
                     Args = {
-                        FieldName = "TutorialText2",
                         Text = 
                             "What's the point? \\n It's an incremental game, honey. Numbers go up, pump dopamine straight into the veins. Simple as. \\n\\n "..
 
@@ -655,16 +655,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "RoadmapText",
                     Args = {
                         Text = "Roadmap",
-                        FieldName = "RoadmapText",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "RoadmapText1",
                     Args = {
-                        FieldName = "RoadmapText1",
                         Text = 
                             "1.0.0 - Initial Release \\n Primary changes: 5 new tiers of boon rarity added, with a new rarity distribution system. "..
                             " New set of unlockable Duo Boons between Olympians and Hermes. New Olympian Legendary Boons. Boon Experience system that "..
@@ -685,8 +685,8 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "RoadmapText2",
                     Args = {
-                        FieldName = "RoadmapText2",
                         Text = "This Page Is Intentionally Left Blank",
                     }
                 },
@@ -706,24 +706,24 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "Mod Settings",
                 },
             },
             {
                 Type = "Text",
                 SubType = "Subtitle",
+                FieldName = "WelcomeTitle",
                 Args = {
                     Text = "Change mod configurations according to your heart's desires.",
-                    FieldName = "WelcomeTitle",
                 }
             },
             {
                 Type = "Dropdown",
                 SubType = "Standard",
+                FieldName = "DifficultyDropdown",
                 Args = {
-                    FieldName = "DifficultyDropdown",
                     Group = "DifficultyGroup",
                     -- X, Y, Items, Name
                     X = ScreenWidth / 6,
@@ -760,8 +760,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Paragraph",
+                FieldName = "ExpDropText",
                 Args = {
-                    FieldName = "ExpDropText",
                     Text = "Configure EXP popup behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - ScreenHeight / 6 - 25,
@@ -771,8 +771,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Dropdown",
                 SubType = "Standard",
+                FieldName = "LevelUpSettingDropdown",
                 Args = {
-                    FieldName = "LevelUpSettingDropdown",
                     Group = "LevelupGroup",
                     -- X, Y, Items, Name
                     X = ScreenWidth / 6,
@@ -821,8 +821,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Paragraph",
+                FieldName = "LevelupText",
                 Args = {
-                    FieldName = "LevelupText",
                     Text = "Configure Level-up notification behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - 145,
@@ -843,8 +843,8 @@ function ModInitializationScreenUpdateDifficultyText(screen, text)
     ZyruIncremental.UpdateText(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "DifficultyDropdownSelectedText",
         Args = {
-            FieldName = "DifficultyDropdownSelectedText",
             Text = "Difficulty Selected: " .. text,
         }
     })
@@ -854,8 +854,8 @@ function ModInitializationScreenUpdateStartingPointText(screen, text)
     ZyruIncremental.UpdateText(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "StartingPointDropdownSelectedText",
         Args = {
-            FieldName = "StartingPointDropdownSelectedText",
             Text = "Starting Point Selected: " .. text,
             OffsetY = - ScreenHeight / 6 -25,
             Justification = "Left",
@@ -868,24 +868,24 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "AcknowledgementsTitle",
             Args = {
-                FieldName = "AcknowledgementsTitle",
                 Text = "Acknowledgements"
             }
         },
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "ContextText",
             Args = {
-                FieldName = "ContextText",
                 Text = "A giant thanks to all the support I've gotten over the development of this mod, whether emotional or technical. I love you all."
             }
         },
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn1",
             Args = {
-                FieldName = "AcknowledgementsColumn1",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.4,
                 Text = 
@@ -907,8 +907,8 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn3",
             Args = {
-                FieldName = "AcknowledgementsColumn3",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.17,
                 OffsetX = - ScreenWidth * 0.2,
@@ -927,8 +927,8 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn2",
             Args = {
-                FieldName = "AcknowledgementsColumn2",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.4,
                 OffsetX = 0,
@@ -951,24 +951,24 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Title",
+                    FieldName = "MenuTitle",
                     Args = {
-                        FieldName = "MenuTitle",
                         Text = "Incremental Mod Setup",
                     },
                 },
                     {
                         Type = "Text",
                         SubType = "Subtitle",
+                        FieldName = "WelcomeTitle",
                         Args = {
                             Text = "Existing Save Detected",
-                            FieldName = "WelcomeTitle",
                         }
                     },
                     {
                         Type = "Text",
                         SubType = "Paragraph",
+                        FieldName = "WelcomeText",
                         Args = {
-                            FieldName = "WelcomeText",
                             Text = "Hello there,\\n\\n In order to use this mod, you must start a new save file. Your current"
                             .." savefile progress does not translate well in the new mod systems, so it does not make sense to"
                             .." allow you to continue. Please select \"Give Up\" or \"Quit\" and create a new file to access the mod setup page and begin your "
@@ -986,16 +986,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "WelcomeTitle",
                     Args = {
                         Text = "Welcome",
-                        FieldName = "WelcomeTitle",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "WelcomeText",
                     Args = {
-                        FieldName = "WelcomeText",
                         Text = "Welcome to the Incremental Overhaul Mod. The game has been transformed from a roguelike"
                         .." with primary emphasis on single runs to large, long term emphasis on metaprogression, unlocks,"
                         .." practice, and various other points of focus of the Incremental game genre. Please understand that"
@@ -1010,16 +1010,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "ContextTitle",
                     Args = {
-                        FieldName = "ContextTitle",
                         Text = "Story Context"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "ContextText",
                     Args = {
-                        FieldName = "ContextText",
                         Text = "When you finally resolve the plot of Hades for the first time, you "
                         .."agree to continue traversing through the underworld more-or-less as a "
                         .."glorified security analyst. Through your further battles in Tartarus, Asphodel, "
@@ -1042,24 +1042,24 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "DifficultyTitle",
                     Args = {
-                        FieldName = "DifficultyTitle",
                         Text = "Difficulty Settings"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyText",
                     Args = {
-                        FieldName = "DifficultyText",
                         Text = "This mod is intended to be difficult by nature of infinite scaling and building off the original game's innate difficulty. Please select your preferred difficulty settings below."
                     }
                 },
                 {
                     Type = "Dropdown",
                     SubType = "Standard",
+                    FieldName = "DifficultyDropdown",
                     Args = {
-                        FieldName = "DifficultyDropdown",
                         Group = "DifficultyGroup",
                         -- X, Y, Items, Name
                         X = ScreenWidth / 6,
@@ -1103,8 +1103,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyDropdownSelectedText",
                     Args = {
-                        FieldName = "DifficultyDropdownSelectedText",
                         Text = "Difficulty Selected: " .. (ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard"),
                         OffsetY = - ScreenHeight / 6 - 25,
                         Justification = "Left",
@@ -1113,8 +1113,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyExplanation",
                     Args = {
-                        FieldName = "DifficultyExplanation",
                         Text = "Standard - The originally intended difficulty by the developer (that's me!! lmao) - enemies grow in strength "
                         .."and health, and a few other challenges sneak their way in throughout the course of gameplay. \\n\\n "
                         
@@ -1138,16 +1138,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "StartingPointTitle",
                     Args = {
-                        FieldName = "StartingPointTitle",
                         Text = "Starting Point Settings"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "StartingPointText",
                     Args = {
-                        FieldName = "StartingPointText",
                         Text = "This mod requires you to start a fresh file since the context of game progression in normal "
                         .."Hades does not make sense in the context of this mod. However, that does not mean you have to complete "
                         .."the whole story again. You are free to start a fresh file and re-experience the story, but you may "
@@ -1157,8 +1157,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "StartingPointDropdownSelectedText",
                     Args = {
-                        FieldName = "StartingPointDropdownSelectedText",
                         Text = "Starting Point Selected: " .. 
                             (ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE),
                         OffsetY = - ScreenHeight / 6 + 25,
@@ -1168,8 +1168,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Dropdown",
                     SubType = "Standard",
+                    FieldName = "StartingPointDropdown",
                     Args = {
-                        FieldName = "StartingPointDropdown",
                         Group = "bleh",
                         X = ScreenWidth / 2,
                         Y = ScreenHeight / 2,
@@ -1202,16 +1202,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "finishedTitle",
                     Args = {
                         Text = "Final Step",
-                        FieldName = "finishedTitle"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "FinishedText",
                     Args = {
-                        FieldName = "FinishedText",
                         Text = "Click the button below to finish your file configuration. Please note that if you are "
                         .."starting from the Epilogue file setting, it will take a minute to process save file changes. "
                         .."Additionally, there are extra miscellaneous settings in the Courtyard when you get there."
@@ -1222,14 +1222,14 @@ function ModInitializationScreen2()
                 {
                     Type = "Button",
                     SubType = "Basic",
+                    FieldName = "FinishedFileConfiguration",
                     Args = {
                         Scale = 1.0,
-                        FieldName = "FinishedFileConfiguration",
                         Label = {
                             Type = "Text",
                             SubType = "Paragraph",
+                            FieldName = "FinishedFileConfigurationText",
                             Args = {
-                                FieldName = "FinishedFileConfigurationText",
                                 Text = "Finish",
                                 FontSize = "30",
                                 OffsetY = 0,
@@ -1250,8 +1250,8 @@ function ModInitializationScreen2()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "Incremental Mod Setup",
                 }
             }
@@ -1377,8 +1377,8 @@ function CloseInitializationScreen(screen, button)
     local progressBar = {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "SaveStateBar",
         Args = {
-            FieldName = "SaveStateBar",
             X = ScreenCenterX - 480 * 1.5,
             ScaleX = 3,
             ScaleY = 3,
@@ -1387,8 +1387,8 @@ function CloseInitializationScreen(screen, button)
     local progressText = {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "SaveStateText",
         Args = {
-            FieldName = "SaveStateText",
             Text = "",
             OffsetY = -100,
             OffsetX = 0,
@@ -1478,8 +1478,8 @@ end, ZyruIncremental)
 --             {
 --                 Type = "Button",
 --                 SubType = "Icon",
---                 Args = {
 --                     FieldName = "IconTest",
+--                 Args = {
 --                     Group = "Combat_Menu_TraitTray",
 --                     Animation = "Codex_Portrait_Zagreus",
 --                     OffsetX = 0,
@@ -1507,8 +1507,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateComponent(screen, {
         Type = "Text",
         SubType = "Subtitle",
+        FieldName = "BoonProgressSubtitle",
         Args = {
-            FieldName = "BoonProgressSubtitle",
             Text = boonName
         }
 
@@ -1517,8 +1517,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
+        FieldName = "BoonProgressBoonIcon",
         Args = {
-            FieldName = "BoonProgressBoonIcon",
             Animation = GetTraitIcon( TraitData[boonName] or {} ),
             Scale = 2.0
         }
@@ -1528,8 +1528,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     local boonLevelLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "BoonLevelUniqueLabel",
         Args = {
-            FieldName = "BoonLevelUniqueLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY - 120,
             Text = "Boon Level",
@@ -1550,8 +1550,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "BoonProgressBar",
         Args = {
-            FieldName = "BoonProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = 0,
@@ -1569,8 +1569,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "BoonProgressBar",
         Args = {
-            FieldName = "BoonProgressBar",
             Proportion = expProportion,
             UpdateDuration = 1,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
@@ -1616,8 +1616,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = button.PageIndex .. "ProgressTitle",
             Args = {
-                FieldName = button.PageIndex .. "ProgressTitle",
                 Text = button.PageIndex, -- todo: generalize args or properties or something??
             }
         },
@@ -1633,9 +1633,9 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "BoonProgressSubtitle",
             Args = {
                 OffsetX = ScreenWidth / 6,
-                FieldName = "BoonProgressSubtitle",
                 Text = ""
             }
         },
@@ -1643,8 +1643,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Icon",
             SubType = "Standard",
+            FieldName = "BoonProgressBoonIcon",
             Args = {
-                FieldName = "BoonProgressBoonIcon",
                 OffsetX = ScreenWidth / 3,
                 OffsetY = -250,
                 Scale = 2,
@@ -1654,8 +1654,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "ProgressBar",
             SubType = "Standard",
+            FieldName = "BoonProgressBar",
             Args = {
-                FieldName = "BoonProgressBar",
                 X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
                 Y = ScreenCenterY - 90,
                 -- BackgroundColor = {0, 0, 0, 0},
@@ -1692,8 +1692,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local rarityBarLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "DistributionLabel",
         Args = {
-            FieldName = "DistributionLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY + ScreenHeight / 6 - 150,
             Text = "Rarity Bonus: " .. (100 + ZyruIncremental.ComputeRarityBonusForGod(button.PageIndex)) .. "% \\n Boons' Offered Rarity Distribution",
@@ -1705,8 +1705,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local rarityBarComponent = {
         Type = "Distribution",
         SubType = "Standard",
+        FieldName = "RarityDistributionBar",
         Args = {
-            FieldName = "RarityDistributionBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
@@ -1725,8 +1725,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local godLevelLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "GodLevelLabel",
         Args = {
-            FieldName = "GodLevelLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY + ScreenHeight / 6 + 100,
             Text = button.PageIndex .. "'s God Level",
@@ -1747,8 +1747,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "GodProgressBar",
         Args = {
-            FieldName = "GodProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = 0,
@@ -1766,8 +1766,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "GodProgressBar",
         Args = {
-            FieldName = "GodProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = expProportion,
@@ -1793,16 +1793,16 @@ function ShowZyruProgressScreen()
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = "ProgressTitle",
             Args = {
-                FieldName = "ProgressTitle",
                 Text = "Incremental Progress",
             }
         },
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "ProgressSubtitle",
             Args = {
-                FieldName = "ProgressSubtitle",
                 Text = "Click on a God's portrait to see your progress with their gifts!",
             }
         },
@@ -1815,8 +1815,8 @@ function ShowZyruProgressScreen()
         table.insert(componentsToRender, {
             Type = "Button",
             SubType = "Icon",
+            FieldName = name .. "Button",
             Args = {
-                FieldName = name .. "Button",
                 Animation = "Codex_Portrait_" .. name,
                 -- series layout
                 OffsetX = - ScreenWidth / 2 + ScreenWidth / 11 * i,
@@ -1852,16 +1852,16 @@ function ShowZyruUpgradeScreen()
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = "UpgradeTitle",
             Args = {
-                FieldName = "UpgradeTitle",
                 Text = "Olympian Upgrades",
             }
         },
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "UpgradeSubtitle",
             Args = {
-                FieldName = "UpgradeSubtitle",
                 Text = "Click on a God's portrait to see additional gifts and bonuses they can offer!",
             }
         },
@@ -1874,8 +1874,8 @@ function ShowZyruUpgradeScreen()
         table.insert(componentsToRender, {
             Type = "Button",
             SubType = "Icon",
+            FieldName = name .. "Button",
             Args = {
-                FieldName = name .. "Button",
                 Animation = "Codex_Portrait_" .. name,
                 -- series layout
                 OffsetX = - ScreenWidth / 2 + ScreenWidth / 10 * i,
@@ -1925,8 +1925,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
+        FieldName = "UpgradeIcon",
         Args = {
-            FieldName = "UpgradeIcon",
             Animation = GetTraitIcon( TraitData[upgrade.Name] or {} ),
             OffsetX = ScreenWidth / 6,
             OffsetY = -100,
@@ -1936,8 +1936,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Note",
+        FieldName = "UpgradeCurrencyText",
         Args = {
-            FieldName = "UpgradeCurrencyText",
             OffsetX = ScreenWidth / 3 - 50,
             OffsetY = -450,
             Justification = "Right",
@@ -1948,8 +1948,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "UpgradeDescriptionText",
         Args = {
-            FieldName = "UpgradeDescriptionText",
             Text = "",
             OffsetX = ScreenWidth / 6,
             OffsetY = 0,
@@ -1959,8 +1959,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Note",
+        FieldName = "UpgradeCostText",
         Args = {
-            FieldName = "UpgradeCostText",
             Text = GetUpgradeGostText(upgrade),
             OffsetX = ScreenWidth / 6,
             OffsetY = 110,
@@ -1971,8 +1971,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Button",
         SubType = "Basic",
+        FieldName = "PurchaseButton",
         Args = {
-            FieldName = "PurchaseButton",
             OffsetX = ScreenWidth / 6,
             OffsetY = 200,
             Label = "Purchase Upgrade",
@@ -2046,8 +2046,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = source .. "UpgradeTitle",
             Args = {
-                FieldName = source .. "UpgradeTitle",
                 Text = source, -- todo: generalize args or properties or something??
             }
         },
@@ -2063,8 +2063,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Icon",
             SubType = "Standard",
+            FieldName = "UpgradeCurrency",
             Args = {
-                FieldName = "UpgradeCurrency",
                 OffsetX = ScreenWidth / 3,
                 OffsetY = -450,
                 Scale = 0.75,
@@ -2074,8 +2074,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Text",
             SubType = "Note",
+            FieldName = "UpgradeCurrencyText",
             Args = {
-                FieldName = "UpgradeCurrencyText",
                 OffsetX = ScreenWidth / 3 - 50,
                 OffsetY = -450,
                 Justification = "Right",
