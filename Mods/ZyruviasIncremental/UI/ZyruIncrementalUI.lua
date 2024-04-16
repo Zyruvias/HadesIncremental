@@ -354,19 +354,73 @@ function CloseScreenByName ( name )
 	OnScreenClosed({ Flag = screen.Name })
 end
 
+ModUtil.Path.Wrap("ShowOverlookText", function (base)
+    if IsScreenOpen("ZyruResetScreen") then
+        return
+    end
+    base()
+end, ZyruIncremental)
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-    thread( InCombatTextArgs, {
-        TargetId = CurrentRun.Hero.ObjectId,
-        Text = "Coming Soon!",
-        SkipRise = false,
-        SkipFlash = true,
-        ShadowScale = 0.66,
-        Duration = 1.5,
-        OffsetY = -100 })
-    offsetY = offsetY - 60
-    thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+    -- CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+    -- thread( InCombatTextArgs, {
+    --     TargetId = CurrentRun.Hero.ObjectId,
+    --     Text = "Coming Soon!",
+    --     SkipRise = false,
+    --     SkipFlash = true,
+    --     ShadowScale = 0.66,
+    --     Duration = 1.5,
+    --     OffsetY = -100 })
+    -- offsetY = offsetY - 60
+    -- thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+
+    local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                FieldName = "ResetTitle",
+                Args = {
+                    Text = "Do you want to go back to an easier time?",
+                    FontSize = 24,
+                }
+            },
+            {
+                Type = "Button",
+                SubType = "Back"
+            },
+        },
+        Pages = {
+            [1] = {
+                    {
+                        Type = "Text",
+                        SubType = "Paragraph",
+                        FieldName = "ResetExplanation",
+                        Args = {
+                            Text = "Does Hades have you beat? Is the underworld security system TOO strong? Or would you simply like to take your"
+                             .. " \"field research\" to the next level? \\n\\n Mnemosyne will offer you assistance in wiping the memories of"
+                             .. " the Underworld to return to where this all begin, but your experiences, memories, and strengths will remain."
+                             .. " She will provide you with ample Nectar and Ambrosia infused with extract of the waters of Lethe, and you must simply give"
+                             .. " these to the members of the House of Hades, and all will fall into place. Don't worry about Hades' minions in the underworld"
+                             .. "... Mnemosyne has you covered. winky emoji. \\n\\n "
+                             .. " If desired, select a new file difficulty, and proceed to the next page to see how your current progress transforms"
+                             .. " after your deal with Mnemosyne. Note that this cannot be undone, so if there are things you want to finish up before"
+                             .. " resetting, do that first."
+                        }
+                    },
+                    {
+                        Type = "Text",
+                        SubType = "Subtitle",
+                        FieldName = "ResetSubtitle",
+                        Args = {
+                            Text = "Mnemosyne offers a helping hand ...",
+                        }
+                    },
+                }
+            
+        }
+    })
 end
 
 -- Courtyard Interface
@@ -2116,51 +2170,6 @@ ModUtil.Path.Wrap("OpenShrineUpgradeMenu", function (base, args)
     })
 end, ZyruIncremental)
 
-local shrineExpFactorTable = {
-	EnemyDamageShrineUpgrade = 1.05,
-	HealingReductionShrineUpgrade = 1.05,
-	ShopPricesShrineUpgrade = 1.1,
-	EnemyCountShrineUpgrade = 1.02,
-	BossDifficultyShrineUpgrade = 1.1,
-
-	EnemyHealthShrineUpgrade = 1.05,
-	EnemyEliteShrineUpgrade = 1.15,
-	MinibossCountShrineUpgrade = 1.1,
-	ForceSellShrineUpgrade = 1.2,
-	EnemySpeedShrineUpgrade = 1.1,
-
-	TrapDamageShrineUpgrade = 1.05,
-	MetaUpgradeStrikeThroughShrineUpgrade = 1.2,
-	EnemyShieldShrineUpgrade = 1.02,
-	ReducedLootChoicesShrineUpgrade = 1.25,
-	BiomeSpeedShrineUpgrade = 1.05,
-	NoInvulnerabilityShrineUpgrade = 1,
-}
-function ZyruIncremental.ComputeShrinePactExperienceMultiplier(args)
-    if args.Cached and ZyruIncremental.ShrinePactExperienceMultiplierCache ~= nil then
-        -- DebugPrint { Text = "returning cached shrine mult: " .. tostring(ZyruIncremental.ShrinePactExperienceMultiplierCache)}
-        return ZyruIncremental.ShrinePactExperienceMultiplierCache
-    end
-    local value = 1 -- multValue
-    local additiveValue = 1
-    local mixedValue = 1
-    for i, pactConditionName in ipairs(ShrineUpgradeOrder) do
-		local upgradeData = MetaUpgradeData[pactConditionName]
-        local expFactor = shrineExpFactorTable[pactConditionName]
-        local pactConditionCount = GetNumMetaUpgrades( pactConditionName ) or 0
-        if pactConditionCount > 0 then
-        
-            value = value * math.pow(expFactor, pactConditionCount)
-            additiveValue = additiveValue + (expFactor - 1) * pactConditionCount
-            mixedValue = mixedValue * ((expFactor - 1) * pactConditionCount + 1)
-        end
-
-        
-    end
-    -- DebugPrint { Text = "Mult: " .. tostring(value) ..  ", Mixed: " .. tostring(mixedValue) .. ", Additive: " .. tostring(additiveValue)}
-    ZyruIncremental.ShrinePactExperienceMultiplierCache = value
-    return value
-end
 function ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
 
     ZyruIncremental.CreateOrUpdateComponent(screen, {
