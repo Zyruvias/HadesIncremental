@@ -4,7 +4,7 @@ function ZyruIncremental.AddUpgrade(upgrade, args)
         return false
     end
     if upgrade == nil then
-        DebugPrint { Text = "Passed nil upgrade"}
+        DebugPrint {Text = "Passed nil upgrade"}
         return false
     end
     local upgradeName = upgrade.Name
@@ -17,7 +17,7 @@ function ZyruIncremental.AddUpgrade(upgrade, args)
     if upgrade.OnApplyFunction ~= nil then
         _G[upgrade.OnApplyFunction](upgrade.OnApplyFunctionArgs)
     end
-    
+
     if upgrade.OnApplyFunctions ~= nil then
         for k, functionName in ipairs(upgrade.OnApplyFunctions) do
             local functionArgs = upgrade.OnApplyFunctionArgs[k]
@@ -35,7 +35,7 @@ function ZyruIncremental.RemoveUpgrade(upgradeName, args)
         return false
     end
 
-    for i,v in ipairs(ZyruIncremental.Data.UpgradeData) do
+    for i, v in ipairs(ZyruIncremental.Data.UpgradeData) do
         if v == upgradeName then
             table.remove(ZyruIncremental.Data.UpgradeData, i)
             -- DebugPrint { Text = "Removing " .. upgradeName .. " from GameState. Current upgrade values:"}
@@ -43,7 +43,6 @@ function ZyruIncremental.RemoveUpgrade(upgradeName, args)
             return
         end
     end
-
 end
 
 function ZyruIncremental.AddTraitToTraitData(args)
@@ -73,13 +72,7 @@ end
 
 function ZyruIncremental.MergeDataArrays(args)
     for i, mergeArgs in ipairs(args) do
-        ModUtil.Path.Set(
-            mergeArgs.Array,
-            ModUtil.Array.Join(
-                ModUtil.Path.Get(mergeArgs.Array),
-                mergeArgs.Value
-            )
-        )
+        ModUtil.Path.Set(mergeArgs.Array, ModUtil.Array.Join(ModUtil.Path.Get(mergeArgs.Array), mergeArgs.Value))
     end
 end
 
@@ -145,11 +138,11 @@ end
 
 function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
     local upgrade = button.Upgrade
-    DebugPrint { Text = ModUtil.ToString.Shallow(upgrade) }
+    DebugPrint {Text = ModUtil.ToString.Shallow(upgrade)}
     if ZyruIncremental.HasUpgrade(upgrade) and not ZyruIncremental.IsUpgradeRepeatable(upgrade) then
         -- TODO: CannotPurchaseVoiceLines all but last?
-        DebugPrint { Text = "Already have upgrade: " .. upgrade.Name }
-		thread( PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true )
+        DebugPrint {Text = "Already have upgrade: " .. upgrade.Name}
+        thread(PlayVoiceLines, HeroVoiceLines.CannotPurchaseVoiceLines, true)
         return
     end
     if IsUpgradeAffordable(upgrade) then
@@ -158,11 +151,11 @@ function ZyruIncremental.AttemptPurchaseUpgrade(screen, button)
         -- add upgrade to save
         ZyruIncremental.AddUpgrade(upgrade)
         -- exhibit signs of self awareness
-		thread( PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true )
-        DebugPrint { Text = "Purchased upgrade: " .. upgrade.Name }
+        thread(PlayVoiceLines, HeroVoiceLines.GenericUpgradePickedVoiceLines, true)
+        DebugPrint {Text = "Purchased upgrade: " .. upgrade.Name}
     else
-		thread( PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true )
-        DebugPrint { Text = "Cannot purchase upgrade: " .. upgrade.Name }
+        thread(PlayVoiceLines, HeroVoiceLines.NotEnoughCurrencyVoiceLines, true)
+        DebugPrint {Text = "Cannot purchase upgrade: " .. upgrade.Name}
     end
     -- reupdate the info screen in case of changing costs or whatever
     UpdateUpgradeInfoScreen(screen, upgrade, button)
@@ -176,7 +169,6 @@ function AugmentTransientState(args)
         elseif type(val) == "string" then
             ZyruIncremental.TransientState[name] = val
         end
-
     end
 end
 
@@ -209,4 +201,15 @@ function ApplyTransientPatches(args)
             end
         end
     end
+end
+
+function ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName, prestigeTierValue)
+    prestigeTierValue = prestigeTierValue or 1
+    local upgrade = ZyruIncremental.GetUpgradeByName(upgradeName)
+    if upgrade and upgrade.Persistence == ZyruIncremental.Constants.Prestige.NONE then
+        return false
+    elseif upgrade and upgrade.Persistence == ZyruIncremental.Constants.Prestige.PRESTIGE and prestigeTierValue <= 1 then
+        return true
+    end
+    return false
 end
