@@ -1,44 +1,36 @@
 -- SAVE DATA SETUP
-ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
+function ZyruIncremental.InitializeGodData()
+  ZyruIncremental.Data.GodData = { 
+    Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+  }
+end
+
+function ZyruIncremental.InitializeDropData()
+  ZyruIncremental.Data.DropData = {
+    RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+  }
+end
+
+function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
   if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
     ZyruIncremental.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
-    ZyruIncremental.Data.GodData = { 
-      Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-    }
+      ZyruIncremental.InitializeGodData()
     -- track acquisition of runources: health / gold
-    -- meta currencies???
-    ZyruIncremental.Data.DropData = {
-      RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-      RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-      StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-    }
+    ZyruIncremental.InitializeDropData()
     -- Dynamically set / prescribed
-    --[[
-      Upgrade shape: {
-        Name
-        CostType
-        Cost
-        OnApplyFunction
-        OnApplyFunctionArgs
-        Purchased
-      }
-    ]]--
-    ZyruIncremental.Data.UpgradeData = {
-      
-    }
-    ZyruIncremental.Data.Currencies = {
-      
-    }
+    ZyruIncremental.Data.UpgradeData = {}
     ZyruIncremental.Data.FileOptions = {
       StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
       DifficultySetting = ZyruIncremental.Constants.SaveFile.STANDARD,
@@ -48,11 +40,27 @@ ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
     ZyruIncremental.Data.Flags = {
       Initialized = true,
     }
+    --[[
+      {
+        ExperienceMulitpliers {source: number}
+        BoonData
+        GodData
+        DropData
+        Upgrades
+
+      }
+    ]]
+    ZyruIncremental.Data.PrestigeData = {}
+    ZyruIncremental.Data.CurrentPrestige = 0
   end
 
   -- APPLY VERSION PATCHES
   if not ZyruIncremental.Data.Flags.MostRecentVersionPlayed then
     ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
+  end
+  if not ZyruIncremental.Data.PrestigeData then
+    ZyruIncremental.Data.PrestigeData = {}
+    ZyruIncremental.Data.CurrentPrestige = 0
   end
 end
 
@@ -65,18 +73,9 @@ ModUtil.LoadOnce( function ( )
 
   -- process existing upgrades
   for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
-    local upgrade = ZyruIncremental.UpgradeData[upgradeName]
+    local upgrade = ZyruIncremental.GetUpgradeByName(upgradeName)
     if upgrade == nil then
-      -- check upgrades themselves for a name match, reworked names recently
-      for u, uData in pairs(ZyruIncremental.UpgradeData) do
-        if uData.Name == upgradeName then
-          upgrade = uData
-        end
-      end
-      -- still not found? remove it 
-      if upgrade == nil then
-        return ZyruIncremental.RemoveUpgrade(upgradeName)
-      end
+      return ZyruIncremental.RemoveUpgrade(upgradeName)
 
     end
     if upgrade.OnApplyFunction ~= nil then
