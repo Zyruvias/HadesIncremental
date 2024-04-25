@@ -169,7 +169,7 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
             Components = {
                 {
                     Type = "Button",
-                    SubType = "Close"
+                    SubType = "Back"
                 },
                 {
                     Type = "Text",
@@ -361,6 +361,99 @@ ModUtil.Path.Wrap("ShowOverlookText", function (base)
     base()
 end, ZyruIncremental)
 
+-- computing reset progress
+function ComputeResetProgressionUI()
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            FieldName = "ResetTitle",
+            Args = {
+                Text = "Admire the fruits of your labor, Zagreus...",
+                FontSize = 24,
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            FieldName = "ResetSubtitle",
+            Args = {
+                Text = "Experience multiplier changes for next attempt"
+            }
+        },
+    }
+
+    -- TODO: generalize by type of progress
+    local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
+    for i, olympian in ipairs(olympians) do
+        local offsetY = -350 + i * 65
+        local prevMult = ComputeCurrentSourceExpMult(olympian)
+        local prevMultText = "x" .. string.format("%.2f", prevMult)
+        local arrow = " => "
+        local nextMult = ComputeNextSourceExpMult(olympian)
+        local nextMultText = "x" .. string.format("%.2f", nextMult)
+        table.insert(componentsToRender, {
+            Type = "Icon",
+            SubType = "Standard",
+            FieldName = "ResetGodIcon"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3,
+                OffsetY = offsetY,
+                Scale = 0.5,
+                Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "GodText"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 100,
+                OffsetY = offsetY,
+                Text = olympian,
+                VerticalJustification = "Center"
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "PrevGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 350,
+                OffsetY = offsetY,
+                Text = prevMultText,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "Arrow"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 450,
+                OffsetY = offsetY,
+                Text = arrow,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "NextGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 525,
+                OffsetY = offsetY,
+                Text = nextMultText,
+                VerticalJustification = "Center"
+            }
+        })
+    end
+
+    return componentsToRender
+end
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
     -- CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
@@ -374,18 +467,9 @@ function ShowZyruResetScreen ()
     --     OffsetY = -100 })
     -- offsetY = offsetY - 60
     -- thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
-
+    ZyruIncremental.TemporaryPrestigeState = {}
     local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
         Components = {
-            {
-                Type = "Text",
-                SubType = "Title",
-                FieldName = "ResetTitle",
-                Args = {
-                    Text = "Do you want to go back to an easier time?",
-                    FontSize = 24,
-                }
-            },
             {
                 Type = "Button",
                 SubType = "Back"
@@ -393,6 +477,15 @@ function ShowZyruResetScreen ()
         },
         Pages = {
             [1] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Mnemosyne offers a helping hand ...",
+                        FontSize = 24,
+                    }
+                },
                     {
                         Type = "Text",
                         SubType = "Paragraph",
@@ -414,13 +507,239 @@ function ShowZyruResetScreen ()
                         SubType = "Subtitle",
                         FieldName = "ResetSubtitle",
                         Args = {
-                            Text = "Mnemosyne offers a helping hand ...",
+                            Text = "Do you want to go back to an easier time?",
                         }
                     },
+            },
+            [2] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "It's time to make a choice...",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "Now is not the time to reify regret.",
+                    }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    FieldName = "DifficultyDropdown",
+                    Args = {
+                        Group = "DifficultyGroup",
+                        -- X, Y, Items, Name
+                        X = ScreenWidth / 6,
+                        Y = ScreenHeight / 3 + 75,
+                        Scale = {X = .3125, Y = .5},
+                        Items = {
+                            Default = {
+                                Text = "Change difficulty?",
+                                event = function() end
+                            },
+                            {
+                                Text = "Easy",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Easy"
+                                end
+                            },
+                            {
+                                Text = "Standard",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Standard"
+                                end
+                            },
+                            {
+                                Text = "Hard",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Hard"
+                                end
+                            },
+                            {
+                                Text = "Freeplay",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Freeplay"
+                                end
+                            },
+                        }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyText",
+                    Args = {
+                        Text = "While there's no need to take on more responsibility and challenges now, some of the Underworld's finest"
+                        .. " challenges require pushing your working relationship with Hades to its absolute limit... "
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyExplanation",
+                    Args = {
+                        Text = "To increase your prestige in the Underworld, you must sacrifice your current relationships with the Olympians. "
+                        .." However, you will still remember how to build these relationships, and you'll do it even faster than ever before. "
+                        .." \\n\\n "
+                        .."If you are ready to proceed, go to the next page to see the fruits of your labor."
+                        ,
+                        OffsetX = - ScreenWidth / 4 + 50,
+                        OffsetY = - ScreenHeight / 6 + 50,
+                        Width = ScreenWidth * 0.65
+                    }
                 }
+            },
+            [3] = ComputeResetProgressionUI(),
+            -- [4] = { ... final confirmatyion page TODO}
+            [4] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Are you truly ready, Zagreus?",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "There's no turning back ...",
+                    }
+                },
+                {
+                    Type = "Button",
+                    SubType = "Basic",
+                    Args = {
+                        Label = "Advance to the next prestige ...",
+                        ComponentArgs = {
+                            OnPressedFunctionName = "CloseResetScreenAndApplyPrestige"
+                        }
+                    }
+
+                }
+            }
             
         }
     })
+    ZyruIncremental.TemporaryPrestigeState = {}
+end
+
+function CloseResetScreenAndApplyPrestige(screen, button)
+    CloseScreenByName("ZyruResetScreen")
+
+    -- BEGIN CREATING PRESTIGE STATE
+    DebugPrint { Text = "file modifications here lmao"}
+    --[[
+      {
+        ExperienceMulitpliers {source: number}
+        BoonData
+        GodData
+        DropData
+        Upgrades
+
+      }
+    ]]
+    local prestigeData = {}
+    -- compute next multipliers
+    prestigeData.ExperienceMulitpliers = {}
+    for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
+        prestigeData.ExperienceMulitpliers[source] = ComputeNextSourceExpMult(source)
+    end
+    -- cache old run data
+    prestigeData.BoonData = DeepCopyTable(ZyruIncremental.Data.BoonData)
+    prestigeData.GodData = DeepCopyTable(ZyruIncremental.Data.GodData)
+    prestigeData.DropData = DeepCopyTable(ZyruIncremental.Data.DropData)
+    prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
+    prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
+
+    _G["p"] = prestigeData
+    
+    table.insert(ZyruIncremental.Data.PrestigeData, prestigeData)
+
+    -- END CREATING PRESTIGE STATE
+    -- BEGIN APPLYING PRESTIGE STATE
+
+    -- Reset file upgrade data
+    DebugPrint { Text = "UpgradeData Before"}
+    DebugPrint { Text = ModUtil.ToString.Shallow(ZyruIncremental.Data.UpgradeData)}
+    ZyruIncremental.Data.UpgradeData = {}
+    for i, upgradeName in ipairs(prestigeData.UpgradeData) do
+        if ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName) then
+            table.insert(ZyruIncremental.Data.UpgradeData, upgradeName)
+        end
+    end
+    DebugPrint { Text = "UpgradeData After"}
+    DebugPrint { Text = ModUtil.ToString.Shallow(ZyruIncremental.Data.UpgradeData)}
+    -- Reset Boon Data
+    ZyruIncremental.Data.BoonData = {}
+    -- Reset God Data
+    ZyruIncremental.InitializeGodData()
+    -- Reset Drop Data
+    ZyruIncremental.InitializeDropData()
+
+
+
+    -- compute starting difficulty multipliier -- TODO: generate formula
+    -- TODO: extract file difficulty and apply it
+
+    -- END APPLYING PRESTIGE STATE
+    ZyruIncremental.TemporaryPrestigeState = {}
+
+    -- ACTUALLY SAVE SAVE FILE
+
+    -- setup players to load in at death area
+	SaveCheckpoint({ StartNextMap = "DeathArea" })
+
+    local screen = ZyruIncremental.CreateMenu("forceQuit", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                FieldName = "ForceQuitTitle",
+                Args = {
+                    Text = "You've done it, Zagberus"
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                FieldName = "ForceQuitSubtitle",
+                Args = {
+                    Text = "Your decision has been saved."
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                FieldName = "ForceQuitParagraph",
+                Args = {
+                    Text = "Your next prestige decision has been recorded, and your file has been saved. Unfortunately, "
+                    .. " I have to break the fourth wall here again (no precedent for that whatsoever, it's unimagineable, really)"
+                    .. " to tell you that due to some of the limits of the lua and engine structure in Hades, I am requiring you to"
+                    .. " pause, press \"Quit\" in the pause menu, and then reload the save file. Some of your upgrades this run have"
+                    .. " caused irreversable changes to engine state, and reloading the save file is the best way to ensure both the"
+                    .. " mod state and engine state are consistent moving forward."
+
+                    .. " \\n\\n I actually could write code such that this isn't a necessary procedure, but I'm lazy. "
+                    .. " \\n\\n Go on now, quit out and reload the save file. Thanks. Love you. "
+
+                }
+            }
+        }
+    })
+
+
+    return 
 end
 
 -- Courtyard Interface
