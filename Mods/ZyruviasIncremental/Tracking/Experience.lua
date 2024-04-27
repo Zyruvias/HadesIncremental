@@ -41,16 +41,30 @@ function ZyruIncremental.ComputeShrinePactExperienceMultiplier(args)
     return mixedValue
 end
 
--- TODO: cache these results
+
+
+function ComputeSourceExpMultCache()
+    ZyruIncremental.CachedExpMultipliersByGod = {}
+    for i, olympian in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
+        ComputeCurrentSourceExpMult(olympian)
+    end
+end
+
+ModUtil.LoadOnce(ComputeSourceExpMultCache)
+
 function ComputeCurrentSourceExpMult(source)
     local currentPrestige = ZyruIncremental.Data.CurrentPrestige
     if currentPrestige == 0 then
         return 1
     end
+    if ZyruIncremental.CachedExpMultipliersByGod[source] ~= nil then
+        return ZyruIncremental.CachedExpMultipliersByGod[source]
+    end
     local multiplier = 1
-    for i, prestigeData in ZyruIncremental.Data.PrestigeData do
+    for i, prestigeData in ipairs(ZyruIncremental.Data.PrestigeData) do
         multiplier = multiplier * (prestigeData.ExperienceMulitpliers[source] or 1)
     end
+    ZyruIncremental.CachedExpMultipliersByGod[source] = multiplier
     return multiplier
 end
 --[[
@@ -63,12 +77,8 @@ end
         - 100 points by god: 1.93x mult
 ]]
 function ComputeNextSourceExpMult(source)
-    local prevMult = ComputeCurrentSourceExpMult(source)
     -- GodData hardcoded
     local maxPointsObtained = ZyruIncremental.Data.GodData[source].MaxPoints
     local mult = math.pow((50 + maxPointsObtained) / 50, 0.6)
-
-    -- DebugPrint { Text = "Computing Next Source Mult: " .. source .. ": " .. tostring(mult) ", total mult: " .. tostring(prevMult * mult)  }
-
     return mult
 end

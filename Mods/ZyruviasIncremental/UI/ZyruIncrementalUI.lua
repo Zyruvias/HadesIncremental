@@ -383,6 +383,7 @@ function ComputeResetProgressionUI()
         },
     }
 
+    ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers = {}
     -- TODO: generalize by type of progress
     local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
     for i, olympian in ipairs(olympians) do
@@ -391,7 +392,8 @@ function ComputeResetProgressionUI()
         local prevMultText = "x" .. string.format("%.2f", prevMult)
         local arrow = " => "
         local nextMult = ComputeNextSourceExpMult(olympian)
-        local nextMultText = "x" .. string.format("%.2f", nextMult)
+        local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
+        ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers[olympian] = nextMult
         table.insert(componentsToRender, {
             Type = "Icon",
             SubType = "Standard",
@@ -636,6 +638,7 @@ end
 
 function CloseResetScreenAndApplyPrestige(screen, button)
     CloseScreenByName("ZyruResetScreen")
+    AddInputBlock({ Name = "ZyruReset"})
 
     -- BEGIN CREATING PRESTIGE STATE
     DebugPrint { Text = "file modifications here lmao"}
@@ -661,7 +664,8 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     prestigeData.DropData = DeepCopyTable(ZyruIncremental.Data.DropData)
     prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
     prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
-
+    -- compute/retrieve derived values
+    prestigeData.ExperienceMulitpliers = DeepCopyTable(ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers)
     _G["p"] = prestigeData
     
     table.insert(ZyruIncremental.Data.PrestigeData, prestigeData)
@@ -690,16 +694,43 @@ function CloseResetScreenAndApplyPrestige(screen, button)
 
 
     -- compute starting difficulty multipliier -- TODO: generate formula
-    -- TODO: extract file difficulty and apply it
+    if ZyruIncremental.TemporaryPrestigeState.DifficultySetting then
+        ZyruIncremental.Data.FileOptions.DifficultySetting = ZyruIncremental.TemporaryPrestigeState.DifficultySetting
+    end
 
     -- END APPLYING PRESTIGE STATE
     ZyruIncremental.TemporaryPrestigeState = {}
+    ZyruIncremental.Data.CurrentPrestige = ZyruIncremental.Data.CurrentPrestige + 1
 
     -- ACTUALLY SAVE SAVE FILE
 
     -- setup players to load in at death area
-	SaveCheckpoint({ StartNextMap = "DeathArea" })
+	-- SaveCheckpoint({ StartNextMap = "RoomPreRun", SaveFile = "_Temp", DevSaveName = CreateDevSaveName( CurrentRun, { StartNextMap = "RoomPreRun" }) })
+    -- ValidateCheckpoint({ Value = true })
+    
 
+
+    wait(0.5)
+    -- Not again.
+    PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
+    wait(1.0)
+
+    RemoveInputBlock({ Name = "ZyruReset"})
+    ZyruIncremental.ShowForceQuitScreen = true
+    RemoveLastAssistTrait()
+    RemoveLastAwardTrait()
+    KillHero(CurrentRun.Hero, {})
+
+    -- TODO:
+    -- compute and set run baseline multiplier
+
+    wait(5)   
+    ShowForceQuitScreenImmediately()
+
+    return 
+end
+
+function ShowForceQuitScreenImmediately()
     local screen = ZyruIncremental.CreateMenu("forceQuit", {
         Components = {
             {
@@ -707,7 +738,7 @@ function CloseResetScreenAndApplyPrestige(screen, button)
                 SubType = "Title",
                 FieldName = "ForceQuitTitle",
                 Args = {
-                    Text = "You've done it, Zagberus"
+                    Text = "You've done it, Zagberus",
                 }
             },
             {
@@ -715,7 +746,7 @@ function CloseResetScreenAndApplyPrestige(screen, button)
                 SubType = "Subtitle",
                 FieldName = "ForceQuitSubtitle",
                 Args = {
-                    Text = "Your decision has been saved."
+                    Text = "Your decision has been saved.",
                 }
             },
             {
@@ -731,15 +762,12 @@ function CloseResetScreenAndApplyPrestige(screen, button)
                     .. " mod state and engine state are consistent moving forward."
 
                     .. " \\n\\n I actually could write code such that this isn't a necessary procedure, but I'm lazy. "
-                    .. " \\n\\n Go on now, quit out and reload the save file. Thanks. Love you. "
+                    .. " \\n\\n Go on now, quit out and reload the save file. Thanks. Love you. ",
 
                 }
             }
         }
     })
-
-
-    return 
 end
 
 -- Courtyard Interface

@@ -861,6 +861,7 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   if not ZyruIncremental.Data.Flags or not ZyruIncremental.Data.Flags.Initialized then
     return run
   end 
+  ComputeSourceExpMultCache()
   ZyruIncremental.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
     ZyruIncremental.Data.FileOptions.DifficultySetting,
     ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING

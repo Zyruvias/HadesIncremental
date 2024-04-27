@@ -206,9 +206,9 @@ end
 function ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName, prestigeTierValue)
     prestigeTierValue = prestigeTierValue or 1
     local upgrade = ZyruIncremental.GetUpgradeByName(upgradeName)
-    if upgrade and upgrade.Persistence == ZyruIncremental.Constants.Prestige.NONE then
+    if upgrade and upgrade.Persistence == ZyruIncremental.Constants.Persistence.NONE then
         return false
-    elseif upgrade and upgrade.Persistence == ZyruIncremental.Constants.Prestige.PRESTIGE and prestigeTierValue <= 1 then
+    elseif upgrade and upgrade.Persistence == ZyruIncremental.Constants.Persistence.PRESTIGE and prestigeTierValue <= 1 then
         return true
     end
     return false

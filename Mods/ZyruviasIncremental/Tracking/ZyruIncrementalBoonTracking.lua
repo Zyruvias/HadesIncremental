@@ -971,6 +971,9 @@ function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
   local heatMultiplier = ZyruIncremental.ComputeShrinePactExperienceMultiplier({ Cached = true })
   multiplier = multiplier * heatMultiplier
 
+  local godMultiplier = ComputeCurrentSourceExpMult(ZyruIncremental.BoonToGod[traitName])
+  multiplier = multiplier * godMultiplier
+
   -- shrink multiplier by kill amount in survival rooms
   if encounter.EncounterType == "SurvivalChallenge" then
     local currentRoom = CurrentRun.CurrentRoom

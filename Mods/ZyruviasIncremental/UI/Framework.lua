@@ -378,7 +378,7 @@ function ZyruIncremental.CreateMenu(name, args)
     local components = screen.Components
 
     -- initialize group if provided
-    screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
+    -- screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
     -- initialize screen page history
     screen.PageStack = { }
 
