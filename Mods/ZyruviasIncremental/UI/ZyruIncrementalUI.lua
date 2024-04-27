@@ -386,13 +386,18 @@ function ComputeResetProgressionUI()
     ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers = {}
     -- TODO: generalize by type of progress
     local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
+    local enemyMult = 1
+    local prevEnemyMult = 1
+    local offsetY
+    local arrow = " => "
     for i, olympian in ipairs(olympians) do
-        local offsetY = -350 + i * 65
+        offsetY = -350 + i * 65
         local prevMult = ComputeCurrentSourceExpMult(olympian)
         local prevMultText = "x" .. string.format("%.2f", prevMult)
-        local arrow = " => "
+        prevEnemyMult = prevEnemyMult  * prevMult
         local nextMult = ComputeNextSourceExpMult(olympian)
         local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
+        enemyMult = enemyMult * nextMult * prevMult
         ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers[olympian] = nextMult
         table.insert(componentsToRender, {
             Type = "Icon",
@@ -452,6 +457,67 @@ function ComputeResetProgressionUI()
             }
         })
     end
+    -- enemy scaling increment
+    offsetY = offsetY + 65
+    enemyMult = math.pow(enemyMult, 1 / 6)
+    prevEnemyMult = math.pow(prevEnemyMult, 1 / 6)
+    -- table.insert(componentsToRender, {
+    --     Type = "Icon",
+    --     SubType = "Standard",
+    --     FieldName = "ResetGodIcon"..Enemy,
+    --     Args = {
+    --         OffsetX = - ScreenWidth / 3,
+    --         OffsetY = offsetY,
+    --         Scale = 0.5,
+    --         Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+    --     }
+    -- })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "EnemyText",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 100,
+            OffsetY = offsetY,
+            Text = "Enemy Scaling",
+            VerticalJustification = "Center"
+        }
+    })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "PrevEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 350,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", prevEnemyMult),
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "ArrowEnemy",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 450,
+            OffsetY = offsetY,
+            Text = arrow,
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "NextEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 525,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", enemyMult),
+            VerticalJustification = "Center"
+        }
+    })
 
     return componentsToRender
 end
@@ -641,7 +707,6 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     AddInputBlock({ Name = "ZyruReset"})
 
     -- BEGIN CREATING PRESTIGE STATE
-    DebugPrint { Text = "file modifications here lmao"}
     --[[
       {
         ExperienceMulitpliers {source: number}
@@ -655,9 +720,13 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     local prestigeData = {}
     -- compute next multipliers
     prestigeData.ExperienceMulitpliers = {}
+    local expMultProduct = 1
     for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
-        prestigeData.ExperienceMulitpliers[source] = ComputeNextSourceExpMult(source)
+        local olympianMult = ComputeNextSourceExpMult(source)
+        prestigeData.ExperienceMulitpliers[source] = olympianMult
+        expMultProduct = expMultProduct * olympianMult
     end
+    local enemyScalingMult = math.pow(expMultProduct, 1 / 6)
     -- cache old run data
     prestigeData.BoonData = DeepCopyTable(ZyruIncremental.Data.BoonData)
     prestigeData.GodData = DeepCopyTable(ZyruIncremental.Data.GodData)
@@ -666,24 +735,23 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
     -- compute/retrieve derived values
     prestigeData.ExperienceMulitpliers = DeepCopyTable(ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers)
-    _G["p"] = prestigeData
-    
+    prestigeData.EnemyScalingMultiplier = enemyScalingMult
+    prestigeData.RunAttemptCount = TableLength(GameState.RunHistory)
+    ZyruIncremental.CachedEnemyScalingMultiplier = enemyScalingMult
+
+    -- officially insert dat prestige in the you know where (the prestige array)
     table.insert(ZyruIncremental.Data.PrestigeData, prestigeData)
 
     -- END CREATING PRESTIGE STATE
     -- BEGIN APPLYING PRESTIGE STATE
 
     -- Reset file upgrade data
-    DebugPrint { Text = "UpgradeData Before"}
-    DebugPrint { Text = ModUtil.ToString.Shallow(ZyruIncremental.Data.UpgradeData)}
     ZyruIncremental.Data.UpgradeData = {}
     for i, upgradeName in ipairs(prestigeData.UpgradeData) do
         if ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName) then
             table.insert(ZyruIncremental.Data.UpgradeData, upgradeName)
         end
     end
-    DebugPrint { Text = "UpgradeData After"}
-    DebugPrint { Text = ModUtil.ToString.Shallow(ZyruIncremental.Data.UpgradeData)}
     -- Reset Boon Data
     ZyruIncremental.Data.BoonData = {}
     -- Reset God Data

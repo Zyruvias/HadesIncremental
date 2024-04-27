@@ -827,10 +827,14 @@ ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, 
   return baseFunc(newEnemy, currentRun, args)
 end, ZyruIncremental)
 
-function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
-  local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
-  local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
+function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
   local numRunsToExponentiate = TableLength(GameState.RunHistory) - 1
+  if ZyruIncremental.Data.CurrentPrestige > 0 then
+    local latestPrestige = ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige]
+    -- new reset -- latest Prestige = 10 runs, numsToExponentiate = 9
+    -- 9 - 10 + 1 = first run, no exponentiation
+    numRunsToExponentiate = numRunsToExponentiate - latestPrestige.RunAttemptCount + 1
+  end
   if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
     if GetNumRunsCleared() < 10 then
       return 1
@@ -852,6 +856,21 @@ function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property)
     -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
     numRunsToExponentiate = numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
   end
+
+  return numRunsToExponentiate
+end
+
+function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
+  local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
+  local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
+  local prestigeScalar = math.pow(ZyruIncremental.CachedEnemyScalingMultiplier or 1, 1 / 6)
+
+  local prevDiffScalar = difficultyScalar
+  difficultyScalar = 1 + (difficultyScalar - 1) * prestigeScalar
+
+  DebugPrint { Text = "ComputedDifficultyModifier: " .. prevDiffScalar .. " before prestige -> " .. difficultyScalar}
+
+  local numRunsToExponentiate = ZyruIncremental.ComputeNumRunsForCurrentPrestige()
   return math.pow(difficultyScalar, numRunsToExponentiate)
 end
 

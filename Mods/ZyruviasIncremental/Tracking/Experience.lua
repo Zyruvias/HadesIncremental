@@ -45,8 +45,10 @@ end
 
 function ComputeSourceExpMultCache()
     ZyruIncremental.CachedExpMultipliersByGod = {}
+    ZyruIncremental.CachedEnemyScalingMultiplier = 1
     for i, olympian in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
-        ComputeCurrentSourceExpMult(olympian)
+        local mult = ComputeCurrentSourceExpMult(olympian)
+        ZyruIncremental.CachedEnemyScalingMultiplier = ZyruIncremental.CachedEnemyScalingMultiplier * mult
     end
 end
 
