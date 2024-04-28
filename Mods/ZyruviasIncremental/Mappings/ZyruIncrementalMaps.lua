@@ -59,10 +59,6 @@ function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
   if  latestVer < 6 then
     ZyruIncremental.Data.PrestigeData = {}
     ZyruIncremental.Data.CurrentPrestige = 0
-    -- address bug where this value was cached incorrectly
-    if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
-      ZyruIncremental.Data.FreshFileRunCompletion = nil
-    end
   end
   -- UPDATE SAVE FILE TO BE LATEST VERSION
   ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
@@ -843,21 +839,17 @@ function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
     if GetNumRunsCleared() < 10 then
       return 1
     end
-    if ZyruIncremental.Data.FreshFileRunCompletion ~= nil then
-      return numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
-    end
-      -- compute the file-cached multiplier
-      local runIndex = 0
-      for k, run in pairs( GameState.RunHistory ) do
-        if run.Cleared then
-          runIndex = runIndex + 1
-        end
-        if runIndex == 10 then
-          ZyruIncremental.Data.FreshFileRunCompletion = k - 1
-          break
-        end
-
+    -- compute the file-cached multiplier
+    local runIndex = 0
+    for k, run in pairs( GameState.RunHistory ) do
+      if run.Cleared then
+        runIndex = runIndex + 1
       end
+      if runIndex == 10 then
+        return numRunsToExponentiate - k
+      end
+
+    end
     -- return the cached value
     -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
   end
