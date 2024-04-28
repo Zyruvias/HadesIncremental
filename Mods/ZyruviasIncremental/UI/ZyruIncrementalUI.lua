@@ -169,7 +169,7 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
             Components = {
                 {
                     Type = "Button",
-                    SubType = "Close"
+                    SubType = "Back"
                 },
                 {
                     Type = "Text",
@@ -354,19 +354,488 @@ function CloseScreenByName ( name )
 	OnScreenClosed({ Flag = screen.Name })
 end
 
+ModUtil.Path.Wrap("ShowOverlookText", function (base)
+    if IsScreenOpen("ZyruResetScreen") then
+        return
+    end
+    base()
+end, ZyruIncremental)
+
+-- computing reset progress
+function ComputeResetProgressionUI()
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            FieldName = "ResetTitle",
+            Args = {
+                Text = "Admire the fruits of your labor, Zagreus...",
+                FontSize = 24,
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            FieldName = "ResetSubtitle",
+            Args = {
+                Text = "Experience multiplier changes for next attempt"
+            }
+        },
+    }
+
+    ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers = {}
+    -- TODO: generalize by type of progress
+    local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
+    local enemyMult = 1
+    local prevEnemyMult = 1
+    local offsetY
+    local arrow = " => "
+    for i, olympian in ipairs(olympians) do
+        offsetY = -350 + i * 65
+        local prevMult = ComputeCurrentSourceExpMult(olympian)
+        local prevMultText = "x" .. string.format("%.2f", prevMult)
+        prevEnemyMult = prevEnemyMult  * prevMult
+        local nextMult = ComputeNextSourceExpMult(olympian)
+        local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
+        enemyMult = enemyMult * nextMult * prevMult
+        ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers[olympian] = nextMult
+        table.insert(componentsToRender, {
+            Type = "Icon",
+            SubType = "Standard",
+            FieldName = "ResetGodIcon"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3,
+                OffsetY = offsetY,
+                Scale = 0.5,
+                Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "GodText"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 100,
+                OffsetY = offsetY,
+                Text = olympian,
+                VerticalJustification = "Center"
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "PrevGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 350,
+                OffsetY = offsetY,
+                Text = prevMultText,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "Arrow"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 450,
+                OffsetY = offsetY,
+                Text = arrow,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "NextGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 525,
+                OffsetY = offsetY,
+                Text = nextMultText,
+                VerticalJustification = "Center"
+            }
+        })
+    end
+    -- enemy scaling increment
+    offsetY = offsetY + 65
+    enemyMult = math.pow(enemyMult, 1 / 6)
+    prevEnemyMult = math.pow(prevEnemyMult, 1 / 6)
+    -- table.insert(componentsToRender, {
+    --     Type = "Icon",
+    --     SubType = "Standard",
+    --     FieldName = "ResetGodIcon"..Enemy,
+    --     Args = {
+    --         OffsetX = - ScreenWidth / 3,
+    --         OffsetY = offsetY,
+    --         Scale = 0.5,
+    --         Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+    --     }
+    -- })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "EnemyText",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 100,
+            OffsetY = offsetY,
+            Text = "Enemy Scaling",
+            VerticalJustification = "Center"
+        }
+    })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "PrevEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 350,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", prevEnemyMult),
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "ArrowEnemy",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 450,
+            OffsetY = offsetY,
+            Text = arrow,
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "NextEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 525,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", enemyMult),
+            VerticalJustification = "Center"
+        }
+    })
+
+    return componentsToRender
+end
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-    thread( InCombatTextArgs, {
-        TargetId = CurrentRun.Hero.ObjectId,
-        Text = "Coming Soon!",
-        SkipRise = false,
-        SkipFlash = true,
-        ShadowScale = 0.66,
-        Duration = 1.5,
-        OffsetY = -100 })
-    offsetY = offsetY - 60
-    thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+    -- CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+    -- thread( InCombatTextArgs, {
+    --     TargetId = CurrentRun.Hero.ObjectId,
+    --     Text = "Coming Soon!",
+    --     SkipRise = false,
+    --     SkipFlash = true,
+    --     ShadowScale = 0.66,
+    --     Duration = 1.5,
+    --     OffsetY = -100 })
+    -- offsetY = offsetY - 60
+    -- thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+    ZyruIncremental.TemporaryPrestigeState = {}
+    local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Back"
+            },
+        },
+        Pages = {
+            [1] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Mnemosyne offers a helping hand ...",
+                        FontSize = 24,
+                    }
+                },
+                    {
+                        Type = "Text",
+                        SubType = "Paragraph",
+                        FieldName = "ResetExplanation",
+                        Args = {
+                            Text = "Does Hades have you beat? Is the underworld security system TOO strong? Or would you simply like to take your"
+                             .. " \"field research\" to the next level? \\n\\n Mnemosyne will offer you assistance in wiping the memories of"
+                             .. " the Underworld to return to where this all begin, but your experiences, memories, and strengths will remain."
+                             .. " She will provide you with ample Nectar and Ambrosia infused with extract of the waters of Lethe, and you must simply give"
+                             .. " these to the members of the House of Hades, and all will fall into place. Don't worry about Hades' minions in the underworld"
+                             .. "... Mnemosyne has you covered. winky emoji. \\n\\n "
+                             .. " If desired, select a new file difficulty, and proceed to the next page to see how your current progress transforms"
+                             .. " after your deal with Mnemosyne. Note that this cannot be undone, so if there are things you want to finish up before"
+                             .. " resetting, do that first."
+                        }
+                    },
+                    {
+                        Type = "Text",
+                        SubType = "Subtitle",
+                        FieldName = "ResetSubtitle",
+                        Args = {
+                            Text = "Do you want to go back to an easier time?",
+                        }
+                    },
+            },
+            [2] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "It's time to make a choice...",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "Now is not the time to reify regret.",
+                    }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    FieldName = "DifficultyDropdown",
+                    Args = {
+                        Group = "DifficultyGroup",
+                        -- X, Y, Items, Name
+                        X = ScreenWidth / 6,
+                        Y = ScreenHeight / 3 + 75,
+                        Scale = {X = .3125, Y = .5},
+                        Items = {
+                            Default = {
+                                Text = "Change difficulty?",
+                                event = function() end
+                            },
+                            {
+                                Text = "Easy",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Easy"
+                                end
+                            },
+                            {
+                                Text = "Standard",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Standard"
+                                end
+                            },
+                            {
+                                Text = "Hard",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Hard"
+                                end
+                            },
+                            {
+                                Text = "Freeplay",
+                                event = function (parent, button)
+                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Freeplay"
+                                end
+                            },
+                        }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyText",
+                    Args = {
+                        Text = "While there's no need to take on more responsibility and challenges now, some of the Underworld's finest"
+                        .. " challenges require pushing your working relationship with Hades to its absolute limit... "
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyExplanation",
+                    Args = {
+                        Text = "To increase your prestige in the Underworld, you must sacrifice your current relationships with the Olympians. "
+                        .." However, you will still remember how to build these relationships, and you'll do it even faster than ever before. "
+                        .." \\n\\n "
+                        .."If you are ready to proceed, go to the next page to see the fruits of your labor."
+                        ,
+                        OffsetX = - ScreenWidth / 4 + 50,
+                        OffsetY = - ScreenHeight / 6 + 50,
+                        Width = ScreenWidth * 0.65
+                    }
+                }
+            },
+            [3] = ComputeResetProgressionUI(),
+            -- [4] = { ... final confirmatyion page TODO}
+            [4] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Are you truly ready, Zagreus?",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "There's no turning back ...",
+                    }
+                },
+                {
+                    Type = "Button",
+                    SubType = "Basic",
+                    Args = {
+                        Label = "Advance to the next prestige ...",
+                        ComponentArgs = {
+                            OnPressedFunctionName = "CloseResetScreenAndApplyPrestige"
+                        }
+                    }
+
+                }
+            }
+            
+        }
+    })
+    ZyruIncremental.TemporaryPrestigeState = {}
+end
+
+function CloseResetScreenAndApplyPrestige(screen, button)
+    CloseScreenByName("ZyruResetScreen")
+    AddInputBlock({ Name = "ZyruReset"})
+
+    -- BEGIN CREATING PRESTIGE STATE
+    --[[
+      {
+        ExperienceMulitpliers {source: number}
+        BoonData
+        GodData
+        DropData
+        Upgrades
+
+      }
+    ]]
+    local prestigeData = {}
+    -- compute next multipliers
+    prestigeData.ExperienceMulitpliers = {}
+    local expMultProduct = 1
+    for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
+        local olympianMult = ComputeNextSourceExpMult(source)
+        prestigeData.ExperienceMulitpliers[source] = olympianMult
+        expMultProduct = expMultProduct * olympianMult
+    end
+    local enemyScalingMult = math.pow(expMultProduct, 1 / 6)
+    -- cache old run data
+    prestigeData.BoonData = DeepCopyTable(ZyruIncremental.Data.BoonData)
+    prestigeData.GodData = DeepCopyTable(ZyruIncremental.Data.GodData)
+    prestigeData.DropData = DeepCopyTable(ZyruIncremental.Data.DropData)
+    prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
+    prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
+    -- compute/retrieve derived values
+    prestigeData.ExperienceMulitpliers = DeepCopyTable(ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers)
+    prestigeData.EnemyScalingMultiplier = enemyScalingMult
+    prestigeData.RunAttemptCount = TableLength(GameState.RunHistory)
+    ZyruIncremental.CachedEnemyScalingMultiplier = enemyScalingMult
+
+    -- officially insert dat prestige in the you know where (the prestige array)
+    table.insert(ZyruIncremental.Data.PrestigeData, prestigeData)
+
+    -- END CREATING PRESTIGE STATE
+    -- BEGIN APPLYING PRESTIGE STATE
+
+    -- Reset file upgrade data
+    ZyruIncremental.Data.UpgradeData = {}
+    for i, upgradeName in ipairs(prestigeData.UpgradeData) do
+        if ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName) then
+            table.insert(ZyruIncremental.Data.UpgradeData, upgradeName)
+        end
+    end
+    -- Reset Boon Data
+    ZyruIncremental.Data.BoonData = {}
+    -- Reset God Data
+    ZyruIncremental.InitializeGodData()
+    -- Reset Drop Data
+    ZyruIncremental.InitializeDropData()
+
+
+
+    -- compute starting difficulty multipliier -- TODO: generate formula
+    if ZyruIncremental.TemporaryPrestigeState.DifficultySetting then
+        ZyruIncremental.Data.FileOptions.DifficultySetting = ZyruIncremental.TemporaryPrestigeState.DifficultySetting
+    end
+
+    -- END APPLYING PRESTIGE STATE
+    ZyruIncremental.TemporaryPrestigeState = {}
+    ZyruIncremental.Data.CurrentPrestige = ZyruIncremental.Data.CurrentPrestige + 1
+
+    -- ACTUALLY SAVE SAVE FILE
+
+    -- setup players to load in at death area
+	-- SaveCheckpoint({ StartNextMap = "RoomPreRun", SaveFile = "_Temp", DevSaveName = CreateDevSaveName( CurrentRun, { StartNextMap = "RoomPreRun" }) })
+    -- ValidateCheckpoint({ Value = true })
+    
+
+
+    wait(0.5)
+    -- Not again.
+    PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
+    wait(1.0)
+
+    RemoveInputBlock({ Name = "ZyruReset"})
+    ZyruIncremental.ShowForceQuitScreen = true
+    RemoveLastAssistTrait()
+    RemoveLastAwardTrait()
+    KillHero(CurrentRun.Hero, {})
+
+    -- TODO:
+    -- compute and set run baseline multiplier
+
+    wait(5)   
+    ShowForceQuitScreenImmediately()
+
+    return 
+end
+
+function ShowForceQuitScreenImmediately()
+    local screen = ZyruIncremental.CreateMenu("forceQuit", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                FieldName = "ForceQuitTitle",
+                Args = {
+                    Text = "You've done it, Zagberus",
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                FieldName = "ForceQuitSubtitle",
+                Args = {
+                    Text = "Your decision has been saved.",
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                FieldName = "ForceQuitParagraph",
+                Args = {
+                    Text = "Your next prestige decision has been recorded, and your file has been saved. Unfortunately, "
+                    .. " I have to break the fourth wall here again (no precedent for that whatsoever, it's unimagineable, really)"
+                    .. " to tell you that due to some of the limits of the lua and engine structure in Hades, I am requiring you to"
+                    .. " pause, press \"Quit\" in the pause menu, and then reload the save file. Some of your upgrades this run have"
+                    .. " caused irreversable changes to engine state, and reloading the save file is the best way to ensure both the"
+                    .. " mod state and engine state are consistent moving forward."
+
+                    .. " \\n\\n I actually could write code such that this isn't a necessary procedure, but I'm lazy. "
+                    .. " \\n\\n Go on now, quit out and reload the save file. Thanks. Love you. ",
+
+                }
+            }
+        }
+    })
 end
 
 -- Courtyard Interface
@@ -2116,51 +2585,6 @@ ModUtil.Path.Wrap("OpenShrineUpgradeMenu", function (base, args)
     })
 end, ZyruIncremental)
 
-local shrineExpFactorTable = {
-	EnemyDamageShrineUpgrade = 1.05,
-	HealingReductionShrineUpgrade = 1.05,
-	ShopPricesShrineUpgrade = 1.1,
-	EnemyCountShrineUpgrade = 1.02,
-	BossDifficultyShrineUpgrade = 1.1,
-
-	EnemyHealthShrineUpgrade = 1.05,
-	EnemyEliteShrineUpgrade = 1.15,
-	MinibossCountShrineUpgrade = 1.1,
-	ForceSellShrineUpgrade = 1.2,
-	EnemySpeedShrineUpgrade = 1.1,
-
-	TrapDamageShrineUpgrade = 1.05,
-	MetaUpgradeStrikeThroughShrineUpgrade = 1.2,
-	EnemyShieldShrineUpgrade = 1.02,
-	ReducedLootChoicesShrineUpgrade = 1.25,
-	BiomeSpeedShrineUpgrade = 1.05,
-	NoInvulnerabilityShrineUpgrade = 1,
-}
-function ZyruIncremental.ComputeShrinePactExperienceMultiplier(args)
-    if args.Cached and ZyruIncremental.ShrinePactExperienceMultiplierCache ~= nil then
-        -- DebugPrint { Text = "returning cached shrine mult: " .. tostring(ZyruIncremental.ShrinePactExperienceMultiplierCache)}
-        return ZyruIncremental.ShrinePactExperienceMultiplierCache
-    end
-    local value = 1 -- multValue
-    local additiveValue = 1
-    local mixedValue = 1
-    for i, pactConditionName in ipairs(ShrineUpgradeOrder) do
-		local upgradeData = MetaUpgradeData[pactConditionName]
-        local expFactor = shrineExpFactorTable[pactConditionName]
-        local pactConditionCount = GetNumMetaUpgrades( pactConditionName ) or 0
-        if pactConditionCount > 0 then
-        
-            value = value * math.pow(expFactor, pactConditionCount)
-            additiveValue = additiveValue + (expFactor - 1) * pactConditionCount
-            mixedValue = mixedValue * ((expFactor - 1) * pactConditionCount + 1)
-        end
-
-        
-    end
-    -- DebugPrint { Text = "Mult: " .. tostring(value) ..  ", Mixed: " .. tostring(mixedValue) .. ", Additive: " .. tostring(additiveValue)}
-    ZyruIncremental.ShrinePactExperienceMultiplierCache = value
-    return value
-end
 function ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
 
     ZyruIncremental.CreateOrUpdateComponent(screen, {

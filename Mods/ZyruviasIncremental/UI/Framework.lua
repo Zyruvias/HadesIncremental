@@ -377,7 +377,7 @@ function ZyruIncremental.CreateMenu(name, args)
     local components = screen.Components
 
     -- initialize group if provided
-    screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
+    -- screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
     -- initialize screen page history
     screen.PageStack = { }
 
@@ -892,7 +892,11 @@ function ZyruIncremental.RenderText(screen, component)
     local parentName = textDefinition.Parent or "Background"
     textDefinition.Parent = parentName
     -- update a computed property on the object definition
-    textDefinition.DestinationId = screen.Components[parentName].Id
+    DebugPrint { Text = parentName }
+    if screen.Components[parentName] == nil then
+        textDefinition.Parent = "Background"
+    end
+    textDefinition.DestinationId = screen.Components[textDefinition.Parent].Id
 
 
     screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
