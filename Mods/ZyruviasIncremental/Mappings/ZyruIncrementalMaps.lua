@@ -55,13 +55,17 @@ function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
   end
 
   -- APPLY VERSION PATCHES
-  if not ZyruIncremental.Data.Flags.MostRecentVersionPlayed then
-    ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
-  end
-  if not ZyruIncremental.Data.PrestigeData then
+  local latestVer = ZyruIncremental.Data.Flags.MostRecentVersionPlayed or 1
+  if  latestVer < 6 then
     ZyruIncremental.Data.PrestigeData = {}
     ZyruIncremental.Data.CurrentPrestige = 0
+    -- address bug where this value was cached incorrectly
+    if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
+      ZyruIncremental.Data.FreshFileRunCompletion = nil
+    end
   end
+  -- UPDATE SAVE FILE TO BE LATEST VERSION
+  ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
 end
 
 ModUtil.LoadOnce(ZyruIncremental.InitializeSaveDataAndPatchIfNecessary)
