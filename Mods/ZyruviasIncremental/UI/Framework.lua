@@ -893,7 +893,11 @@ function ZyruIncremental.RenderText(screen, component)
     local parentName = textDefinition.Parent or "Background"
     textDefinition.Parent = parentName
     -- update a computed property on the object definition
-    textDefinition.DestinationId = screen.Components[parentName].Id
+    DebugPrint { Text = parentName }
+    if screen.Components[parentName] == nil then
+        textDefinition.Parent = "Background"
+    end
+    textDefinition.DestinationId = screen.Components[textDefinition.Parent].Id
 
 
     screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)

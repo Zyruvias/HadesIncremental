@@ -1382,13 +1382,20 @@ end, ZyruIncremental)
 ---- DROP DATA SCALING
 -- TODO - ApplyConsumableItemResourceMultiplier wrap
 local getMaxHealthScalar = function ()
-  local level = ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
-  return (1 + (level - 1) * 0.1)
+  if ModUtil.Path.Get("ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level", 0) then
+    local level = ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
+    return (1 + (level - 1) * 0.1)
+  end
+  return 1
 end
 
 local getCoinScalar = function ()
-  local level = ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level or 0
-  return (1 + (level - 1) * 0.1)
+  if ModUtil.Path.Get("ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level", 0) then
+    
+    local level = ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level or 0
+    return (1 + (level - 1) * 0.1)
+  end
+  return 1
 end
 
 -- GetTotalHeroTraitValue tracking / mapping

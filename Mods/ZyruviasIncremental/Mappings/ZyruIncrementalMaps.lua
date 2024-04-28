@@ -838,23 +838,24 @@ function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
   if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
     if GetNumRunsCleared() < 10 then
       return 1
-    elseif ZyruIncremental.Data.FreshFileRunCompletion == nil then
+    end
+    if ZyruIncremental.Data.FreshFileRunCompletion ~= nil then
+      return numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
+    end
       -- compute the file-cached multiplier
       local runIndex = 0
-      local attemptIndex = 1
       for k, run in pairs( GameState.RunHistory ) do
         if run.Cleared then
           runIndex = runIndex + 1
         end
         if runIndex == 10 then
-          ZyruIncremental.Data.FreshFileRunCompletion = attemptIndex
+          ZyruIncremental.Data.FreshFileRunCompletion = k - 1
           break
         end
+
       end
-    end
     -- return the cached value
     -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
-    numRunsToExponentiate = numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
   end
 
   return numRunsToExponentiate
