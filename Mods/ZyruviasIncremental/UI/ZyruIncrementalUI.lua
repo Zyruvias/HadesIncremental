@@ -522,19 +522,40 @@ function ComputeResetProgressionUI()
     return componentsToRender
 end
 
+function GetRunsClearedThisPrestige ()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return GetNumRunsCleared()
+    end
+    local startingRun = ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount + 1
+    local runCount = 0
+    for k = startingRun, #GameState.RunHistory do
+        if GameState.RunHistory[k].Cleared then
+            runCount = runCount + 1
+        end
+    end
+    return runCount
+end
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    -- CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-    -- thread( InCombatTextArgs, {
-    --     TargetId = CurrentRun.Hero.ObjectId,
-    --     Text = "Coming Soon!",
-    --     SkipRise = false,
-    --     SkipFlash = true,
-    --     ShadowScale = 0.66,
-    --     Duration = 1.5,
-    --     OffsetY = -100 })
-    -- offsetY = offsetY - 60
-    -- thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+
+    local clearedRunsThisPrestige = GetRunsClearedThisPrestige()
+    if clearedRunsThisPrestige < 5 and false then
+        CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+        thread( InCombatTextArgs, {
+            TargetId = CurrentRun.Hero.ObjectId,
+            Text = "Clear five runs this cycle...",
+            SkipRise = false,
+            SkipFlash = true,
+            ShadowScale = 0.8,
+            Duration = 1.5,
+            Cooldown = 1.5,
+            OffsetY = -100 })
+        offsetY = offsetY - 60
+        thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+        return
+    end
+
     ZyruIncremental.TemporaryPrestigeState = {}
     local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
         Components = {
@@ -702,11 +723,8 @@ function ShowZyruResetScreen ()
     ZyruIncremental.TemporaryPrestigeState = {}
 end
 
-function CloseResetScreenAndApplyPrestige(screen, button)
-    CloseScreenByName("ZyruResetScreen")
-    AddInputBlock({ Name = "ZyruReset"})
-
-    -- BEGIN CREATING PRESTIGE STATE
+function ApplyPrestige()
+-- BEGIN CREATING PRESTIGE STATE
     --[[
       {
         ExperienceMulitpliers {source: number}
@@ -769,32 +787,82 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     -- END APPLYING PRESTIGE STATE
     ZyruIncremental.TemporaryPrestigeState = {}
     ZyruIncremental.Data.CurrentPrestige = ZyruIncremental.Data.CurrentPrestige + 1
+end
 
-    -- ACTUALLY SAVE SAVE FILE
+ModUtil.Path.Wrap("AttemptGift", function (base, currentRun, target)
+    base(currentRun, target)
+    if not ZyruIncremental.InFlashback then
+        return
+    end
+    _G["t"] = target
+    if target.Name == "NPC_Hades_01" then
+        -- initialize dialogue
+        DebugPrint { Text = "gifting hades"}
+        -- Mmm.
+        local lines = {
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Text = "bophadeez" },
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Text = "bophadeez2" },
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Text = "bophadeez22" }
+        }
+        local screen = {}
+        PlayTextLine(screen, lines, nil, nil, target)
+        Destroy{Id=screen.PortraitId}
+        Destroy{Id=screen.PromptId}
+    end
+end, ZyruIncremental)
 
-    -- setup players to load in at death area
-	-- SaveCheckpoint({ StartNextMap = "RoomPreRun", SaveFile = "_Temp", DevSaveName = CreateDevSaveName( CurrentRun, { StartNextMap = "RoomPreRun" }) })
-    -- ValidateCheckpoint({ Value = true })
+ModUtil.Path.Wrap("FlashbackPresentation", function (base)
+    base()
+    if ZyruIncremental.InFlashback then
+		HideCombatUI()
+		AdjustColorGrading({ Name = "Sepia", Duration = 0.0 })
+    end
+end, ZyruIncremental)
+
+function StartResetFlashback()
+    ZyruIncremental.InFlashback = true
+    AdjustColorGrading({ Name = "Sepia", Duration = 1.0 })
+    HideCombatUI("ResetFlashback")
+    RemoveInputBlock({ Name = "ZyruReset"})
     
+	CurrentRun.StoredNPCInteractions = DeepCopyTable(CurrentRun.NPCInteractions)
+	CurrentRun.StoredTextLinesRecord = DeepCopyTable(CurrentRun.TextLinesRecord)
 
+	CurrentRun.NPCInteractions = {}
+	CurrentRun.TextLinesRecord = {}
+end
 
+function EndResetFlashback()
+    ZyruIncremental.InFlashback = false
+    ShowCombatUI("ResetFlashback")
+	CurrentRun.NPCInteractions = DeepCopyTable(CurrentRun.StoredNPCInteractions)
+	CurrentRun.TextLinesRecord = DeepCopyTable(CurrentRun.StoredTextLinesRecord)
+
+	GameState.Flags.InFlashback = false
+	GameState.Flags.AllowFlashback = false
+    
     wait(0.5)
     -- Not again.
     PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
     wait(1.0)
 
     RemoveInputBlock({ Name = "ZyruReset"})
-    ZyruIncremental.ShowForceQuitScreen = true
     RemoveLastAssistTrait()
     RemoveLastAwardTrait()
     KillHero(CurrentRun.Hero, {})
-
-    -- TODO:
-    -- compute and set run baseline multiplier
+    AdjustColorGrading({ Name = "Off", Duration = 1.0 })
 
     wait(5)   
     ShowForceQuitScreenImmediately()
 
+end
+
+function CloseResetScreenAndApplyPrestige(screen, button)
+    CloseScreenByName("ZyruResetScreen")
+    AddInputBlock({ Name = "ZyruReset"})
+
+    ApplyPrestige()
+    StartResetFlashback()
     return 
 end
 
@@ -2600,6 +2668,10 @@ end
 ModUtil.Path.Wrap("HandleMetaUpgradeInput", function (base, screen, button)
 
     base(screen, button)
+    _G["b"] = button
+    if button.ResourceName == "MetaPoints" then
+        return
+    end
 
     ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
 
