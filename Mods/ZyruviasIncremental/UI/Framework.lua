@@ -890,18 +890,26 @@ function ZyruIncremental.RenderText(screen, component)
     -- Create Text
     textDefinition.Name = "BlankObstacle"
     local parentName = textDefinition.Parent or "Background"
-    textDefinition.Parent = parentName
     -- update a computed property on the object definition
     DebugPrint { Text = parentName }
     if screen.Components[parentName] == nil then
-        textDefinition.Parent = "Background"
+        parentName = "Background"
     end
-    textDefinition.DestinationId = screen.Components[textDefinition.Parent].Id
+    if screen.Components[parentName] == nil then
+        DebugPrint {
+            Text = "Attempting to bind text so something that doesn't exist: "
+                .. tostring(textDefinition.Parent) .. " to " .. parentName
+        }
+        return
+    end
+    
+    textDefinition.DestinationId = screen.Components[parentName].Id
 
 
     screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
     textDefinition.Id = screen.Components[textDefinition.FieldName].Id
     CreateTextBox(textDefinition)
+    textDefinition.Parent = parentName
     return textDefinition
 end
 
