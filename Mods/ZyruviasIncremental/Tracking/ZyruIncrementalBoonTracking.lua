@@ -62,7 +62,7 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
       godNameFromUpgrade = "Chaos"
     end
     local godData = ZyruIncremental.Data.GodData[godNameFromUpgrade]
-    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState[" ..godNameFromUpgrade .. "RarityBonus]", ZyruIncremental) or 0)
+    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState." ..godNameFromUpgrade .. "RarityBonus", ZyruIncremental) or 0)
 	end
 
 	local legendaryRoll = CurrentRun.Hero[referencedTable].LegendaryChance or 0
