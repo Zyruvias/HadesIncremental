@@ -42,7 +42,7 @@ function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
     }
     --[[
       {
-        ExperienceMulitpliers {source: number}
+        ExperienceMultipliers {source: number}
         BoonData
         GodData
         DropData

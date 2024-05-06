@@ -68,8 +68,8 @@ function ComputeCurrentSourceExpMult(source)
     end
     local multiplier = 1
     for i, prestigeData in ipairs(ZyruIncremental.Data.PrestigeData) do
-        if prestigeData.ExperienceMulitpliers ~= nil then
-            multiplier = multiplier * (prestigeData.ExperienceMulitpliers[source] or 1)
+        if prestigeData.ExperienceMultipliers ~= nil then
+            multiplier = multiplier * (prestigeData.ExperienceMultipliers[source] or 1)
         end
     end
     ZyruIncremental.CachedExpMultipliersByGod[source] = multiplier

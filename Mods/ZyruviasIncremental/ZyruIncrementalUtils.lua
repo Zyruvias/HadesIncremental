@@ -107,7 +107,7 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
   end
 
   chances[lastRarity] = chances[lastRarity] + 1 - previousValue
-
+  DebugPrint { Text = rarityBonus .. " " .. ModUtil.ToString.Deep(chances)}
   ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] = chances
   return chances
 

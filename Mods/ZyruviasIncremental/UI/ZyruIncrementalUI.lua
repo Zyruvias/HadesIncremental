@@ -383,7 +383,7 @@ function ComputeResetProgressionUI()
         },
     }
 
-    ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMulitpliers = {}
+    ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers = {}
     -- TODO: generalize by type of progress
     local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
     local enemyMult = 1
@@ -398,7 +398,7 @@ function ComputeResetProgressionUI()
         local nextMult = ComputeNextSourceExpMult(olympian)
         local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
         enemyMult = enemyMult * nextMult * prevMult
-        ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMulitpliers[olympian] = nextMult
+        ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers[olympian] = nextMult
         table.insert(componentsToRender, {
             Type = "Icon",
             SubType = "Standard",
@@ -522,6 +522,13 @@ function ComputeResetProgressionUI()
     return componentsToRender
 end
 
+function GetRunsAttemptedThisPrestige()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return #GameState.RunHistory
+    end
+    return #GameState.RunHistory - ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount
+end
+
 function GetRunsClearedThisPrestige ()
     if ZyruIncremental.Data.CurrentPrestige == 0 then
         return GetNumRunsCleared()
@@ -539,15 +546,15 @@ end
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
 
-    local clearedRunsThisPrestige = GetRunsClearedThisPrestige()
-    if clearedRunsThisPrestige < 5 and false then
+    local clearedRunsThisPrestige = GetRunsAttemptedThisPrestige()
+    if clearedRunsThisPrestige < 10 and not ZyruIncremental.DEBUG_MODE then
         CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
         thread( InCombatTextArgs, {
             TargetId = CurrentRun.Hero.ObjectId,
-            Text = "Clear five runs this cycle...",
+            Text = "Generate 10 field reports this cycle first...",
             SkipRise = false,
             SkipFlash = true,
-            ShadowScale = 0.8,
+            ShadowScale = 1.2,
             Duration = 1.5,
             Cooldown = 1.5,
             OffsetY = -100 })
@@ -721,8 +728,9 @@ function ShowZyruResetScreen ()
                     FieldName = "CutsceneSetting",
                     Args = {
                         Group = "CutsceneSetting",
-                        X = ScreenWidth / 6,
-                        Y = ScreenHeight - 75,
+                        X = ScreenWidth / 8,
+                        Y = ScreenHeight - 150,
+                        Disabled = not ZyruIncremental.Data.Flags.SeenResetCutscene,
                         Items = {
                             Default = {
                                 Text = "Show Cutscene?",
@@ -731,13 +739,13 @@ function ShowZyruResetScreen ()
                             {
                                 Text = "Yes",
                                 event = function (parent, button)
-                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = "Yes"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = true
                                 end
                             },
                             {
-                                Text = "Standard",
+                                Text = "No",
                                 event = function (parent, button)
-                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = "No"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = false
                                 end
                             },
                         }
@@ -747,14 +755,13 @@ function ShowZyruResetScreen ()
             
         }
     })
-    ZyruIncremental.Data.TemporaryPrestigeState = {}
 end
 
 function ApplyPrestige()
 -- BEGIN CREATING PRESTIGE STATE
     --[[
       {
-        ExperienceMulitpliers {source: number}
+        ExperienceMultipliers {source: number}
         BoonData
         GodData
         DropData
@@ -764,11 +771,11 @@ function ApplyPrestige()
     ]]
     local prestigeData = {}
     -- compute next multipliers
-    prestigeData.ExperienceMulitpliers = {}
+    prestigeData.ExperienceMultipliers = {}
     local expMultProduct = 1
     for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
         local olympianMult = ComputeNextSourceExpMult(source)
-        prestigeData.ExperienceMulitpliers[source] = olympianMult
+        prestigeData.ExperienceMultipliers[source] = olympianMult
         expMultProduct = expMultProduct * olympianMult
     end
     local enemyScalingMult = math.pow(expMultProduct, 1 / 6)
@@ -779,7 +786,7 @@ function ApplyPrestige()
     prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
     prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
     -- compute/retrieve derived values
-    prestigeData.ExperienceMulitpliers = DeepCopyTable(ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMulitpliers)
+    prestigeData.ExperienceMultipliers = DeepCopyTable(ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers)
     prestigeData.EnemyScalingMultiplier = enemyScalingMult
     prestigeData.RunAttemptCount = TableLength(GameState.RunHistory)
     ZyruIncremental.CachedEnemyScalingMultiplier = enemyScalingMult
@@ -922,33 +929,42 @@ function EndResetFlashback()
 	CurrentRun.TextLinesRecord = DeepCopyTable(CurrentRun.StoredTextLinesRecord)
     
     AddInputBlock({ Name = "ResetFlashback" })
+    
+    
+    ApplyPrestige()
+    RemoveInputBlock({ Name = "ZyruReset"})
+
+    RemoveLastAssistTrait()
+    RemoveLastAwardTrait()
+    ZyruIncremental.Data.Flags.SeenResetCutscene = true
+    PostPrestigePresentation()
+
+end
+
+function PostPrestigePresentation()
     wait(0.5)
     -- Not again.
     PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
-    
-    ApplyPrestige()
     wait(0.5)
-
-    RemoveInputBlock({ Name = "ZyruReset"})
-    RemoveLastAssistTrait()
-    RemoveLastAwardTrait()
     KillHero(CurrentRun.Hero, {})
     AdjustColorGrading({ Name = "Off", Duration = 1.0 })
-
     wait(4)   
     ShowForceQuitScreenImmediately()
-
 end
 
 function CloseResetScreenAndApplyPrestige(screen, button)
     CloseScreenByName("ZyruResetScreen")
     AddInputBlock({ Name = "ZyruReset"})
 
-    StartResetFlashback()
-    return 
+    if ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene then
+        return StartResetFlashback()
+    end
+    ApplyPrestige()
+    PostPrestigePresentation()
 end
 
 function ShowForceQuitScreenImmediately()
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
     local screen = ZyruIncremental.CreateMenu("forceQuit", {
         Components = {
             {
@@ -1049,6 +1065,13 @@ ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
         or not ZyruIncremental.Data.Flags.SeenRamblingsMenu
     ) then
         return thread( ZyruIncremental.DirectionHintPresentationRework )
+    end
+
+    -- don't allow breaking out of the cutscene
+    if (
+        ZyruIncremental.Data.InFlashback
+    ) then
+        return thread( PlayVoiceLines, HeroVoiceLines.InteractionBlockedVoiceLines, true )
     end
     
     if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then

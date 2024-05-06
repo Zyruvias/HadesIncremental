@@ -178,6 +178,7 @@ ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
+    if true then return false end
 	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
 		if ActiveScreens[name] then
 			return true
@@ -805,8 +806,11 @@ end
 function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
-    
-    ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    local dropdown = ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    if dropdownDefinition.Disabled then
+        dropdown.isEnabled = false
+        UseableOff{ Id = dropdown.Id }
+    end
 end
 
 function ZyruIncremental.RenderButton(screen, component)
