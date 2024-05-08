@@ -974,20 +974,17 @@ function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
   local godMultiplier = ComputeCurrentSourceExpMult(ZyruIncremental.BoonToGod[traitName])
   multiplier = multiplier * godMultiplier
 
-  -- shrink multiplier by kill amount in survival rooms
+  -- grow multiplier by kill amount in survival rooms
   if encounter.EncounterType == "SurvivalChallenge" then
     local currentRoom = CurrentRun.CurrentRoom
     -- TODO: figure out correct caching of this
-    if currentRoom.ZyruExpMult ~= nil then
-      multiplier = multiplier * math.max(0, 1 - 0.02 * currentKillCount)
-    else
-      local currentKillMap = currentRoom.Kills or {}
-      local currentKillCount = 0
-      for name, count in pairs(currentKillMap) do
-        currentKillCount = currentKillCount + count
-      end
-      multiplier = multiplier * math.max(0, 1 - 0.02 * currentKillCount)
+    local currentKillMap = currentRoom.Kills or {}
+    local currentKillCount = 0
+    for name, count in pairs(currentKillMap) do
+      currentKillCount = currentKillCount + count
     end
+    multiplier = multiplier * math.max(0.2, 0.02 * currentKillCount)
+
   end
 
   return multiplier
