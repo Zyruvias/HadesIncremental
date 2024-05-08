@@ -1308,15 +1308,16 @@ function ShowZyruRamblingMenu()
                     FieldName = "RoadmapText1",
                     Args = {
                         Text = 
-                            "1.0.0 - Initial Release \\n Primary changes: 5 new tiers of boon rarity added, with a new rarity distribution system. "..
+                            "1.0.0 - March 13th, 2024 - Initial Release \\n Primary changes: 5 new tiers of boon rarity added, with a new rarity distribution system. "..
                             " New set of unlockable Duo Boons between Olympians and Hermes. New Olympian Legendary Boons. Boon Experience system that "..
                             " tracks how effectively you use your boons over the course of your runs. Boon Point system that lets you unlock various upgrades"..
                             " for the different Olympians to power up your play as you go. \\n\\n " .. 
-                            "1.1.0 - TBD / Heat and Prestige balancing \\n Primary ambitions: properly incentivize climbing heat while playing this mod "..
-                            ", finish the \"Prestige System\" mechanics for dealing with mod scaling getting too difficult. Mod feedback and boon balancing "..
-                            " from YOUR feedback. \\n \\n "..
-                            "1.2.0+ - Future content expansions - In no particular order: \\n * Pomegranate Overhaul - enable rarity in Pom menus, control your pom "..
-                            " options per god, and more! \\n * Courtyard Extension - increase aspect levels, keepsake levels and more. \\n * Hammer Explosion - "..
+                            "1.1.0 - May 8th, 2024 - Heat and Prestige balancing \\n Added experience system for utilizing the Pact of Punishment in conjunction with the mod "..
+                            ", created \"Prestige System\" mechanics to expand scaling systems, alleviate difficulty pressure from late-game v1.0.0. \\n \\n "..
+                            "1.2.0 - Pomegranate Overhaul - Primary ambitions: add more transparent Pomegranate leveling system, Pom rarity, more control over Pom offerings for gods, and more. "..
+                            " Also includes visibility on additional resource scaling that may have not been clear for v1.1.0 and prior versions. \\n \\n "..
+                            "1.3.0+ - Future content expansions - In no particular order: \\n "..
+                            " * Courtyard Extension - increase aspect levels, keepsake levels and more. \\n * Hammer Explosion - "..
                             " add rarity for hammers, hammer leveling, and ... actually that's it. No more for this one. \\n * Void Update - Chaos Trial expansion, Mirror of Night expansion."
                             ,
                     }
@@ -1543,7 +1544,9 @@ function CreateAcknowledgementsPage()
                     "Retr0spektre \\n " ..
                     "Unovarydrdake \\n " ..
                     "violetblight \\n " ..
-                    "Alexca  \\n "
+                    "Alexca  \\n " ..
+                    "BIGPTHEGOAT \\n " ..
+                    "SatanIsAChillGuy \\n "
             },
         },
         {
