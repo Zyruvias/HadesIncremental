@@ -107,7 +107,7 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
   end
 
   chances[lastRarity] = chances[lastRarity] + 1 - previousValue
-
+  DebugPrint { Text = rarityBonus .. " " .. ModUtil.ToString.Deep(chances)}
   ZyruIncremental.RarityArrayMap[tostring(rarityBonus)] = chances
   return chances
 
@@ -208,6 +208,19 @@ end, ZyruIncremental)
 -- TODO: wrapping setupRunData versus just redoing it manually
 SetupRunData()
 
+function ZyruIncremental.GetUpgradeByName(upgradeName)
+  local upgrade = ZyruIncremental.UpgradeData[upgradeName]
+  if upgrade == nil then
+    -- check upgrades themselves for a name match, reworked names recently
+    for u, uData in pairs(ZyruIncremental.UpgradeData) do
+      if uData.Name == upgradeName then
+        upgrade = uData
+        break
+      end
+    end
+  end
+  return upgrade
+end
 
 -- Dev scripts
 ModUtil.LoadOnce( function ( )

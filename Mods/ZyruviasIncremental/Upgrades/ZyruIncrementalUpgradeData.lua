@@ -519,6 +519,7 @@ ZyruIncremental.TraitData = {
         OnApplyFunctionArgs
         Source?
         Sources?
+        Persistence
     }
     ]]--
 ZyruIncremental.UpgradeData = {
@@ -546,6 +547,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     PoseidonHermesSynergyTrait = {
@@ -568,6 +570,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.POSEIDON, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     ArtemisHermesSynergyTrait = {
@@ -590,6 +593,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.ARTEMIS, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
     DionysusHermesSynergyTrait = {
         Name = "DionysusHermesSynergyTrait",
@@ -610,7 +614,8 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
-        Source = "NULL" -- todo: fix, add, release, etc.
+        Source = "NULL", -- todo: fix, add, release, etc.
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
         -- Sources = { ZyruIncremental.Constants.Gods.DIONYSUS, ZyruIncremental.Constants.Gods.HERMES },
     },
 
@@ -634,6 +639,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.ARES, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     AphroditeHermesSynergyTrait = {
@@ -656,6 +662,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.APHRODITE, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     DemeterHermesSynergyTrait = {
@@ -678,6 +685,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.DEMETER, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- TODO: make this
@@ -701,6 +709,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Sources = { ZyruIncremental.Constants.Gods.ATHENA, ZyruIncremental.Constants.Gods.HERMES },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -----------------
@@ -752,6 +761,7 @@ ZyruIncremental.UpgradeData = {
             },
         },
         Source = ZyruIncremental.Constants.Gods.POSEIDON,
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- APHRODITE
@@ -774,6 +784,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- ARTEMIS LEGENDARY
@@ -793,6 +804,7 @@ ZyruIncremental.UpgradeData = {
                 OneOf = { "CritVulnerabilityTrait" },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- DIONYSUS LEFENGDARY
@@ -815,6 +827,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- ATHENA LEFENGDARY
@@ -856,6 +869,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- CHAOS LEGENDARY
@@ -876,6 +890,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
 
     },
 
@@ -899,6 +914,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- HermesAfterImageLegendaryUpgrade = {
@@ -985,6 +1001,7 @@ ZyruIncremental.UpgradeData = {
                 },
             },
         },
+        Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     },
 
     -- ZEUS LEGENDARY
@@ -1006,6 +1023,7 @@ ZyruIncremental.UpgradeData = {
     --             },
     --         },
     --     },
+    --  Persistence = ZyruIncremental.Constants.Persistence.PRESTIGE,
     -- },
 
 
@@ -1022,6 +1040,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             ZeusRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     
@@ -1035,6 +1054,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             PoseidonRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     
@@ -1048,6 +1068,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             AthenaRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     
@@ -1061,6 +1082,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             AresRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     AphroditeRarityUpgrade = {
@@ -1073,6 +1095,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             AphroditeRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     ArtemisRarityUpgrade = {
@@ -1085,6 +1108,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             ArtemisRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     DionysusRarityUpgrade = {
@@ -1097,6 +1121,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             DionysusRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     HermesRarityUpgrade = {
@@ -1109,6 +1134,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             HermesRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     DemeterRarityUpgrade = {
@@ -1121,6 +1147,7 @@ ZyruIncremental.UpgradeData = {
         OnApplyFunctionArgs = {
             DemeterRarityBonus = 10,
         },
+        Persistence = ZyruIncremental.Constants.Persistence.NONE,
     },
 
     -------------------

@@ -244,7 +244,7 @@ ModUtil.LoadOnce(function ( )
       PoseidonShoutTrait = { RarityLevels = scalingTable(1.4, 0.1, 0.2) },
       DefensiveSuperGenerationTrait = { RarityLevels = scalingTable(2, 0.25) },
       EncounterStartOffenseBuffTrait = { RarityLevels = scalingTable(2, 0.25) },
-      RandomMinorLootDrop = { RarityLevels = scalingTable(2, 0.25) },
+      -- RandomMinorLootDrop = { RarityLevels = scalingTable(2, 0.25) },
 
       -- Hermes Boons
     -- RapidCastTrait = ZyruIncremental.Constants.Gods.HERMES,
@@ -299,6 +299,7 @@ ModUtil.LoadOnce(function ( )
     ModUtil.Table.Merge(TraitData.HarvestBoonTrait, {
 		  RoomsPerUpgrade = 5,
     })
+    SetupRunData()
   end, ZyruIncremental)
 
 -- SleepSoul's RCLib mappings as a baseline. Go check out his mods, he's brilliant.

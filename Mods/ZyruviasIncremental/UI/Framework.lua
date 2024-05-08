@@ -178,7 +178,7 @@ ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
-	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
+	for name in pairs( ZyruIncremental.PauseBlockScreens ) do
 		if ActiveScreens[name] then
 			return true
 		end
@@ -190,9 +190,13 @@ function GetScreenIdsToDestroy(screen)
     local idsToKeep = screen.PermanentComponents or {}
     local allIds = GetAllIds(screen.Components)
     local idsToDestroy = {}
-    for _, id in ipairs(allIds) do
+    for componentName, component in pairs(screen.Components) do
+        local id = component.Id
         if not Contains(idsToKeep, id) then
-            table.insert(idsToDestroy, id)
+            table.insert(idsToDestroy, component.Id)
+            -- remove the definition from the screen -- normally this is done
+            -- by just deleting the whole screen on close
+            screen.Components[componentName] = nil
         end
     end
     
@@ -211,11 +215,16 @@ function GoToPageFromSource(screen, button, args)
     RenderScreenPage(screen, button, button.PageIndex)
 end
 
+function DestroyTemporaryScreenComponents(screen)
+
+    Destroy({Ids = GetScreenIdsToDestroy(screen)})
+end
+
 -- Handles non-linear paging
 function RenderScreenPage(screen, button, index)
     -- Get Non-permanent components and DESTROY them
     screen.PageIndex = index
-    Destroy({Ids = GetScreenIdsToDestroy(screen, button)})
+    DestroyTemporaryScreenComponents(screen)
 
     -- then render it
     ZyruIncremental.RenderComponents(screen, screen.Pages[index], { Source = button })
@@ -280,9 +289,23 @@ function CloseScreenFully(screen, button)
     end
 end
 
+function SetComponentDefinitionProperty(screen, component, property, value)
+    local fieldName = component.FieldName
+    if fieldName == nil then
+        return
+    end
+    if ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
+        screen.Components[fieldName].Args = screen.Components[fieldName].Args or {}
+        -- DebugPrint { Text = "setting " .. tostring(property) .. " on " .. fieldName .. " to " .. tostring(value)}
+        screen.Components[fieldName].Args[property] = value
+    end
+
+end
+
 -- Generates a component definition from either an existing screen component or the base definition
 function GetComponentDefinition(screen, component)
     -- TODO: do I need to require a type and subtype all the time?
+
     if not component or not component.Type or not component.SubType then
         DebugPrint { Text = "Bad component received .. " .. ModUtil.ToString.Shallow(component)}
         return
@@ -296,11 +319,15 @@ function GetComponentDefinition(screen, component)
         or ModUtil.Path.Get("Pages[" .. tostring(screen.PageIndex) .. "].Group", screen)
         or screen.Group
     baseDefinition.Group = groupToUse
-    local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+    local fieldName = component.FieldName
+    -- DebugPrint { Text = "accessing definition for " .. fieldName }
+    baseDefinition.FieldName = fieldName
     if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
+        local cachedDefinition = screen.Components[fieldName].Args or {}
+        -- DebugPrint { Text = ModUtil.ToString.Shallow(cachedDefinition)}
         baseDefinition = ModUtil.Table.Merge(
             baseDefinition,
-            screen.Components[fieldName].Args or {}
+            cachedDefinition
         )
     end
 
@@ -311,9 +338,28 @@ function GetComponentDefinition(screen, component)
     -- DebugPrint { Text = tostring(fieldName) .. ": " .. ModUtil.ToString.Shallow(componentDefinition)}
     return componentDefinition
 end
+local forbiddenprops = {
+    "ShadowColor",
+    "Color",
+    "ShadowOffset",
+}
+function  prettyprintcomponent(component, offset)
+    offset = offset or ""
+    for prop, value in pairs(component) do
+        if type(value) == "table" and not Contains(forbiddenprops, prop) then
+            DebugPrint { Text = offset .. prop .. " {"}
+            prettyprintcomponent(value, offset .. "  ")
+            DebugPrint { Text = offset .. "}"}
+
+        else
+            DebugPrint { Text = offset .. prop .. " " .. tostring(value)}
+        end
+    end
+end
 
 function ZyruIncremental.CreateOrUpdateComponent(screen, component)
     local componentDefinition = GetComponentDefinition(screen, component)
+    -- prettyprintcomponent(component)
     if screen.Components[componentDefinition.FieldName] ~= nil then
         ZyruIncremental.UpdateComponent(screen, component)
     else
@@ -331,7 +377,7 @@ function ZyruIncremental.CreateMenu(name, args)
     local components = screen.Components
 
     -- initialize group if provided
-    screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
+    -- screen.Group = screen.Group or "Combat_Menu_TraitTray_Overlay"
     -- initialize screen page history
     screen.PageStack = { }
 
@@ -372,13 +418,13 @@ function ZyruIncremental.CreateMenu(name, args)
             ZyruIncremental.RenderButton(screen, {
                 Type = "Button",
                 SubType = "MenuLeft",
-                Args = { FieldName = "MenuLeft" }
+                FieldName = "MenuLeft",
             })
             -- Page Right button
             ZyruIncremental.RenderButton(screen, {
                 Type = "Button", 
                 SubType = "MenuRight",
-                Args = { FieldName = "MenuRight" }
+                FieldName = "MenuRight",
             })
         end
         -- assigns the "core" components to a placeholder ID set to not delete later
@@ -426,12 +472,14 @@ function ZyruIncremental.RenderComponent(screen, component)
         return
     end 
     if type(ZyruIncremental["Render" .. tostring(component.Type)]) == "function" then
-        ZyruIncremental["Render" .. tostring(component.Type)](screen, component)
+        local updateArgs = ZyruIncremental["Render" .. tostring(component.Type)](screen, component)
 
         -- establish definition on screen object for later access
-        local fieldName = ModUtil.Path.Get("Args.FieldName", component)
+        local fieldName = component.FieldName
         if fieldName ~= nil and ModUtil.Path.Get(fieldName, screen.Components) ~= nil then
-            screen.Components[fieldName].Args = GetComponentDefinition(screen, component)
+            -- DebugPrint { Text = "storing component definition for " .. fieldName}
+            screen.Components[fieldName].Args = updateArgs or GetComponentDefinition(screen, component)
+            -- prettyprintcomponent(screen.Components[fieldName].Args)
         end
     end
 end
@@ -442,12 +490,12 @@ function ZyruIncremental.UpdateComponent(screen, component, args)
         return
     end 
     if type(ZyruIncremental["Update" .. tostring(component.Type)]) == "function" then
-        DebugPrint { Text = "calling ZyruIncrenmental." .. "Update" .. tostring(component.Type)}
-        ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
+        -- DebugPrint { Text = "calling ZyruIncrenmental." .. "Update" .. tostring(component.Type)}
+        local updateArgs = ZyruIncremental["Update" .. tostring(component.Type)](screen, component, args)
 
         -- reestablish definition on screen object for later access
-        local fieldName = ModUtil.Path.Get("Args.FieldName", component)
-        screen.Components[fieldName].Args = GetComponentDefinition(screen, args)
+        local fieldName = component.FieldName
+        screen.Components[fieldName].Args = updateArgs or GetComponentDefinition(screen, component)
     end
 end
 
@@ -503,8 +551,8 @@ function ZyruIncremental.RenderDistribution(screen, component)
         local label = {
             Type = "Text",
             SubType = "Note",
+            FieldName = barName .. "BarLabel",
             Args = {
-                FieldName = barName .. "BarLabel",
                 Text = barDefinition.label or "",
                 Parent = barName .. "BarBackground",
                 X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
@@ -562,8 +610,8 @@ function ZyruIncremental.RenderDistribution(screen, component)
             local text = {
                 Type = "Text",
                 SubType = "Note",
+                FieldName = chunkComponentName .. "Text",
                 Args = {
-                    FieldName = chunkComponentName .. "Text",
                     Text = chunkText,
                     Parent = chunkComponentName .. "BarBackground",
                     X = chunkDefinition.X,
@@ -588,8 +636,8 @@ function ZyruIncremental.RenderDistribution(screen, component)
     -- local barText = {
     --     Type = "Text",
     --     SubType = "Note",
-    --     Args = {
     --         FieldName = barName .. "BarText",
+    --     Args = {
     --         Text = barDefinition.BarText or "",
     --         Parent = barName .. "BarBackground",
             
@@ -627,8 +675,8 @@ function ZyruIncremental.RenderProgressBar(screen, component)
             barDefinition.Label = {
                 Type = "Text",
                 SubType = "Note",
+                FieldName = barName .. "BarLabel",
                 Args = {
-                    FieldName = barName .. "BarLabel",
                     Text = barDefinition.Label,
                     Parent = barName .. "BarBackground",
                     X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH / 2,
@@ -659,8 +707,8 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     local barText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "BarText",
         Args = {
-            FieldName = barName .. "BarText",
             Text = barDefinition.BarText or "",
             Parent = barName .. "BarBackground",
             
@@ -673,8 +721,8 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     local leftText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "LeftText",
         Args = {
-            FieldName = barName .. "LeftText",
             Text = barDefinition.LeftText or "",
             Parent = barName .. "BarBackground",
             X = barDefinition.X - 25,
@@ -686,8 +734,8 @@ function ZyruIncremental.RenderProgressBar(screen, component)
     local rightText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "RightText",
         Args = {
-            FieldName = barName .. "RightText",
             Text = barDefinition.RightText or "",
             Parent = barName .. "BarBackground",
             X = barDefinition.X +  barDefinition.ScaleX * ZyruIncremental.Constants.Components.PROGRESS_BAR_SCALE_PROPORTION_X * ZyruIncremental.Constants.Components.RECTANGLE_01_WIDTH + 25,
@@ -724,8 +772,8 @@ function ZyruIncremental.UpdateProgressBar(screen, component, args)
     local barText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "BarText",
         Args = {
-            FieldName = barName .. "BarText",
             Text = barDefinition.BarText or "",
             Parent = barName .. "BarBackground",
         }
@@ -734,8 +782,8 @@ function ZyruIncremental.UpdateProgressBar(screen, component, args)
     local leftText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "LeftText",
         Args = {
-            FieldName = barName .. "LeftText",
             Text = barDefinition.LeftText or "",
             Parent = barName .. "BarBackground"
         }
@@ -744,8 +792,8 @@ function ZyruIncremental.UpdateProgressBar(screen, component, args)
     local rightText = {
         Type = "Text",
         SubType = "Note",
+        FieldName = barName .. "RightText",
         Args = {
-            FieldName = barName .. "RightText",
             Text = barDefinition.RightText or "",
             Parent = barName .. "BarBackground"
         }
@@ -757,8 +805,11 @@ end
 function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
-    
-    ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    local dropdown = ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    if dropdownDefinition.Disabled then
+        dropdown.isEnabled = false
+        UseableOff{ Id = dropdown.Id }
+    end
 end
 
 function ZyruIncremental.RenderButton(screen, component)
@@ -801,8 +852,8 @@ function ZyruIncremental.RenderButton(screen, component)
             local buttonLabel = {
                 Type = "Text",
                 SubType = "Note",
+                FieldName = buttonName.."Label",
                 Args = {
-                    FieldName = buttonName.."Label",
                     Text = buttonDefinition.Label or "",
                     OffsetX = buttonDefinition.OffsetX,
                     OffsetY = buttonDefinition.OffsetY,
@@ -838,25 +889,42 @@ end
 -- Create Text Box
 function ZyruIncremental.RenderText(screen, component)
     local textDefinition = GetComponentDefinition(screen, component)
+    -- prettyprintcomponent(textDefinition)
     -- Create Text
     textDefinition.Name = "BlankObstacle"
-    local parentName = component.Parent or "Background"
+    local parentName = textDefinition.Parent or "Background"
+    -- update a computed property on the object definition
+    DebugPrint { Text = parentName }
+    if screen.Components[parentName] == nil then
+        parentName = "Background"
+    end
+    if screen.Components[parentName] == nil then
+        DebugPrint {
+            Text = "Attempting to bind text so something that doesn't exist: "
+                .. tostring(textDefinition.Parent) .. " to " .. parentName
+        }
+        return
+    end
+    
     textDefinition.DestinationId = screen.Components[parentName].Id
+
 
     screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
     textDefinition.Id = screen.Components[textDefinition.FieldName].Id
-    return CreateTextBox(textDefinition)
-
+    CreateTextBox(textDefinition)
+    textDefinition.Parent = parentName
+    return textDefinition
 end
 
 function ZyruIncremental.UpdateText(screen, component)
     -- TODO: evaluate if this can even be simplified
     local textDefinition = GetComponentDefinition(screen, component)
     local components = screen.Components
+    -- DebugPrint { Text = textDefinition.Text }
     ModifyTextBox({
         Id = components[textDefinition.FieldName].Id, Text = textDefinition.Text
     })
-
+    return textDefinition
 end
 
 function ZyruIncremental.RenderBackground(screen, component)

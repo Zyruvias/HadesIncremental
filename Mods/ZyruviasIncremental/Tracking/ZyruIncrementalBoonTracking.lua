@@ -62,7 +62,7 @@ ModUtil.Path.Wrap("GetRarityChances", function (baseFunc, args )
       godNameFromUpgrade = "Chaos"
     end
     local godData = ZyruIncremental.Data.GodData[godNameFromUpgrade]
-    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState[" ..godNameFromUpgrade .. "RarityBonus]", ZyruIncremental) or 0)
+    baseRarity = baseRarity + (godData.RarityBonus or 0) + (ModUtil.Path.Get("TransientState." ..godNameFromUpgrade .. "RarityBonus", ZyruIncremental) or 0)
 	end
 
 	local legendaryRoll = CurrentRun.Hero[referencedTable].LegendaryChance or 0
@@ -967,20 +967,24 @@ function ZyruIncremental.GetExperienceFactor(traitName, damageValue, victim)
   local encounter = ModUtil.Path.Get("CurrentRun.CurrentRoom.Encounter")
     or ModUtil.Path.Get("CurrentRun.CurrentRoom.ChallengeEncounter")
 
-  -- shrink multiplier by kill amount in survival rooms
+  -- multiplier increases
+  local heatMultiplier = ZyruIncremental.ComputeShrinePactExperienceMultiplier({ Cached = true })
+  multiplier = multiplier * heatMultiplier
+
+  local godMultiplier = ComputeCurrentSourceExpMult(ZyruIncremental.BoonToGod[traitName])
+  multiplier = multiplier * godMultiplier
+
+  -- grow multiplier by kill amount in survival rooms
   if encounter.EncounterType == "SurvivalChallenge" then
     local currentRoom = CurrentRun.CurrentRoom
     -- TODO: figure out correct caching of this
-    if currentRoom.ZyruExpMult ~= nil then
-      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
-    else
-      local currentKillMap = currentRoom.Kills
-      local currentKillCount = 0
-      for name, count in pairs(currentKillMap) do
-        currentKillCount = currentKillCount + count
-      end
-      multiplier = multiplier * math.max(0, 1 - 0.01 * currentKillCount)
+    local currentKillMap = currentRoom.Kills or {}
+    local currentKillCount = 0
+    for name, count in pairs(currentKillMap) do
+      currentKillCount = currentKillCount + count
     end
+    multiplier = multiplier * math.max(0.2, 0.02 * currentKillCount)
+
   end
 
   return multiplier
@@ -1375,13 +1379,20 @@ end, ZyruIncremental)
 ---- DROP DATA SCALING
 -- TODO - ApplyConsumableItemResourceMultiplier wrap
 local getMaxHealthScalar = function ()
-  local level = ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
-  return (1 + (level - 1) * 0.1)
+  if ModUtil.Path.Get("ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level", 0) then
+    local level = ZyruIncremental.Data.DropData.RoomRewardMaxHealthDrop.Level or 0
+    return (1 + (level - 1) * 0.1)
+  end
+  return 1
 end
 
 local getCoinScalar = function ()
-  local level = ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level or 0
-  return (1 + (level - 1) * 0.1)
+  if ModUtil.Path.Get("ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level", 0) then
+    
+    local level = ZyruIncremental.Data.DropData.RoomRewardMoneyDrop.Level or 0
+    return (1 + (level - 1) * 0.1)
+  end
+  return 1
 end
 
 -- GetTotalHeroTraitValue tracking / mapping

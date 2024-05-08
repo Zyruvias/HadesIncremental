@@ -1,44 +1,36 @@
 -- SAVE DATA SETUP
-ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
+function ZyruIncremental.InitializeGodData()
+  ZyruIncremental.Data.GodData = { 
+    Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+    Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
+  }
+end
+
+function ZyruIncremental.InitializeDropData()
+  ZyruIncremental.Data.DropData = {
+    RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+  }
+end
+
+function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
   if not ZyruIncremental.Data.Flags or ZyruIncremental.Data.Flags.Initialized == nil then
     ZyruIncremental.Data.BoonData = { } -- Set Dynamically
       -- levevl, rarity bonus, experience, max points, current points
-    ZyruIncremental.Data.GodData = { 
-      Zeus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Poseidon = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Athena = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Aphrodite = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Artemis = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Ares = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Dionysus = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Hermes = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Demeter = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-      Chaos = { Level = 1, RarityBonus = 0, Experience = 0, CurrentPoints = 0, MaxPoints = 0, },
-    }
+      ZyruIncremental.InitializeGodData()
     -- track acquisition of runources: health / gold
-    -- meta currencies???
-    ZyruIncremental.Data.DropData = {
-      RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-      RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-      StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-    }
+    ZyruIncremental.InitializeDropData()
     -- Dynamically set / prescribed
-    --[[
-      Upgrade shape: {
-        Name
-        CostType
-        Cost
-        OnApplyFunction
-        OnApplyFunctionArgs
-        Purchased
-      }
-    ]]--
-    ZyruIncremental.Data.UpgradeData = {
-      
-    }
-    ZyruIncremental.Data.Currencies = {
-      
-    }
+    ZyruIncremental.Data.UpgradeData = {}
     ZyruIncremental.Data.FileOptions = {
       StartingPoint = ZyruIncremental.Constants.SaveFile.EPILOGUE,
       DifficultySetting = ZyruIncremental.Constants.SaveFile.STANDARD,
@@ -48,12 +40,28 @@ ZyruIncremental.InitializeSaveDataAndPatchIfNecessary = function ()
     ZyruIncremental.Data.Flags = {
       Initialized = true,
     }
+    --[[
+      {
+        ExperienceMultipliers {source: number}
+        BoonData
+        GodData
+        DropData
+        Upgrades
+
+      }
+    ]]
+    ZyruIncremental.Data.PrestigeData = {}
+    ZyruIncremental.Data.CurrentPrestige = 0
   end
 
   -- APPLY VERSION PATCHES
-  if not ZyruIncremental.Data.Flags.MostRecentVersionPlayed then
-    ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
+  local latestVer = ZyruIncremental.Data.Flags.MostRecentVersionPlayed or 1
+  if  latestVer < 6 then
+    ZyruIncremental.Data.PrestigeData = {}
+    ZyruIncremental.Data.CurrentPrestige = 0
   end
+  -- UPDATE SAVE FILE TO BE LATEST VERSION
+  ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
 end
 
 ModUtil.LoadOnce(ZyruIncremental.InitializeSaveDataAndPatchIfNecessary)
@@ -65,18 +73,9 @@ ModUtil.LoadOnce( function ( )
 
   -- process existing upgrades
   for i, upgradeName in ipairs(ZyruIncremental.Data.UpgradeData) do
-    local upgrade = ZyruIncremental.UpgradeData[upgradeName]
+    local upgrade = ZyruIncremental.GetUpgradeByName(upgradeName)
     if upgrade == nil then
-      -- check upgrades themselves for a name match, reworked names recently
-      for u, uData in pairs(ZyruIncremental.UpgradeData) do
-        if uData.Name == upgradeName then
-          upgrade = uData
-        end
-      end
-      -- still not found? remove it 
-      if upgrade == nil then
-        return ZyruIncremental.RemoveUpgrade(upgradeName)
-      end
+      return ZyruIncremental.RemoveUpgrade(upgradeName)
 
     end
     if upgrade.OnApplyFunction ~= nil then
@@ -818,41 +817,54 @@ end, ZyruIncremental)
 
 -- enemy data: newEnemy.HealthMultiplier
 ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, args)
-  local difficultyModifier = ZyruIncremental.DifficultyModifier or 1
+  local difficultyModifier = ZyruIncremental.Data.DifficultyModifier or 1
   newEnemy.HealthMultiplier = (newEnemy.HealthMultiplier or 1) * difficultyModifier
   -- armor
-  if newEnemy.HealthBuffer ~= nil and newEnemy.HealthBuffer > 0 then
-		newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
-	end
+  -- TODO: this is multiplying both armor and health, add intentionally as a difficulty setting
+  -- if newEnemy.HealthBuffer ~= nil and newEnemy.HealthBuffer > 0 then
+	-- 	newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
+	-- end
 
   return baseFunc(newEnemy, currentRun, args)
 end, ZyruIncremental)
 
-function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
-  local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
-  local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
+function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
   local numRunsToExponentiate = TableLength(GameState.RunHistory) - 1
+  if ZyruIncremental.Data.CurrentPrestige > 0 then
+    local latestPrestige = ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige]
+    -- new reset -- latest Prestige = 10 runs, numsToExponentiate = 9
+    -- 9 - 10 + 1 = first run, no exponentiation
+    numRunsToExponentiate = numRunsToExponentiate - latestPrestige.RunAttemptCount + 1
+  end
   if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.FRESH_FILE then
     if GetNumRunsCleared() < 10 then
       return 1
-    elseif ZyruIncremental.Data.FreshFileRunCompletion == nil then
-      -- compute the file-cached multiplier
-      local runIndex = 0
-      local attemptIndex = 1
-      for k, run in pairs( GameState.RunHistory ) do
-        if run.Cleared then
-          runIndex = runIndex + 1
-        end
-        if runIndex == 10 then
-          ZyruIncremental.Data.FreshFileRunCompletion = attemptIndex
-          break
-        end
+    end
+    local runIndex = 0
+    for k, run in pairs( GameState.RunHistory ) do
+      if run.Cleared then
+        runIndex = runIndex + 1
+      end
+      if runIndex == 10 then
+        return numRunsToExponentiate - k
       end
     end
-    -- return the cached value
-    -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
-    numRunsToExponentiate = numRunsToExponentiate - ZyruIncremental.Data.FreshFileRunCompletion + 1
   end
+
+  return numRunsToExponentiate
+end
+
+function ZyruIncremental.ComputeDifficultyModifier (fileDifficulty, property) 
+  local fileDifficultyMap = ZyruIncremental.Constants.Difficulty[property]
+  local difficultyScalar = fileDifficultyMap[fileDifficulty] or 1
+  local prestigeScalar = math.pow(ZyruIncremental.CachedEnemyScalingMultiplier or 1, 1 / 6)
+
+  local prevDiffScalar = difficultyScalar
+  difficultyScalar = 1 + (difficultyScalar - 1) * prestigeScalar
+
+  DebugPrint { Text = "ComputedDifficultyModifier: " .. prevDiffScalar .. " before prestige -> " .. difficultyScalar}
+
+  local numRunsToExponentiate = ZyruIncremental.ComputeNumRunsForCurrentPrestige()
   return math.pow(difficultyScalar, numRunsToExponentiate)
 end
 
@@ -862,13 +874,14 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
   if not ZyruIncremental.Data.Flags or not ZyruIncremental.Data.Flags.Initialized then
     return run
   end 
-  ZyruIncremental.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
+  ComputeSourceExpMultCache()
+  ZyruIncremental.Data.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
     ZyruIncremental.Data.FileOptions.DifficultySetting,
     ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
   )
   AddIncomingDamageModifier(CurrentRun.Hero, {
     Name = "ZyruIncremental",
-    GlobalMultiplier = ZyruIncremental.DifficultyModifier
+    GlobalMultiplier = ZyruIncremental.Data.DifficultyModifier
   })
 
   return run

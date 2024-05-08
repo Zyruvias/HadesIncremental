@@ -169,21 +169,21 @@ ModUtil.Path.Wrap("CloseRunClearScreen", function (baseFunc, ...)
             Components = {
                 {
                     Type = "Button",
-                    SubType = "Close"
+                    SubType = "Back"
                 },
                 {
                     Type = "Text",
                     SubType = "Title",
+                    FieldName = "BoonProgressionTitle",
                     Args = {
-                        FieldName = "BoonProgressionTitle",
                         Text = "Boon Progression"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "BoonProgressionSubtitle",
                     Args = {
-                        FieldName = "BoonProgressionSubtitle",
                         Text = "Wow, you sure used some boons today Zagreus."
                     }
                 }
@@ -354,19 +354,654 @@ function CloseScreenByName ( name )
 	OnScreenClosed({ Flag = screen.Name })
 end
 
+ModUtil.Path.Wrap("ShowOverlookText", function (base)
+    if IsScreenOpen("ZyruResetScreen") then
+        return
+    end
+    base()
+end, ZyruIncremental)
+
+-- computing reset progress
+function ComputeResetProgressionUI()
+    local componentsToRender = {
+        {
+            Type = "Text",
+            SubType = "Title",
+            FieldName = "ResetTitle",
+            Args = {
+                Text = "Admire the fruits of your labor, Zagreus...",
+                FontSize = 24,
+            }
+        },
+        {
+            Type = "Text",
+            SubType = "Subtitle",
+            FieldName = "ResetSubtitle",
+            Args = {
+                Text = "Experience multiplier changes for next attempt"
+            }
+        },
+    }
+
+    ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers = {}
+    -- TODO: generalize by type of progress
+    local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
+    local enemyMult = 1
+    local prevEnemyMult = 1
+    local offsetY
+    local arrow = " => "
+    for i, olympian in ipairs(olympians) do
+        offsetY = -350 + i * 65
+        local prevMult = ComputeCurrentSourceExpMult(olympian)
+        local prevMultText = "x" .. string.format("%.2f", prevMult)
+        prevEnemyMult = prevEnemyMult  * prevMult
+        local nextMult = ComputeNextSourceExpMult(olympian)
+        local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
+        enemyMult = enemyMult * nextMult * prevMult
+        ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers[olympian] = nextMult
+        table.insert(componentsToRender, {
+            Type = "Icon",
+            SubType = "Standard",
+            FieldName = "ResetGodIcon"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3,
+                OffsetY = offsetY,
+                Scale = 0.5,
+                Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "GodText"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 100,
+                OffsetY = offsetY,
+                Text = olympian,
+                VerticalJustification = "Center"
+            }
+        })
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "PrevGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 350,
+                OffsetY = offsetY,
+                Text = prevMultText,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "Arrow"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 450,
+                OffsetY = offsetY,
+                Text = arrow,
+                VerticalJustification = "Center"
+            }
+        })
+        
+        table.insert(componentsToRender, {
+            Type = "Text",
+            SubType = "Paragraph",
+            FieldName = "NextGodMult"..olympian,
+            Args = {
+                OffsetX = - ScreenWidth / 3 + 525,
+                OffsetY = offsetY,
+                Text = nextMultText,
+                VerticalJustification = "Center"
+            }
+        })
+    end
+    -- enemy scaling increment
+    offsetY = offsetY + 65
+    enemyMult = math.pow(enemyMult, 1 / 6)
+    prevEnemyMult = math.pow(prevEnemyMult, 1 / 6)
+    -- table.insert(componentsToRender, {
+    --     Type = "Icon",
+    --     SubType = "Standard",
+    --     FieldName = "ResetGodIcon"..Enemy,
+    --     Args = {
+    --         OffsetX = - ScreenWidth / 3,
+    --         OffsetY = offsetY,
+    --         Scale = 0.5,
+    --         Animation = "BoonInfoSymbol" .. olympian .. "Icon",
+    --     }
+    -- })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "EnemyText",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 100,
+            OffsetY = offsetY,
+            Text = "Enemy Scaling",
+            VerticalJustification = "Center"
+        }
+    })
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "PrevEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 350,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", prevEnemyMult),
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "ArrowEnemy",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 450,
+            OffsetY = offsetY,
+            Text = arrow,
+            VerticalJustification = "Center"
+        }
+    })
+    
+    table.insert(componentsToRender, {
+        Type = "Text",
+        SubType = "Paragraph",
+        FieldName = "NextEnemyMult",
+        Args = {
+            OffsetX = - ScreenWidth / 3 + 525,
+            OffsetY = offsetY,
+            Text = "x" .. string.format("%.2f", enemyMult),
+            VerticalJustification = "Center"
+        }
+    })
+
+    return componentsToRender
+end
+
+function GetRunsAttemptedThisPrestige()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return #GameState.RunHistory
+    end
+    return #GameState.RunHistory - ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount
+end
+
+function GetRunsClearedThisPrestige ()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return GetNumRunsCleared()
+    end
+    local startingRun = ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount + 1
+    local runCount = 0
+    for k = startingRun, #GameState.RunHistory do
+        if GameState.RunHistory[k].Cleared then
+            runCount = runCount + 1
+        end
+    end
+    return runCount
+end
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-    thread( InCombatTextArgs, {
-        TargetId = CurrentRun.Hero.ObjectId,
-        Text = "Coming Soon!",
-        SkipRise = false,
-        SkipFlash = true,
-        ShadowScale = 0.66,
-        Duration = 1.5,
-        OffsetY = -100 })
-    offsetY = offsetY - 60
-    thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+
+    local clearedRunsThisPrestige = GetRunsAttemptedThisPrestige()
+    if clearedRunsThisPrestige < 10 and not ZyruIncremental.DEBUG_MODE then
+        CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+        thread( InCombatTextArgs, {
+            TargetId = CurrentRun.Hero.ObjectId,
+            Text = "Generate 10 field reports this cycle first...",
+            SkipRise = false,
+            SkipFlash = true,
+            ShadowScale = 1.2,
+            Duration = 1.5,
+            Cooldown = 1.5,
+            OffsetY = -100 })
+        offsetY = offsetY - 60
+        thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+        return
+    end
+
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
+    local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
+        Components = {
+            {
+                Type = "Button",
+                SubType = "Back"
+            },
+        },
+        Pages = {
+            [1] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Mnemosyne offers a helping hand ...",
+                        FontSize = 24,
+                    }
+                },
+                    {
+                        Type = "Text",
+                        SubType = "Paragraph",
+                        FieldName = "ResetExplanation",
+                        Args = {
+                            Text = "Does Hades have you beat? Is the underworld security system TOO strong? Or would you simply like to take your"
+                             .. " \"field research\" to the next level? \\n\\n Mnemosyne will offer you assistance in wiping the memories of"
+                             .. " the Underworld to return to where this all begin, but your experiences, memories, and strengths will remain."
+                             .. " She will provide you with ample Nectar and Ambrosia infused with extract of the waters of Lethe, and you must simply give"
+                             .. " these to the members of the House of Hades, and all will fall into place. Don't worry about Hades' minions in the underworld"
+                             .. "... Mnemosyne has you covered. winky emoji. \\n\\n "
+                             .. " If desired, select a new file difficulty, and proceed to the next page to see how your current progress transforms"
+                             .. " after your deal with Mnemosyne. Note that this cannot be undone, so if there are things you want to finish up before"
+                             .. " resetting, do that first."
+                        }
+                    },
+                    {
+                        Type = "Text",
+                        SubType = "Subtitle",
+                        FieldName = "ResetSubtitle",
+                        Args = {
+                            Text = "Do you want to go back to an easier time?",
+                        }
+                    },
+            },
+            [2] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "It's time to make a choice...",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "Now is not the time to reify regret.",
+                    }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    FieldName = "DifficultyDropdown",
+                    Args = {
+                        Group = "DifficultyGroup",
+                        -- X, Y, Items, Name
+                        X = ScreenWidth / 6,
+                        Y = ScreenHeight / 3 + 75,
+                        Scale = {X = .3125, Y = .5},
+                        Items = {
+                            Default = {
+                                Text = "Change difficulty?",
+                                event = function() end
+                            },
+                            {
+                                Text = "Easy",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Easy"
+                                end
+                            },
+                            {
+                                Text = "Standard",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Standard"
+                                end
+                            },
+                            {
+                                Text = "Hard",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Hard"
+                                end
+                            },
+                            {
+                                Text = "Freeplay",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Freeplay"
+                                end
+                            },
+                        }
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyText",
+                    Args = {
+                        Text = "While there's no need to take on more responsibility and challenges now, some of the Underworld's finest"
+                        .. " challenges require pushing your working relationship with Hades to its absolute limit... "
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Paragraph",
+                    FieldName = "DifficultyExplanation",
+                    Args = {
+                        Text = "To increase your prestige in the Underworld, you must sacrifice your current relationships with the Olympians. "
+                        .." However, you will still remember how to build these relationships, and you'll do it even faster than ever before. "
+                        .." \\n\\n "
+                        .."If you are ready to proceed, go to the next page to see the fruits of your labor."
+                        ,
+                        OffsetX = - ScreenWidth / 4 + 50,
+                        OffsetY = - ScreenHeight / 6 + 50,
+                        Width = ScreenWidth * 0.65
+                    }
+                }
+            },
+            [3] = ComputeResetProgressionUI(),
+            [4] = {
+                {
+                    Type = "Text",
+                    SubType = "Title",
+                    FieldName = "ResetTitle",
+                    Args = {
+                        Text = "Are you truly ready, Zagreus?",
+                        FontSize = 24,
+                    }
+                },
+                {
+                    Type = "Text",
+                    SubType = "Subtitle",
+                    FieldName = "ResetSubtitle",
+                    Args = {
+                        Text = "There's no turning back ...",
+                    }
+                },
+                {
+                    Type = "Button",
+                    SubType = "Basic",
+                    Args = {
+                        Label = "Advance to the next prestige ...",
+                        ComponentArgs = {
+                            OnPressedFunctionName = "CloseResetScreenAndApplyPrestige"
+                        }
+                    }
+
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    FieldName = "CutsceneSetting",
+                    Args = {
+                        Group = "CutsceneSetting",
+                        X = ScreenWidth / 8,
+                        Y = ScreenHeight - 150,
+                        Disabled = not ZyruIncremental.Data.Flags.SeenResetCutscene,
+                        Items = {
+                            Default = {
+                                Text = "Show Cutscene?",
+                                event = function() end
+                            },
+                            {
+                                Text = "Yes",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = true
+                                end
+                            },
+                            {
+                                Text = "No",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = false
+                                end
+                            },
+                        }
+                    }
+                },
+            }
+            
+        }
+    })
+end
+
+function ApplyPrestige()
+-- BEGIN CREATING PRESTIGE STATE
+    --[[
+      {
+        ExperienceMultipliers {source: number}
+        BoonData
+        GodData
+        DropData
+        Upgrades
+
+      }
+    ]]
+    local prestigeData = {}
+    -- compute next multipliers
+    prestigeData.ExperienceMultipliers = {}
+    local expMultProduct = 1
+    for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
+        local olympianMult = ComputeNextSourceExpMult(source)
+        prestigeData.ExperienceMultipliers[source] = olympianMult
+        expMultProduct = expMultProduct * olympianMult
+    end
+    local enemyScalingMult = math.pow(expMultProduct, 1 / 6)
+    -- cache old run data
+    prestigeData.BoonData = DeepCopyTable(ZyruIncremental.Data.BoonData)
+    prestigeData.GodData = DeepCopyTable(ZyruIncremental.Data.GodData)
+    prestigeData.DropData = DeepCopyTable(ZyruIncremental.Data.DropData)
+    prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
+    prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
+    -- compute/retrieve derived values
+    prestigeData.ExperienceMultipliers = DeepCopyTable(ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers)
+    prestigeData.EnemyScalingMultiplier = enemyScalingMult
+    prestigeData.RunAttemptCount = TableLength(GameState.RunHistory)
+    ZyruIncremental.CachedEnemyScalingMultiplier = enemyScalingMult
+
+    -- officially insert dat prestige in the you know where (the prestige array)
+    table.insert(ZyruIncremental.Data.PrestigeData, prestigeData)
+
+    -- END CREATING PRESTIGE STATE
+    -- BEGIN APPLYING PRESTIGE STATE
+
+    -- Reset file upgrade data
+    ZyruIncremental.Data.UpgradeData = {}
+    for i, upgradeName in ipairs(prestigeData.UpgradeData) do
+        if ZyruIncremental.UpgradePresistsThroughPrestige(upgradeName) then
+            table.insert(ZyruIncremental.Data.UpgradeData, upgradeName)
+        end
+    end
+    -- Reset Boon Data
+    ZyruIncremental.Data.BoonData = {}
+    -- Reset God Data
+    ZyruIncremental.InitializeGodData()
+    -- Reset Drop Data
+    ZyruIncremental.InitializeDropData()
+
+
+
+    -- compute starting difficulty multipliier -- TODO: generate formula
+    if ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting then
+        ZyruIncremental.Data.FileOptions.DifficultySetting = ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting
+    end
+
+    -- END APPLYING PRESTIGE STATE
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
+    ZyruIncremental.Data.CurrentPrestige = ZyruIncremental.Data.CurrentPrestige + 1
+end
+
+ModUtil.Path.Wrap("AttemptGift", function (base, currentRun, target)
+    base(currentRun, target)
+    if not ZyruIncremental.Data.InFlashback then
+        return
+    end
+    _G["t"] = target
+    if target.Name == "NPC_Hades_01" and not ZyruIncremental.InGiftDialogue then
+        thread(MarkObjectiveComplete, "ZyruResetGift")
+        -- initialize dialogue
+        -- Mmm.
+        ZyruIncremental.InGiftDialogue = true
+        local lines = {
+            { Cue = "/VO/ZagreusField_0371", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Erm, Hades. I'd like to offer you another gift of nectar. I know our relationship no longer "
+                .. "hinges on sustained pleasantries and other such niceties, but I think I want you to know that I "
+                .. "am proud of your effort to truly improve the security around the Underworld."
+            },
+            { Cue = "/VO/ZagreusField_0370", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Cheers to a successful working arrangement."
+            },
+            
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Description="",
+                Text = "Zagreus, of course. It is my obligation. It is your obligation as well. However, I suppose"
+                .. " a reward every once in a while doesn't incur too insufferable a decline in one's work ethic."
+            },
+            -- TODO: gift sounds?
+            { Cue = "/VO/ZagreusField_0370", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Mnemosyne said that was all..."
+            },
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Description="",
+                Text = "What."
+            }
+        }
+        local screen = {}
+        PlayTextLine(screen, lines, nil, nil, target)
+        Destroy{Id=screen.PortraitId}
+        Destroy{Id=screen.PromptId}
+        EndResetFlashback()
+    end
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("FlashbackPresentation", function (base)
+    base()
+    if ZyruIncremental.Data.InFlashback then
+		HideCombatUI()
+		AdjustColorGrading({ Name = "Sepia", Duration = 0.0 })
+    end
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetUseText", function(base, useTarget, useData)
+    if not ZyruIncremental.InGiftDialogue and ZyruIncremental.Data.InFlashback and useTarget.Name == "NPC_Hades_01" then
+        return "ZyruResetGiftUseText"
+    end
+    return base(useTarget, useData)
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetUseData", function(base, useTarget)
+    if not ZyruIncremental.InGiftDialogue and ZyruIncremental.Data.InFlashback and useTarget.Name == "NPC_Hades_01" then
+        return { GiftResourceAmount = 1 }
+    end
+    return base(useTarget)
+end, ZyruIncremental)
+
+-- setup tutorial objectives for reset
+ModUtil.LoadOnce(function ()
+    ModUtil.Table.Merge(ObjectiveSetData, {
+        ZyruReset = {
+            Name = "ZyruReset",
+            AllowRepeat = true,
+            RequiredTrueFlags = { "ZyruReset" },
+            Objectives =
+            {
+                { "ZyruResetGift" }
+            },
+        },
+    })
+    ModUtil.Table.Merge(ObjectiveData, {
+        ZyruResetGift = { Description = "Objective_ZyruResetGift" },
+    })
+    SetupRunData()
+end)
+
+function StartResetFlashback()
+    ZyruIncremental.Data.InFlashback = true
+    GameState.Flags.ZyruReset = true
+    AdjustColorGrading({ Name = "Sepia", Duration = 1.0 })
+    HideCombatUI("ResetFlashback")
+    RemoveInputBlock({ Name = "ZyruReset"})
+    
+	CurrentRun.StoredNPCInteractions = DeepCopyTable(CurrentRun.NPCInteractions)
+	CurrentRun.StoredTextLinesRecord = DeepCopyTable(CurrentRun.TextLinesRecord)
+
+	CurrentRun.NPCInteractions = {}
+	CurrentRun.TextLinesRecord = {}
+
+    ShowObjectiveSet( "ZyruReset" )
+end
+
+function EndResetFlashback()
+    ZyruIncremental.Data.InFlashback = false
+    GameState.Flags.ZyruReset = false
+    ShowCombatUI("ResetFlashback")
+	CurrentRun.NPCInteractions = DeepCopyTable(CurrentRun.StoredNPCInteractions)
+	CurrentRun.TextLinesRecord = DeepCopyTable(CurrentRun.StoredTextLinesRecord)
+    
+    AddInputBlock({ Name = "ResetFlashback" })
+    
+    
+    ApplyPrestige()
+    RemoveInputBlock({ Name = "ZyruReset"})
+
+    RemoveLastAssistTrait()
+    RemoveLastAwardTrait()
+    ZyruIncremental.Data.Flags.SeenResetCutscene = true
+    PostPrestigePresentation()
+
+end
+
+function PostPrestigePresentation()
+    wait(0.5)
+    -- Not again.
+    PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
+    wait(0.5)
+    KillHero(CurrentRun.Hero, {})
+    AdjustColorGrading({ Name = "Off", Duration = 1.0 })
+    wait(4)   
+    ShowForceQuitScreenImmediately()
+end
+
+function CloseResetScreenAndApplyPrestige(screen, button)
+    CloseScreenByName("ZyruResetScreen")
+    AddInputBlock({ Name = "ZyruReset"})
+
+    if ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene then
+        return StartResetFlashback()
+    end
+    ApplyPrestige()
+    PostPrestigePresentation()
+end
+
+function ShowForceQuitScreenImmediately()
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
+    local screen = ZyruIncremental.CreateMenu("forceQuit", {
+        Components = {
+            {
+                Type = "Text",
+                SubType = "Title",
+                FieldName = "ForceQuitTitle",
+                Args = {
+                    Text = "You've done it, Zagberus",
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Subtitle",
+                FieldName = "ForceQuitSubtitle",
+                Args = {
+                    Text = "Your decision has been saved.",
+                }
+            },
+            {
+                Type = "Text",
+                SubType = "Paragraph",
+                FieldName = "ForceQuitParagraph",
+                Args = {
+                    Text = "Your next prestige decision has been recorded, and your file has been saved. Unfortunately, "
+                    .. " I have to break the fourth wall here again (no precedent for that whatsoever, it's unimagineable, really)"
+                    .. " to tell you that due to some of the limits of the lua and engine structure in Hades, I am requiring you to"
+                    .. " pause, press \"Quit\" in the pause menu, and then reload the save file. Some of your upgrades this run have"
+                    .. " caused irreversable changes to engine state, and reloading the save file is the best way to ensure both the"
+                    .. " mod state and engine state are consistent moving forward."
+
+                    .. " \\n\\n I actually could write code such that this isn't a necessary procedure, but I'm lazy. "
+                    .. " \\n\\n Go on now, quit out and reload the save file. Thanks. Love you. ",
+
+                }
+            }
+        }
+    })
 end
 
 -- Courtyard Interface
@@ -430,6 +1065,13 @@ ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
         or not ZyruIncremental.Data.Flags.SeenRamblingsMenu
     ) then
         return thread( ZyruIncremental.DirectionHintPresentationRework )
+    end
+
+    -- don't allow breaking out of the cutscene
+    if (
+        ZyruIncremental.Data.InFlashback
+    ) then
+        return thread( PlayVoiceLines, HeroVoiceLines.InteractionBlockedVoiceLines, true )
     end
     
     if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
@@ -573,8 +1215,8 @@ function ShowZyruRamblingMenu()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "FAQ / Tutorial / Roadmap",
                 },
             },
@@ -588,16 +1230,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "TutorialRamblingsText",
                     Args = {
                         Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
-                        FieldName = "TutorialRamblingsText",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "TutorialText",
                     Args = {
-                        FieldName = "TutorialText",
                         Text = 
                             "How do I gain experience for my booons? \\n Use your boons! It's that easy. If a boon does damage, deal damage with it equipped" ..
                             " to gain experience. If it applies an extra effect to enemies, apply that effect to enemies to get some activation experience! " .. 
@@ -622,16 +1264,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "TutorialRamblingsText2",
                     Args = {
                         Text = "Frequently Asked Questions and Basic Explanations for this weird-ass mod by a weird-ass modder",
-                        FieldName = "TutorialRamblingsText2",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "TutorialText2",
                     Args = {
-                        FieldName = "TutorialText2",
                         Text = 
                             "What's the point? \\n It's an incremental game, honey. Numbers go up, pump dopamine straight into the veins. Simple as. \\n\\n "..
 
@@ -655,16 +1297,16 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "RoadmapText",
                     Args = {
                         Text = "Roadmap",
-                        FieldName = "RoadmapText",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "RoadmapText1",
                     Args = {
-                        FieldName = "RoadmapText1",
                         Text = 
                             "1.0.0 - Initial Release \\n Primary changes: 5 new tiers of boon rarity added, with a new rarity distribution system. "..
                             " New set of unlockable Duo Boons between Olympians and Hermes. New Olympian Legendary Boons. Boon Experience system that "..
@@ -685,8 +1327,8 @@ function ShowZyruRamblingMenu()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "RoadmapText2",
                     Args = {
-                        FieldName = "RoadmapText2",
                         Text = "This Page Is Intentionally Left Blank",
                     }
                 },
@@ -706,24 +1348,24 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "Mod Settings",
                 },
             },
             {
                 Type = "Text",
                 SubType = "Subtitle",
+                FieldName = "WelcomeTitle",
                 Args = {
                     Text = "Change mod configurations according to your heart's desires.",
-                    FieldName = "WelcomeTitle",
                 }
             },
             {
                 Type = "Dropdown",
                 SubType = "Standard",
+                FieldName = "DifficultyDropdown",
                 Args = {
-                    FieldName = "DifficultyDropdown",
                     Group = "DifficultyGroup",
                     -- X, Y, Items, Name
                     X = ScreenWidth / 6,
@@ -760,8 +1402,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Paragraph",
+                FieldName = "ExpDropText",
                 Args = {
-                    FieldName = "ExpDropText",
                     Text = "Configure EXP popup behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - ScreenHeight / 6 - 25,
@@ -771,8 +1413,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Dropdown",
                 SubType = "Standard",
+                FieldName = "LevelUpSettingDropdown",
                 Args = {
-                    FieldName = "LevelUpSettingDropdown",
                     Group = "LevelupGroup",
                     -- X, Y, Items, Name
                     X = ScreenWidth / 6,
@@ -821,8 +1463,8 @@ function ShowZyruSettingsMenu()
             {
                 Type = "Text",
                 SubType = "Paragraph",
+                FieldName = "LevelupText",
                 Args = {
-                    FieldName = "LevelupText",
                     Text = "Configure Level-up notification behavior",
                     OffsetX = - ScreenWidth / 4 + 100,
                     OffsetY = - 145,
@@ -843,8 +1485,8 @@ function ModInitializationScreenUpdateDifficultyText(screen, text)
     ZyruIncremental.UpdateText(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "DifficultyDropdownSelectedText",
         Args = {
-            FieldName = "DifficultyDropdownSelectedText",
             Text = "Difficulty Selected: " .. text,
         }
     })
@@ -854,8 +1496,8 @@ function ModInitializationScreenUpdateStartingPointText(screen, text)
     ZyruIncremental.UpdateText(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "StartingPointDropdownSelectedText",
         Args = {
-            FieldName = "StartingPointDropdownSelectedText",
             Text = "Starting Point Selected: " .. text,
             OffsetY = - ScreenHeight / 6 -25,
             Justification = "Left",
@@ -868,24 +1510,24 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "AcknowledgementsTitle",
             Args = {
-                FieldName = "AcknowledgementsTitle",
                 Text = "Acknowledgements"
             }
         },
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "ContextText",
             Args = {
-                FieldName = "ContextText",
                 Text = "A giant thanks to all the support I've gotten over the development of this mod, whether emotional or technical. I love you all."
             }
         },
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn1",
             Args = {
-                FieldName = "AcknowledgementsColumn1",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.4,
                 Text = 
@@ -907,8 +1549,8 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn3",
             Args = {
-                FieldName = "AcknowledgementsColumn3",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.17,
                 OffsetX = - ScreenWidth * 0.2,
@@ -927,8 +1569,8 @@ function CreateAcknowledgementsPage()
         {
             Type = "Text",
             SubType = "Paragraph",
+            FieldName = "AcknowledgementsColumn2",
             Args = {
-                FieldName = "AcknowledgementsColumn2",
                 OffsetY = -200,
                 Width = ScreenWidth * 0.4,
                 OffsetX = 0,
@@ -951,24 +1593,24 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Title",
+                    FieldName = "MenuTitle",
                     Args = {
-                        FieldName = "MenuTitle",
                         Text = "Incremental Mod Setup",
                     },
                 },
                     {
                         Type = "Text",
                         SubType = "Subtitle",
+                        FieldName = "WelcomeTitle",
                         Args = {
                             Text = "Existing Save Detected",
-                            FieldName = "WelcomeTitle",
                         }
                     },
                     {
                         Type = "Text",
                         SubType = "Paragraph",
+                        FieldName = "WelcomeText",
                         Args = {
-                            FieldName = "WelcomeText",
                             Text = "Hello there,\\n\\n In order to use this mod, you must start a new save file. Your current"
                             .." savefile progress does not translate well in the new mod systems, so it does not make sense to"
                             .." allow you to continue. Please select \"Give Up\" or \"Quit\" and create a new file to access the mod setup page and begin your "
@@ -986,16 +1628,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "WelcomeTitle",
                     Args = {
                         Text = "Welcome",
-                        FieldName = "WelcomeTitle",
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "WelcomeText",
                     Args = {
-                        FieldName = "WelcomeText",
                         Text = "Welcome to the Incremental Overhaul Mod. The game has been transformed from a roguelike"
                         .." with primary emphasis on single runs to large, long term emphasis on metaprogression, unlocks,"
                         .." practice, and various other points of focus of the Incremental game genre. Please understand that"
@@ -1010,16 +1652,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "ContextTitle",
                     Args = {
-                        FieldName = "ContextTitle",
                         Text = "Story Context"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "ContextText",
                     Args = {
-                        FieldName = "ContextText",
                         Text = "When you finally resolve the plot of Hades for the first time, you "
                         .."agree to continue traversing through the underworld more-or-less as a "
                         .."glorified security analyst. Through your further battles in Tartarus, Asphodel, "
@@ -1042,24 +1684,24 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "DifficultyTitle",
                     Args = {
-                        FieldName = "DifficultyTitle",
                         Text = "Difficulty Settings"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyText",
                     Args = {
-                        FieldName = "DifficultyText",
                         Text = "This mod is intended to be difficult by nature of infinite scaling and building off the original game's innate difficulty. Please select your preferred difficulty settings below."
                     }
                 },
                 {
                     Type = "Dropdown",
                     SubType = "Standard",
+                    FieldName = "DifficultyDropdown",
                     Args = {
-                        FieldName = "DifficultyDropdown",
                         Group = "DifficultyGroup",
                         -- X, Y, Items, Name
                         X = ScreenWidth / 6,
@@ -1103,8 +1745,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyDropdownSelectedText",
                     Args = {
-                        FieldName = "DifficultyDropdownSelectedText",
                         Text = "Difficulty Selected: " .. (ZyruIncremental.Data.FileOptions.DifficultySetting or "Standard"),
                         OffsetY = - ScreenHeight / 6 - 25,
                         Justification = "Left",
@@ -1113,8 +1755,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "DifficultyExplanation",
                     Args = {
-                        FieldName = "DifficultyExplanation",
                         Text = "Standard - The originally intended difficulty by the developer (that's me!! lmao) - enemies grow in strength "
                         .."and health, and a few other challenges sneak their way in throughout the course of gameplay. \\n\\n "
                         
@@ -1138,16 +1780,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "StartingPointTitle",
                     Args = {
-                        FieldName = "StartingPointTitle",
                         Text = "Starting Point Settings"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "StartingPointText",
                     Args = {
-                        FieldName = "StartingPointText",
                         Text = "This mod requires you to start a fresh file since the context of game progression in normal "
                         .."Hades does not make sense in the context of this mod. However, that does not mean you have to complete "
                         .."the whole story again. You are free to start a fresh file and re-experience the story, but you may "
@@ -1157,8 +1799,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "StartingPointDropdownSelectedText",
                     Args = {
-                        FieldName = "StartingPointDropdownSelectedText",
                         Text = "Starting Point Selected: " .. 
                             (ZyruIncremental.Data.FileOptions.StartingPoint or ZyruIncremental.Constants.SaveFile.EPILOGUE),
                         OffsetY = - ScreenHeight / 6 + 25,
@@ -1168,8 +1810,8 @@ function ModInitializationScreen2()
                 {
                     Type = "Dropdown",
                     SubType = "Standard",
+                    FieldName = "StartingPointDropdown",
                     Args = {
-                        FieldName = "StartingPointDropdown",
                         Group = "bleh",
                         X = ScreenWidth / 2,
                         Y = ScreenHeight / 2,
@@ -1202,16 +1844,16 @@ function ModInitializationScreen2()
                 {
                     Type = "Text",
                     SubType = "Subtitle",
+                    FieldName = "finishedTitle",
                     Args = {
                         Text = "Final Step",
-                        FieldName = "finishedTitle"
                     }
                 },
                 {
                     Type = "Text",
                     SubType = "Paragraph",
+                    FieldName = "FinishedText",
                     Args = {
-                        FieldName = "FinishedText",
                         Text = "Click the button below to finish your file configuration. Please note that if you are "
                         .."starting from the Epilogue file setting, it will take a minute to process save file changes. "
                         .."Additionally, there are extra miscellaneous settings in the Courtyard when you get there."
@@ -1222,14 +1864,14 @@ function ModInitializationScreen2()
                 {
                     Type = "Button",
                     SubType = "Basic",
+                    FieldName = "FinishedFileConfiguration",
                     Args = {
                         Scale = 1.0,
-                        FieldName = "FinishedFileConfiguration",
                         Label = {
                             Type = "Text",
                             SubType = "Paragraph",
+                            FieldName = "FinishedFileConfigurationText",
                             Args = {
-                                FieldName = "FinishedFileConfigurationText",
                                 Text = "Finish",
                                 FontSize = "30",
                                 OffsetY = 0,
@@ -1250,8 +1892,8 @@ function ModInitializationScreen2()
             {
                 Type = "Text",
                 SubType = "Title",
+                FieldName = "MenuTitle",
                 Args = {
-                    FieldName = "MenuTitle",
                     Text = "Incremental Mod Setup",
                 }
             }
@@ -1377,8 +2019,8 @@ function CloseInitializationScreen(screen, button)
     local progressBar = {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "SaveStateBar",
         Args = {
-            FieldName = "SaveStateBar",
             X = ScreenCenterX - 480 * 1.5,
             ScaleX = 3,
             ScaleY = 3,
@@ -1387,8 +2029,8 @@ function CloseInitializationScreen(screen, button)
     local progressText = {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "SaveStateText",
         Args = {
-            FieldName = "SaveStateText",
             Text = "",
             OffsetY = -100,
             OffsetX = 0,
@@ -1397,8 +2039,8 @@ function CloseInitializationScreen(screen, button)
             
         }
     }
-    ZyruIncremental.RenderComponent(screen, progressBar)
-    ZyruIncremental.RenderComponent(screen, progressText)
+    ZyruIncremental.CreateOrUpdateComponent(screen, progressBar)
+    ZyruIncremental.CreateOrUpdateComponent(screen, progressText)
 
     for _, stage in ipairs(stages) do
         if stage.Voicelines then
@@ -1478,8 +2120,8 @@ end, ZyruIncremental)
 --             {
 --                 Type = "Button",
 --                 SubType = "Icon",
---                 Args = {
 --                     FieldName = "IconTest",
+--                 Args = {
 --                     Group = "Combat_Menu_TraitTray",
 --                     Animation = "Codex_Portrait_Zagreus",
 --                     OffsetX = 0,
@@ -1507,8 +2149,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateComponent(screen, {
         Type = "Text",
         SubType = "Subtitle",
+        FieldName = "BoonProgressSubtitle",
         Args = {
-            FieldName = "BoonProgressSubtitle",
             Text = boonName
         }
 
@@ -1517,8 +2159,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
+        FieldName = "BoonProgressBoonIcon",
         Args = {
-            FieldName = "BoonProgressBoonIcon",
             Animation = GetTraitIcon( TraitData[boonName] or {} ),
             Scale = 2.0
         }
@@ -1528,8 +2170,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     local boonLevelLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "BoonLevelUniqueLabel",
         Args = {
-            FieldName = "BoonLevelUniqueLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY - 120,
             Text = "Boon Level",
@@ -1550,8 +2192,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "BoonProgressBar",
         Args = {
-            FieldName = "BoonProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = 0,
@@ -1569,8 +2211,8 @@ function UpdateBoonInfoProgressScreen(screen, boonName)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "BoonProgressBar",
         Args = {
-            FieldName = "BoonProgressBar",
             Proportion = expProportion,
             UpdateDuration = 1,
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
@@ -1616,8 +2258,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = button.PageIndex .. "ProgressTitle",
             Args = {
-                FieldName = button.PageIndex .. "ProgressTitle",
                 Text = button.PageIndex, -- todo: generalize args or properties or something??
             }
         },
@@ -1633,9 +2275,9 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "BoonProgressSubtitle",
             Args = {
                 OffsetX = ScreenWidth / 6,
-                FieldName = "BoonProgressSubtitle",
                 Text = ""
             }
         },
@@ -1643,8 +2285,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "Icon",
             SubType = "Standard",
+            FieldName = "BoonProgressBoonIcon",
             Args = {
-                FieldName = "BoonProgressBoonIcon",
                 OffsetX = ScreenWidth / 3,
                 OffsetY = -250,
                 Scale = 2,
@@ -1654,8 +2296,8 @@ function ShowGodProgressScreen(screen, button)
         {
             Type = "ProgressBar",
             SubType = "Standard",
+            FieldName = "BoonProgressBar",
             Args = {
-                FieldName = "BoonProgressBar",
                 X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
                 Y = ScreenCenterY - 90,
                 -- BackgroundColor = {0, 0, 0, 0},
@@ -1692,8 +2334,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local rarityBarLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "DistributionLabel",
         Args = {
-            FieldName = "DistributionLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY + ScreenHeight / 6 - 150,
             Text = "Rarity Bonus: " .. (100 + ZyruIncremental.ComputeRarityBonusForGod(button.PageIndex)) .. "% \\n Boons' Offered Rarity Distribution",
@@ -1705,8 +2347,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local rarityBarComponent = {
         Type = "Distribution",
         SubType = "Standard",
+        FieldName = "RarityDistributionBar",
         Args = {
-            FieldName = "RarityDistributionBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
@@ -1725,8 +2367,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     local godLevelLabel = {
         Type = "Text",
         SubType = "Note",
+        FieldName = "GodLevelLabel",
         Args = {
-            FieldName = "GodLevelLabel",
             X = ScreenCenterX + ScreenWidth / 6 - 480 * 0.75,
             Y = ScreenCenterY + ScreenHeight / 6 + 100,
             Text = button.PageIndex .. "'s God Level",
@@ -1747,8 +2389,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "GodProgressBar",
         Args = {
-            FieldName = "GodProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = 0,
@@ -1766,8 +2408,8 @@ function ZyruIncremental.ShowGodProgressUI(screen, button)
     ZyruIncremental.UpdateProgressBar(screen, {
         Type = "ProgressBar",
         SubType = "Standard",
+        FieldName = "GodProgressBar",
         Args = {
-            FieldName = "GodProgressBar",
             BackgroundColor = {96, 96, 96, 255}, -- Default color.
             ForegroundColor = {255, 255, 255, 255},
             Proportion = expProportion,
@@ -1793,16 +2435,16 @@ function ShowZyruProgressScreen()
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = "ProgressTitle",
             Args = {
-                FieldName = "ProgressTitle",
                 Text = "Incremental Progress",
             }
         },
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "ProgressSubtitle",
             Args = {
-                FieldName = "ProgressSubtitle",
                 Text = "Click on a God's portrait to see your progress with their gifts!",
             }
         },
@@ -1815,8 +2457,8 @@ function ShowZyruProgressScreen()
         table.insert(componentsToRender, {
             Type = "Button",
             SubType = "Icon",
+            FieldName = name .. "Button",
             Args = {
-                FieldName = name .. "Button",
                 Animation = "Codex_Portrait_" .. name,
                 -- series layout
                 OffsetX = - ScreenWidth / 2 + ScreenWidth / 11 * i,
@@ -1852,16 +2494,16 @@ function ShowZyruUpgradeScreen()
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = "UpgradeTitle",
             Args = {
-                FieldName = "UpgradeTitle",
                 Text = "Olympian Upgrades",
             }
         },
         {
             Type = "Text",
             SubType = "Subtitle",
+            FieldName = "UpgradeSubtitle",
             Args = {
-                FieldName = "UpgradeSubtitle",
                 Text = "Click on a God's portrait to see additional gifts and bonuses they can offer!",
             }
         },
@@ -1874,8 +2516,8 @@ function ShowZyruUpgradeScreen()
         table.insert(componentsToRender, {
             Type = "Button",
             SubType = "Icon",
+            FieldName = name .. "Button",
             Args = {
-                FieldName = name .. "Button",
                 Animation = "Codex_Portrait_" .. name,
                 -- series layout
                 OffsetX = - ScreenWidth / 2 + ScreenWidth / 10 * i,
@@ -1925,8 +2567,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Icon",
         SubType = "Standard",
+        FieldName = "UpgradeIcon",
         Args = {
-            FieldName = "UpgradeIcon",
             Animation = GetTraitIcon( TraitData[upgrade.Name] or {} ),
             OffsetX = ScreenWidth / 6,
             OffsetY = -100,
@@ -1936,8 +2578,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Note",
+        FieldName = "UpgradeCurrencyText",
         Args = {
-            FieldName = "UpgradeCurrencyText",
             OffsetX = ScreenWidth / 3 - 50,
             OffsetY = -450,
             Justification = "Right",
@@ -1948,8 +2590,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Paragraph",
+        FieldName = "UpgradeDescriptionText",
         Args = {
-            FieldName = "UpgradeDescriptionText",
             Text = "",
             OffsetX = ScreenWidth / 6,
             OffsetY = 0,
@@ -1959,8 +2601,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Text",
         SubType = "Note",
+        FieldName = "UpgradeCostText",
         Args = {
-            FieldName = "UpgradeCostText",
             Text = GetUpgradeGostText(upgrade),
             OffsetX = ScreenWidth / 6,
             OffsetY = 110,
@@ -1971,8 +2613,8 @@ function UpdateUpgradeInfoScreen(screen, upgrade, button)
     ZyruIncremental.CreateOrUpdateComponent(screen, {
         Type = "Button",
         SubType = "Basic",
+        FieldName = "PurchaseButton",
         Args = {
-            FieldName = "PurchaseButton",
             OffsetX = ScreenWidth / 6,
             OffsetY = 200,
             Label = "Purchase Upgrade",
@@ -2046,8 +2688,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Text",
             SubType = "Title",
+            FieldName = source .. "UpgradeTitle",
             Args = {
-                FieldName = source .. "UpgradeTitle",
                 Text = source, -- todo: generalize args or properties or something??
             }
         },
@@ -2063,8 +2705,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Icon",
             SubType = "Standard",
+            FieldName = "UpgradeCurrency",
             Args = {
-                FieldName = "UpgradeCurrency",
                 OffsetX = ScreenWidth / 3,
                 OffsetY = -450,
                 Scale = 0.75,
@@ -2074,8 +2716,8 @@ function ShowGodUpgradeScreen(screen, button)
         {
             Type = "Text",
             SubType = "Note",
+            FieldName = "UpgradeCurrencyText",
             Args = {
-                FieldName = "UpgradeCurrencyText",
                 OffsetX = ScreenWidth / 3 - 50,
                 OffsetY = -450,
                 Justification = "Right",
@@ -2090,3 +2732,67 @@ function ShowGodUpgradeScreen(screen, button)
     }
     ZyruIncremental.RenderComponents(screen, componentsToRender)
 end
+
+-- 1.1.0 EXP stuff
+ModUtil.Path.Wrap("OpenShrineUpgradeMenu", function (base, args)
+    -- base calls "HandleScreenInput" unthreaded which blocks our function
+    thread(base, args)
+
+    
+	local screen = ScreenAnchors.ShrineScreen
+    local components = screen.Components
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Note",
+        FieldName = "ExpCounter",
+        Args = {
+            Text = "Exp Multiplier: x" .. string.format("%.2f", ZyruIncremental.ComputeShrinePactExperienceMultiplier()),
+            Parent = "ShopBackground",
+            Group = "Combat_Menu",
+            Font = "AlegreyaSansSCExtraBold",
+            FontSize = 24,
+            OffsetY = -345,
+            Color = Color.White,
+            OffsetX = 200,
+        }
+    })
+end, ZyruIncremental)
+
+function ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
+
+    ZyruIncremental.CreateOrUpdateComponent(screen, {
+        Type = "Text",
+        SubType = "Note", 
+        FieldName = "ExpCounter",
+        Args = {
+            Text = "Exp Multiplier: x" .. string.format("%.2f", ZyruIncremental.ComputeShrinePactExperienceMultiplier()),
+        }
+    })
+end
+
+ModUtil.Path.Wrap("HandleMetaUpgradeInput", function (base, screen, button)
+
+    base(screen, button)
+    _G["b"] = button
+    if button.ResourceName == "MetaPoints" then
+        return
+    end
+
+    ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
+
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("SetTraitTrayDetails", function ( base, button, detailsBox, rarityBox, titleBox, patch, icon )
+    _G["a"] = button
+    return  base(button, detailsBox, rarityBox, titleBox, patch, icon)
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetTraitTooltip", function (base, trait, args)
+    _G["t"] = trait
+    _G["args"] = args
+    local tooltip = base(trait, args)
+    if tooltip == nil then
+        waitUntil("z")
+    end
+    return tooltip
+end, ZyruIncremental)
