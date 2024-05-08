@@ -840,7 +840,6 @@ function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
     if GetNumRunsCleared() < 10 then
       return 1
     end
-    -- compute the file-cached multiplier
     local runIndex = 0
     for k, run in pairs( GameState.RunHistory ) do
       if run.Cleared then
@@ -849,10 +848,7 @@ function ZyruIncremental.ComputeNumRunsForCurrentPrestige()
       if runIndex == 10 then
         return numRunsToExponentiate - k
       end
-
     end
-    -- return the cached value
-    -- e.g. 10th win on attempt 18, this is attempt 19, total length - 
   end
 
   return numRunsToExponentiate

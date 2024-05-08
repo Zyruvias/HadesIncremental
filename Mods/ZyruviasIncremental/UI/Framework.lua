@@ -178,8 +178,7 @@ ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
-    if true then return false end
-	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
+	for name in pairs( ZyruIncremental.PauseBlockScreens ) do
 		if ActiveScreens[name] then
 			return true
 		end
