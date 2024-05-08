@@ -178,6 +178,7 @@ ZyruIncremental.ScrollingList = {}
 
 ZyruIncremental.PauseBlockScreens = {}
 ModUtil.Path.Wrap("IsPauseBlocked", function (base)
+    if true then return false end
 	for name  in pairs( ZyruIncremental.PauseBlockScreens ) do
 		if ActiveScreens[name] then
 			return true
@@ -805,8 +806,11 @@ end
 function ZyruIncremental.RenderDropdown(screen, component)
     local dropdownDefinition = GetComponentDefinition(screen, component)
     dropdownDefinition.Name = dropdownDefinition.FieldName
-    
-    ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    local dropdown = ZyruIncremental.Dropdown.CreateDropdown(screen, dropdownDefinition)
+    if dropdownDefinition.Disabled then
+        dropdown.isEnabled = false
+        UseableOff{ Id = dropdown.Id }
+    end
 end
 
 function ZyruIncremental.RenderButton(screen, component)
@@ -890,18 +894,26 @@ function ZyruIncremental.RenderText(screen, component)
     -- Create Text
     textDefinition.Name = "BlankObstacle"
     local parentName = textDefinition.Parent or "Background"
-    textDefinition.Parent = parentName
     -- update a computed property on the object definition
     DebugPrint { Text = parentName }
     if screen.Components[parentName] == nil then
-        textDefinition.Parent = "Background"
+        parentName = "Background"
     end
-    textDefinition.DestinationId = screen.Components[textDefinition.Parent].Id
+    if screen.Components[parentName] == nil then
+        DebugPrint {
+            Text = "Attempting to bind text so something that doesn't exist: "
+                .. tostring(textDefinition.Parent) .. " to " .. parentName
+        }
+        return
+    end
+    
+    textDefinition.DestinationId = screen.Components[parentName].Id
 
 
     screen.Components[textDefinition.FieldName] = CreateScreenComponent(textDefinition)
     textDefinition.Id = screen.Components[textDefinition.FieldName].Id
     CreateTextBox(textDefinition)
+    textDefinition.Parent = parentName
     return textDefinition
 end
 

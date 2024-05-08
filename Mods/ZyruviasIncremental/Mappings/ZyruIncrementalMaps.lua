@@ -42,7 +42,7 @@ function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
     }
     --[[
       {
-        ExperienceMulitpliers {source: number}
+        ExperienceMultipliers {source: number}
         BoonData
         GodData
         DropData
@@ -817,12 +817,13 @@ end, ZyruIncremental)
 
 -- enemy data: newEnemy.HealthMultiplier
 ModUtil.Path.Wrap("SetupEnemyObject", function (baseFunc, newEnemy, currentRun, args)
-  local difficultyModifier = ZyruIncremental.DifficultyModifier or 1
+  local difficultyModifier = ZyruIncremental.Data.DifficultyModifier or 1
   newEnemy.HealthMultiplier = (newEnemy.HealthMultiplier or 1) * difficultyModifier
   -- armor
-  if newEnemy.HealthBuffer ~= nil and newEnemy.HealthBuffer > 0 then
-		newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
-	end
+  -- TODO: this is multiplying both armor and health, add intentionally as a difficulty setting
+  -- if newEnemy.HealthBuffer ~= nil and newEnemy.HealthBuffer > 0 then
+	-- 	newEnemy.HealthBufferMultiplier = (newEnemy.HealthBufferMultiplier or 1) * difficultyModifier
+	-- end
 
   return baseFunc(newEnemy, currentRun, args)
 end, ZyruIncremental)
@@ -878,13 +879,13 @@ ModUtil.Path.Wrap("StartNewRun", function (baseFunc, ...)
     return run
   end 
   ComputeSourceExpMultCache()
-  ZyruIncremental.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
+  ZyruIncremental.Data.DifficultyModifier = ZyruIncremental.ComputeDifficultyModifier(
     ZyruIncremental.Data.FileOptions.DifficultySetting,
     ZyruIncremental.Constants.Difficulty.Keys.INCOMING_DAMAGE_SCALING
   )
   AddIncomingDamageModifier(CurrentRun.Hero, {
     Name = "ZyruIncremental",
-    GlobalMultiplier = ZyruIncremental.DifficultyModifier
+    GlobalMultiplier = ZyruIncremental.Data.DifficultyModifier
   })
 
   return run

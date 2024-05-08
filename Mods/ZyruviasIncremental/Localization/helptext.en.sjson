@@ -272,5 +272,13 @@
             Id = "Boon_Olympic"
             DisplayName = "Olympic"
         }
+        {
+            Id = "Objective_ZyruResetGift"
+            DisplayName = "Give Hades an offering of {!Icons.GiftPoint} to take us all back ..."
+        }
+        {
+            Id = "ZyruResetGiftUseText"
+            DisplayName = "{G} Gift {#UseGiftPointFormat}( -{$TempTextData.GiftResourceAmount} {!Icons.GiftPoint}) (Lethe-infused)"
+        }
     ]
 }

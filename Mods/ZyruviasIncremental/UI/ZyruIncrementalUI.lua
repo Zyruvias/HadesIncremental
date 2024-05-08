@@ -383,7 +383,7 @@ function ComputeResetProgressionUI()
         },
     }
 
-    ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers = {}
+    ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers = {}
     -- TODO: generalize by type of progress
     local olympians = { "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }
     local enemyMult = 1
@@ -398,7 +398,7 @@ function ComputeResetProgressionUI()
         local nextMult = ComputeNextSourceExpMult(olympian)
         local nextMultText = "x" .. string.format("%.2f", nextMult * prevMult)
         enemyMult = enemyMult * nextMult * prevMult
-        ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers[olympian] = nextMult
+        ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers[olympian] = nextMult
         table.insert(componentsToRender, {
             Type = "Icon",
             SubType = "Standard",
@@ -522,20 +522,48 @@ function ComputeResetProgressionUI()
     return componentsToRender
 end
 
+function GetRunsAttemptedThisPrestige()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return #GameState.RunHistory
+    end
+    return #GameState.RunHistory - ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount
+end
+
+function GetRunsClearedThisPrestige ()
+    if ZyruIncremental.Data.CurrentPrestige == 0 then
+        return GetNumRunsCleared()
+    end
+    local startingRun = ZyruIncremental.Data.PrestigeData[ZyruIncremental.Data.CurrentPrestige].RunAttemptCount + 1
+    local runCount = 0
+    for k = startingRun, #GameState.RunHistory do
+        if GameState.RunHistory[k].Cleared then
+            runCount = runCount + 1
+        end
+    end
+    return runCount
+end
+
 -- Courtyard Progress Screen
 function ShowZyruResetScreen ()
-    -- CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
-    -- thread( InCombatTextArgs, {
-    --     TargetId = CurrentRun.Hero.ObjectId,
-    --     Text = "Coming Soon!",
-    --     SkipRise = false,
-    --     SkipFlash = true,
-    --     ShadowScale = 0.66,
-    --     Duration = 1.5,
-    --     OffsetY = -100 })
-    -- offsetY = offsetY - 60
-    -- thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
-    ZyruIncremental.TemporaryPrestigeState = {}
+
+    local clearedRunsThisPrestige = GetRunsAttemptedThisPrestige()
+    if clearedRunsThisPrestige < 10 and not ZyruIncremental.DEBUG_MODE then
+        CreateAnimation({ Name = "ItemGet_PomUpgraded", DestinationId = CurrentRun.Hero.ObjectId, Scale = 2.0 })
+        thread( InCombatTextArgs, {
+            TargetId = CurrentRun.Hero.ObjectId,
+            Text = "Generate 10 field reports this cycle first...",
+            SkipRise = false,
+            SkipFlash = true,
+            ShadowScale = 1.2,
+            Duration = 1.5,
+            Cooldown = 1.5,
+            OffsetY = -100 })
+        offsetY = offsetY - 60
+        thread(PlayVoiceLines, GlobalVoiceLines.InvalidResourceInteractionVoiceLines)
+        return
+    end
+
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
     local screen = ZyruIncremental.CreateMenu("ZyruResetScreen", {
         Components = {
             {
@@ -615,25 +643,25 @@ function ShowZyruResetScreen ()
                             {
                                 Text = "Easy",
                                 event = function (parent, button)
-                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Easy"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Easy"
                                 end
                             },
                             {
                                 Text = "Standard",
                                 event = function (parent, button)
-                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Standard"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Standard"
                                 end
                             },
                             {
                                 Text = "Hard",
                                 event = function (parent, button)
-                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Hard"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Hard"
                                 end
                             },
                             {
                                 Text = "Freeplay",
                                 event = function (parent, button)
-                                    ZyruIncremental.TemporaryPrestigeState.DifficultySetting = "Freeplay"
+                                    ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting = "Freeplay"
                                 end
                             },
                         }
@@ -665,7 +693,6 @@ function ShowZyruResetScreen ()
                 }
             },
             [3] = ComputeResetProgressionUI(),
-            -- [4] = { ... final confirmatyion page TODO}
             [4] = {
                 {
                     Type = "Text",
@@ -694,22 +721,47 @@ function ShowZyruResetScreen ()
                         }
                     }
 
-                }
+                },
+                {
+                    Type = "Dropdown",
+                    SubType = "Standard",
+                    FieldName = "CutsceneSetting",
+                    Args = {
+                        Group = "CutsceneSetting",
+                        X = ScreenWidth / 8,
+                        Y = ScreenHeight - 150,
+                        Disabled = not ZyruIncremental.Data.Flags.SeenResetCutscene,
+                        Items = {
+                            Default = {
+                                Text = "Show Cutscene?",
+                                event = function() end
+                            },
+                            {
+                                Text = "Yes",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = true
+                                end
+                            },
+                            {
+                                Text = "No",
+                                event = function (parent, button)
+                                    ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene = false
+                                end
+                            },
+                        }
+                    }
+                },
             }
             
         }
     })
-    ZyruIncremental.TemporaryPrestigeState = {}
 end
 
-function CloseResetScreenAndApplyPrestige(screen, button)
-    CloseScreenByName("ZyruResetScreen")
-    AddInputBlock({ Name = "ZyruReset"})
-
-    -- BEGIN CREATING PRESTIGE STATE
+function ApplyPrestige()
+-- BEGIN CREATING PRESTIGE STATE
     --[[
       {
-        ExperienceMulitpliers {source: number}
+        ExperienceMultipliers {source: number}
         BoonData
         GodData
         DropData
@@ -719,11 +771,11 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     ]]
     local prestigeData = {}
     -- compute next multipliers
-    prestigeData.ExperienceMulitpliers = {}
+    prestigeData.ExperienceMultipliers = {}
     local expMultProduct = 1
     for i, source in ipairs({ "Zeus", "Poseidon", "Athena", "Ares", "Aphrodite", "Artemis", "Dionysus", "Hermes", "Demeter", "Chaos" }) do
         local olympianMult = ComputeNextSourceExpMult(source)
-        prestigeData.ExperienceMulitpliers[source] = olympianMult
+        prestigeData.ExperienceMultipliers[source] = olympianMult
         expMultProduct = expMultProduct * olympianMult
     end
     local enemyScalingMult = math.pow(expMultProduct, 1 / 6)
@@ -734,7 +786,7 @@ function CloseResetScreenAndApplyPrestige(screen, button)
     prestigeData.UpgradeData = DeepCopyTable(ZyruIncremental.Data.UpgradeData)
     prestigeData.VersionNumber = ZyruIncremental.CurrentVersion
     -- compute/retrieve derived values
-    prestigeData.ExperienceMulitpliers = DeepCopyTable(ZyruIncremental.TemporaryPrestigeState.ExperienceMulitpliers)
+    prestigeData.ExperienceMultipliers = DeepCopyTable(ZyruIncremental.Data.TemporaryPrestigeState.ExperienceMultipliers)
     prestigeData.EnemyScalingMultiplier = enemyScalingMult
     prestigeData.RunAttemptCount = TableLength(GameState.RunHistory)
     ZyruIncremental.CachedEnemyScalingMultiplier = enemyScalingMult
@@ -762,43 +814,157 @@ function CloseResetScreenAndApplyPrestige(screen, button)
 
 
     -- compute starting difficulty multipliier -- TODO: generate formula
-    if ZyruIncremental.TemporaryPrestigeState.DifficultySetting then
-        ZyruIncremental.Data.FileOptions.DifficultySetting = ZyruIncremental.TemporaryPrestigeState.DifficultySetting
+    if ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting then
+        ZyruIncremental.Data.FileOptions.DifficultySetting = ZyruIncremental.Data.TemporaryPrestigeState.DifficultySetting
     end
 
     -- END APPLYING PRESTIGE STATE
-    ZyruIncremental.TemporaryPrestigeState = {}
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
     ZyruIncremental.Data.CurrentPrestige = ZyruIncremental.Data.CurrentPrestige + 1
+end
 
-    -- ACTUALLY SAVE SAVE FILE
+ModUtil.Path.Wrap("AttemptGift", function (base, currentRun, target)
+    base(currentRun, target)
+    if not ZyruIncremental.Data.InFlashback then
+        return
+    end
+    _G["t"] = target
+    if target.Name == "NPC_Hades_01" and not ZyruIncremental.InGiftDialogue then
+        thread(MarkObjectiveComplete, "ZyruResetGift")
+        -- initialize dialogue
+        -- Mmm.
+        ZyruIncremental.InGiftDialogue = true
+        local lines = {
+            { Cue = "/VO/ZagreusField_0371", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Erm, Hades. I'd like to offer you another gift of nectar. I know our relationship no longer "
+                .. "hinges on sustained pleasantries and other such niceties, but I think I want you to know that I "
+                .. "am proud of your effort to truly improve the security around the Underworld."
+            },
+            { Cue = "/VO/ZagreusField_0370", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Cheers to a successful working arrangement."
+            },
+            
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Description="",
+                Text = "Zagreus, of course. It is my obligation. It is your obligation as well. However, I suppose"
+                .. " a reward every once in a while doesn't incur too insufferable a decline in one's work ethic."
+            },
+            -- TODO: gift sounds?
+            { Cue = "/VO/ZagreusField_0370", Speaker = "_PlayerUnit", Portrait = "Portrait_Zag_Default_01", Description="",
+                Text = "Mnemosyne said that was all..."
+            },
+            { Cue = "/VO/Hades_0166", Speaker = "NPC_Hades_01", Portrait = "Portrait_Hades_Default_01", Description="",
+                Text = "What."
+            }
+        }
+        local screen = {}
+        PlayTextLine(screen, lines, nil, nil, target)
+        Destroy{Id=screen.PortraitId}
+        Destroy{Id=screen.PromptId}
+        EndResetFlashback()
+    end
+end, ZyruIncremental)
 
-    -- setup players to load in at death area
-	-- SaveCheckpoint({ StartNextMap = "RoomPreRun", SaveFile = "_Temp", DevSaveName = CreateDevSaveName( CurrentRun, { StartNextMap = "RoomPreRun" }) })
-    -- ValidateCheckpoint({ Value = true })
+ModUtil.Path.Wrap("FlashbackPresentation", function (base)
+    base()
+    if ZyruIncremental.Data.InFlashback then
+		HideCombatUI()
+		AdjustColorGrading({ Name = "Sepia", Duration = 0.0 })
+    end
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetUseText", function(base, useTarget, useData)
+    if not ZyruIncremental.InGiftDialogue and ZyruIncremental.Data.InFlashback and useTarget.Name == "NPC_Hades_01" then
+        return "ZyruResetGiftUseText"
+    end
+    return base(useTarget, useData)
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetUseData", function(base, useTarget)
+    if not ZyruIncremental.InGiftDialogue and ZyruIncremental.Data.InFlashback and useTarget.Name == "NPC_Hades_01" then
+        return { GiftResourceAmount = 1 }
+    end
+    return base(useTarget)
+end, ZyruIncremental)
+
+-- setup tutorial objectives for reset
+ModUtil.LoadOnce(function ()
+    ModUtil.Table.Merge(ObjectiveSetData, {
+        ZyruReset = {
+            Name = "ZyruReset",
+            AllowRepeat = true,
+            RequiredTrueFlags = { "ZyruReset" },
+            Objectives =
+            {
+                { "ZyruResetGift" }
+            },
+        },
+    })
+    ModUtil.Table.Merge(ObjectiveData, {
+        ZyruResetGift = { Description = "Objective_ZyruResetGift" },
+    })
+    SetupRunData()
+end)
+
+function StartResetFlashback()
+    ZyruIncremental.Data.InFlashback = true
+    GameState.Flags.ZyruReset = true
+    AdjustColorGrading({ Name = "Sepia", Duration = 1.0 })
+    HideCombatUI("ResetFlashback")
+    RemoveInputBlock({ Name = "ZyruReset"})
     
+	CurrentRun.StoredNPCInteractions = DeepCopyTable(CurrentRun.NPCInteractions)
+	CurrentRun.StoredTextLinesRecord = DeepCopyTable(CurrentRun.TextLinesRecord)
 
+	CurrentRun.NPCInteractions = {}
+	CurrentRun.TextLinesRecord = {}
 
+    ShowObjectiveSet( "ZyruReset" )
+end
+
+function EndResetFlashback()
+    ZyruIncremental.Data.InFlashback = false
+    GameState.Flags.ZyruReset = false
+    ShowCombatUI("ResetFlashback")
+	CurrentRun.NPCInteractions = DeepCopyTable(CurrentRun.StoredNPCInteractions)
+	CurrentRun.TextLinesRecord = DeepCopyTable(CurrentRun.StoredTextLinesRecord)
+    
+    AddInputBlock({ Name = "ResetFlashback" })
+    
+    
+    ApplyPrestige()
+    RemoveInputBlock({ Name = "ZyruReset"})
+
+    RemoveLastAssistTrait()
+    RemoveLastAwardTrait()
+    ZyruIncremental.Data.Flags.SeenResetCutscene = true
+    PostPrestigePresentation()
+
+end
+
+function PostPrestigePresentation()
     wait(0.5)
     -- Not again.
     PlayVoiceLine({ Cue = "/VO/ZagreusField_0623"})
-    wait(1.0)
-
-    RemoveInputBlock({ Name = "ZyruReset"})
-    ZyruIncremental.ShowForceQuitScreen = true
-    RemoveLastAssistTrait()
-    RemoveLastAwardTrait()
+    wait(0.5)
     KillHero(CurrentRun.Hero, {})
-
-    -- TODO:
-    -- compute and set run baseline multiplier
-
-    wait(5)   
+    AdjustColorGrading({ Name = "Off", Duration = 1.0 })
+    wait(4)   
     ShowForceQuitScreenImmediately()
+end
 
-    return 
+function CloseResetScreenAndApplyPrestige(screen, button)
+    CloseScreenByName("ZyruResetScreen")
+    AddInputBlock({ Name = "ZyruReset"})
+
+    if ZyruIncremental.Data.TemporaryPrestigeState.ShowCutscene then
+        return StartResetFlashback()
+    end
+    ApplyPrestige()
+    PostPrestigePresentation()
 end
 
 function ShowForceQuitScreenImmediately()
+    ZyruIncremental.Data.TemporaryPrestigeState = {}
     local screen = ZyruIncremental.CreateMenu("forceQuit", {
         Components = {
             {
@@ -899,6 +1065,13 @@ ModUtil.Path.Wrap("UseEscapeDoor", function(base, usee, args)
         or not ZyruIncremental.Data.Flags.SeenRamblingsMenu
     ) then
         return thread( ZyruIncremental.DirectionHintPresentationRework )
+    end
+
+    -- don't allow breaking out of the cutscene
+    if (
+        ZyruIncremental.Data.InFlashback
+    ) then
+        return thread( PlayVoiceLines, HeroVoiceLines.InteractionBlockedVoiceLines, true )
     end
     
     if ZyruIncremental.Data.FileOptions.StartingPoint == ZyruIncremental.Constants.SaveFile.EPILOGUE then
@@ -2600,7 +2773,26 @@ end
 ModUtil.Path.Wrap("HandleMetaUpgradeInput", function (base, screen, button)
 
     base(screen, button)
+    _G["b"] = button
+    if button.ResourceName == "MetaPoints" then
+        return
+    end
 
     ZyruIncremental.UpdateShrineExperienceMultiplier(screen, button)
 
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("SetTraitTrayDetails", function ( base, button, detailsBox, rarityBox, titleBox, patch, icon )
+    _G["a"] = button
+    return  base(button, detailsBox, rarityBox, titleBox, patch, icon)
+end, ZyruIncremental)
+
+ModUtil.Path.Wrap("GetTraitTooltip", function (base, trait, args)
+    _G["t"] = trait
+    _G["args"] = args
+    local tooltip = base(trait, args)
+    if tooltip == nil then
+        waitUntil("z")
+    end
+    return tooltip
 end, ZyruIncremental)

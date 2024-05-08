@@ -59,12 +59,18 @@ function ComputeCurrentSourceExpMult(source)
     if currentPrestige == 0 then
         return 1
     end
+    if source == nil then
+        DebugPrint { Text = "source is nil for EXP computation"}
+        return 1
+    end
     if ZyruIncremental.CachedExpMultipliersByGod[source] ~= nil then
         return ZyruIncremental.CachedExpMultipliersByGod[source]
     end
     local multiplier = 1
     for i, prestigeData in ipairs(ZyruIncremental.Data.PrestigeData) do
-        multiplier = multiplier * (prestigeData.ExperienceMulitpliers[source] or 1)
+        if prestigeData.ExperienceMultipliers ~= nil then
+            multiplier = multiplier * (prestigeData.ExperienceMultipliers[source] or 1)
+        end
     end
     ZyruIncremental.CachedExpMultipliersByGod[source] = multiplier
     return multiplier
