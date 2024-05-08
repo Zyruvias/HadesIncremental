@@ -233,6 +233,9 @@ end
 
 function ScreenPageRight(screen, button)
     -- todo PageStack makes sense here?
+    if type(screen.PageIndex) ~= "number" then
+        return
+    end
     if screen.PageIndex == screen.PageCount then
         return
     end
@@ -244,6 +247,9 @@ end
 
 function ScreenPageLeft(screen, button)
     -- todo PageStack makes sense here?
+    if type(screen.PageIndex) ~= "number" then
+        return
+    end
     if screen.PageIndex == 1 then
         return
     end
@@ -412,7 +418,7 @@ function ZyruIncremental.CreateMenu(name, args)
     if args.Pages ~= nil then
         screen.Pages = args.Pages
         screen.PageIndex = args.InitialPageIndex or 1
-        screen.PageCount = TableLength(args.Pages)
+        screen.PageCount = args.PageCount or TableLength(args.Pages)
         -- Page Left button
         if (args.PaginationStyle or "Linear") == "Linear" then
             ZyruIncremental.RenderButton(screen, {

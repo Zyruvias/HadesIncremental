@@ -113,6 +113,16 @@ function ZyruIncremental.ComputeRarityDistribution( rarityBonus )
 
 end
 
+local resourceNameMap = {
+  Pom = "StackUpgrade"
+}
+
+function ZyruIncremental.ComputeRarityBonusForResource( source )
+  local chosenResource = resourceNameMap[source] or "StackUpgrade"
+  local resourceData = ZyruIncremental.Data.DropData[chosenResource]
+  return resourceData.RarityBonus + (ZyruIncremental.TransientState[chosenResource .. "RarityBonus"] or 0)
+end
+
 
 function ZyruIncremental.ComputeRarityBonusForGod( god )
   local chosenGod = god or "Zeus"

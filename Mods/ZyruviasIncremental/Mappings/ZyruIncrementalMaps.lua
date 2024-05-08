@@ -16,9 +16,9 @@ end
 
 function ZyruIncremental.InitializeDropData()
   ZyruIncremental.Data.DropData = {
-    RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-    RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
-    StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0 },
+    RoomRewardMoneyDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0, RarityBonus = 0, },
+    RoomRewardMaxHealthDrop = { Level = 1, Count = 0, Amount = 0, Experience = 0, RarityBonus = 0, },
+    StackUpgrade = { Level = 1, Count = 0, Amount = 0, Experience = 0, RarityBonus = 0, },
   }
 end
 
@@ -56,9 +56,16 @@ function ZyruIncremental.InitializeSaveDataAndPatchIfNecessary  ()
 
   -- APPLY VERSION PATCHES
   local latestVer = ZyruIncremental.Data.Flags.MostRecentVersionPlayed or 1
+  -- v1.1.0
   if  latestVer < 6 then
     ZyruIncremental.Data.PrestigeData = {}
     ZyruIncremental.Data.CurrentPrestige = 0
+  end
+  -- v1.2.0
+  if latestVer < 7 then
+    for dropName, dropData in pairs(ZyruIncremental.Data.DropData) do
+      dropData.RarityBonus = 0
+    end
   end
   -- UPDATE SAVE FILE TO BE LATEST VERSION
   ZyruIncremental.Data.Flags.MostRecentVersionPlayed = ZyruIncremental.CurrentVersion
